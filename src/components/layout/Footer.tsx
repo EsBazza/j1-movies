@@ -1,6 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
-import { Clapperboard, Sparkles } from 'lucide-react';
+import { Clapperboard, Heart } from 'lucide-react';
 
 export function Footer() {
   return (
@@ -20,7 +20,7 @@ export function Footer() {
               </span>
             </Link>
             <p className="text-xs text-zinc-400 max-w-md leading-relaxed">
-              Experience cinema-grade streaming with rich TMDB metadata, high-definition posters, and seamless Videasy playback.
+              Stream your favorite movies, TV series, and cinema classics in high-definition quality with your personal watchlist and watch history.
             </p>
           </div>
 
@@ -35,10 +35,12 @@ export function Footer() {
 
         <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-zinc-400">
           <p className="flex items-center gap-1.5 font-medium">
-            <span>© {new Date().getFullYear()} J1 Movies. Powered by TMDB & Videasy.</span>
+            <span>© {new Date().getFullYear()} J1 Movies. All rights reserved.</span>
           </p>
-          <p className="text-zinc-400 text-[11px]">
-            Data provided by TMDB. This product is not endorsed or certified by TMDB.
+          <p className="flex items-center gap-1.5 text-zinc-300 font-semibold">
+            <span>Made with</span>
+            <Heart className="w-3.5 h-3.5 fill-red-500 text-red-500 inline" />
+            <span>by <strong className="text-white font-bold">bazza</strong></span>
           </p>
         </div>
       </div>
