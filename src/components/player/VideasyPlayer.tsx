@@ -10,9 +10,11 @@ import {
   Shield,
   Tv,
   Sparkles,
-  Volume2,
+  Server,
+  ChevronDown,
 } from 'lucide-react';
-import { getVideasyPlayerUrl } from '@/lib/videasy';
+import { STREAMING_SERVERS, getPlayerUrlForServer } from '@/lib/playerSources';
+import { useUserStore } from '@/lib/store';
 import { MediaType } from '@/types/tmdb';
 import { cn } from '@/lib/utils';
 
@@ -37,6 +39,8 @@ export function VideasyPlayer({
   isTheaterMode = false,
   onToggleTheater,
 }: VideasyPlayerProps) {
+  const { preferredServerId, setPreferredServerId } = useUserStore();
+  const [currentServerId, setCurrentServerId] = useState<string>(preferredServerId || 'videasy');
   const [isLoading, setIsLoading] = useState(true);
   const [reloadKey, setReloadKey] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -44,11 +48,15 @@ export function VideasyPlayer({
   const playerContainerRef = useRef<HTMLDivElement>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
-  const playerUrl = getVideasyPlayerUrl(type, tmdbId, season, episode, {
-    color: 'e50914',
-    autoplay: true,
-    nextEpisode: true,
-  });
+  const activeServer = STREAMING_SERVERS.find((s) => s.id === currentServerId) || STREAMING_SERVERS[0];
+  const playerUrl = getPlayerUrlForServer(currentServerId, type, tmdbId, season, episode);
+
+  const handleServerChange = (serverId: string) => {
+    setCurrentServerId(serverId);
+    setPreferredServerId(serverId);
+    setIsLoading(true);
+    setReloadKey((prev) => prev + 1);
+  };
 
   const handleReload = () => {
     setIsLoading(true);
@@ -80,14 +88,13 @@ export function VideasyPlayer({
     }
   }, []);
 
-  // Listen for Fullscreen Change & Keyboard Shortcuts (F, T, Esc)
+  // Listen for Fullscreen Change & Keyboard Shortcuts (F, T)
   useEffect(() => {
     const handleFullscreenChange = () => {
       setIsFullscreen(!!document.fullscreenElement);
     };
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Don't trigger if user is typing in an input field
       if (['INPUT', 'TEXTAREA', 'SELECT'].includes((e.target as HTMLElement)?.tagName)) {
         return;
       }
@@ -135,7 +142,7 @@ export function VideasyPlayer({
       >
         {/* Loading Spinner with Cinema Vibe */}
         {isLoading && (
-          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-zinc-950/95 backdrop-blur-md gap-4">
+          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-[#07090e]/95 backdrop-blur-md gap-4">
             <div className="relative">
               <div className="w-14 h-14 rounded-full border-4 border-red-600/20 border-t-red-600 animate-spin" />
               <div className="absolute inset-0 flex items-center justify-center">
@@ -144,7 +151,7 @@ export function VideasyPlayer({
             </div>
             <div className="flex flex-col items-center gap-1">
               <p className="text-sm font-bold text-white tracking-wide">
-                Buffering Cinema Stream
+                Buffering Cinema Stream ({activeServer.name})
               </p>
               <p className="text-xs text-zinc-400 max-w-xs text-center">
                 {title} • {type === 'tv' ? `Season ${season}, Episode ${episode}` : 'Feature Film'}
@@ -153,12 +160,12 @@ export function VideasyPlayer({
           </div>
         )}
 
-        {/* Videasy Iframe Embed with Comprehensive Fullscreen Permissions */}
+        {/* Video Embed Iframe with Fullscreen Permissions */}
         <iframe
           ref={iframeRef}
           key={`${playerUrl}-${reloadKey}`}
           src={playerUrl}
-          title={`Videasy player - ${title}`}
+          title={`Cinema player - ${title}`}
           onLoad={() => setIsLoading(false)}
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen *; display-capture"
           allowFullScreen={true}
@@ -202,23 +209,46 @@ export function VideasyPlayer({
         </div>
       </div>
 
-      {/* Under-Player Cinema Control Deck */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3.5 px-1 text-xs text-zinc-400">
-        <div className="flex items-center gap-3 flex-wrap">
-          <div className="flex items-center gap-1.5 text-zinc-400 bg-zinc-900/60 px-3 py-1.5 rounded-xl border border-zinc-800/80">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="font-medium text-zinc-200">Videasy HD Stream</span>
+      {/* Under-Player Server Switcher & Controls Deck */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pt-3.5 px-1 text-xs text-zinc-400">
+        {/* Server Provider Selector */}
+        <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-1.5 text-zinc-400 mr-1">
+            <Server className="w-3.5 h-3.5 text-red-500" />
+            <span className="font-semibold text-zinc-300">Server:</span>
           </div>
 
-          <div className="hidden sm:flex items-center gap-2 text-zinc-500">
-            <span>Shortcuts:</span>
-            <kbd className="px-1.5 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-[11px] text-zinc-300 font-mono">F</kbd> Fullscreen
-            <kbd className="px-1.5 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-[11px] text-zinc-300 font-mono">T</kbd> Theater
+          <div className="flex items-center gap-1.5 flex-wrap">
+            {STREAMING_SERVERS.map((server) => {
+              const isActive = server.id === currentServerId;
+              return (
+                <button
+                  key={server.id}
+                  onClick={() => handleServerChange(server.id)}
+                  className={cn(
+                    'flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer border',
+                    isActive
+                      ? 'bg-red-600 text-white border-red-500 shadow-md shadow-red-950/40 scale-105'
+                      : 'bg-zinc-900/80 hover:bg-zinc-800 text-zinc-300 border-zinc-800 hover:border-zinc-700'
+                  )}
+                >
+                  <span>{server.name.split(' ')[0]} {server.name.split(' ')[1]}</span>
+                  <span
+                    className={cn(
+                      'text-[10px] px-1.5 py-0.2 rounded-md font-mono',
+                      isActive ? 'bg-black/30 text-white' : 'bg-zinc-800 text-zinc-400'
+                    )}
+                  >
+                    {server.badge}
+                  </span>
+                </button>
+              );
+            })}
           </div>
         </div>
 
         {/* Action Controls */}
-        <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+        <div className="flex items-center gap-2 self-end md:self-auto">
           {onToggleTheater && (
             <button
               onClick={onToggleTheater}
@@ -230,7 +260,7 @@ export function VideasyPlayer({
               )}
             >
               <Tv className="w-3.5 h-3.5" />
-              <span>{isTheaterMode ? 'Default View' : 'Theater Mode'}</span>
+              <span>{isTheaterMode ? 'Default' : 'Theater'}</span>
             </button>
           )}
 
@@ -246,14 +276,14 @@ export function VideasyPlayer({
             ) : (
               <>
                 <Maximize className="w-3.5 h-3.5" />
-                <span>Cinema Fullscreen [F]</span>
+                <span>Fullscreen [F]</span>
               </>
             )}
           </button>
 
           <button
             onClick={handleReload}
-            title="Reload Video Player"
+            title="Reload Video Stream"
             className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white border border-zinc-800 transition-colors cursor-pointer"
           >
             <RefreshCw className="w-3.5 h-3.5" />

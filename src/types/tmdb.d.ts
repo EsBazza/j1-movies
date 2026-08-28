@@ -53,6 +53,27 @@ export interface TMDBCredits {
   }>;
 }
 
+export interface TMDBPersonDetails {
+  id: number;
+  name: string;
+  also_known_as?: string[];
+  biography: string;
+  birthday: string | null;
+  deathday: string | null;
+  gender: number;
+  known_for_department: string;
+  place_of_birth: string | null;
+  popularity: number;
+  profile_path: string | null;
+  combined_credits?: {
+    cast: TMDBMediaItem[];
+    crew: Array<TMDBMediaItem & { job: string; department: string }>;
+  };
+  images?: {
+    profiles: Array<{ file_path: string }>;
+  };
+}
+
 export interface TMDBVideo {
   id: string;
   key: string;
@@ -154,4 +175,12 @@ export interface WatchlistItem {
   vote_average: number;
   release_date?: string;
   addedAt: number;
+}
+
+export interface CustomCollection {
+  id: string;
+  name: string;
+  description?: string;
+  createdAt: number;
+  items: WatchlistItem[];
 }

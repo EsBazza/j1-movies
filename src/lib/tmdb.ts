@@ -169,3 +169,49 @@ export async function getMovieGenres(): Promise<{ genres: TMDBGenre[] }> {
 export async function getTVGenres(): Promise<{ genres: TMDBGenre[] }> {
   return fetchFromTMDB<{ genres: TMDBGenre[] }>('genre/tv/list');
 }
+
+export async function getPersonDetails(id: number | string): Promise<import('@/types/tmdb').TMDBPersonDetails> {
+  return fetchFromTMDB<import('@/types/tmdb').TMDBPersonDetails>(`person/${id}`, {
+    append_to_response: 'combined_credits,images',
+  });
+}
+
+export interface DiscoverFilters {
+  mediaType: 'movie' | 'tv';
+  genreId?: number | string;
+  sortBy?: string;
+  minRating?: number;
+  year?: string;
+  language?: string;
+  page?: number;
+}
+
+export async function discoverMedia(filters: DiscoverFilters): Promise<TMDBPaginatedResponse<TMDBMediaItem>> {
+  const params: Record<string, string | number> = {
+    sort_by: filters.sortBy || 'popularity.desc',
+    page: filters.page || 1,
+  };
+
+  if (filters.genreId) {
+    params.with_genres = filters.genreId;
+  }
+
+  if (filters.minRating && filters.minRating > 0) {
+    params['vote_average.gte'] = filters.minRating;
+    params['vote_count.gte'] = 20;
+  }
+
+  if (filters.year) {
+    if (filters.mediaType === 'movie') {
+      params['primary_release_year'] = filters.year;
+    } else {
+      params['first_air_date_year'] = filters.year;
+    }
+  }
+
+  if (filters.language) {
+    params.with_original_language = filters.language;
+  }
+
+  return fetchFromTMDB<TMDBPaginatedResponse<TMDBMediaItem>>(`discover/${filters.mediaType}`, params);
+}

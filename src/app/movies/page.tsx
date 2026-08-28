@@ -3,9 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import { Film, Filter, Loader2, ArrowUpDown } from 'lucide-react';
 import {
-  getPopularMovies,
-  getMoviesByGenre,
   getMovieGenres,
+  discoverMedia,
   normalizeMediaItem,
 } from '@/lib/tmdb';
 import { TMDBGenre, NormalizedMedia } from '@/types/tmdb';
@@ -13,11 +12,19 @@ import { MediaCard } from '@/components/media/MediaCard';
 import { GenrePills } from '@/components/media/GenrePills';
 import { SkeletonCard } from '@/components/ui/SkeletonCard';
 import { ApiKeyWarning } from '@/components/common/ApiKeyWarning';
+import { AdvancedFilterDrawer, FilterState } from '@/components/common/AdvancedFilterDrawer';
 
 export default function MoviesPage() {
   const [genres, setGenres] = useState<TMDBGenre[]>([]);
   const [selectedGenreId, setSelectedGenreId] = useState<number | null>(null);
-  const [sortBy, setSortBy] = useState<string>('popularity.desc');
+  const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
+  const [filters, setFilters] = useState<FilterState>({
+    year: '',
+    minRating: 0,
+    language: '',
+    sortBy: 'popularity.desc',
+  });
+
   const [movies, setMovies] = useState<NormalizedMedia[]>([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -38,7 +45,7 @@ export default function MoviesPage() {
     loadGenres();
   }, []);
 
-  // Fetch Movies on genre change or sort change
+  // Fetch Movies on genre change or filters change
   useEffect(() => {
     async function loadMovies() {
       setIsLoading(true);
@@ -46,9 +53,15 @@ export default function MoviesPage() {
       setPage(1);
 
       try {
-        const res = selectedGenreId
-          ? await getMoviesByGenre(selectedGenreId, 1, sortBy)
-          : await getMoviesByGenre('', 1, sortBy);
+        const res = await discoverMedia({
+          mediaType: 'movie',
+          genreId: selectedGenreId || undefined,
+          sortBy: filters.sortBy,
+          minRating: filters.minRating,
+          year: filters.year,
+          language: filters.language,
+          page: 1,
+        });
 
         const items = (res.results || []).map((m) => normalizeMediaItem(m, 'movie'));
         setMovies(items);
@@ -62,7 +75,7 @@ export default function MoviesPage() {
     }
 
     loadMovies();
-  }, [selectedGenreId, sortBy]);
+  }, [selectedGenreId, filters]);
 
   // Load More Pages
   const handleLoadMore = async () => {
@@ -71,9 +84,15 @@ export default function MoviesPage() {
 
     try {
       const nextPage = page + 1;
-      const res = selectedGenreId
-        ? await getMoviesByGenre(selectedGenreId, nextPage, sortBy)
-        : await getMoviesByGenre('', nextPage, sortBy);
+      const res = await discoverMedia({
+        mediaType: 'movie',
+        genreId: selectedGenreId || undefined,
+        sortBy: filters.sortBy,
+        minRating: filters.minRating,
+        year: filters.year,
+        language: filters.language,
+        page: nextPage,
+      });
 
       const newItems = (res.results || []).map((m) => normalizeMediaItem(m, 'movie'));
       setMovies((prev) => [...prev, ...newItems]);
@@ -83,6 +102,16 @@ export default function MoviesPage() {
     } finally {
       setIsLoadingMore(false);
     }
+  };
+
+  const handleResetFilters = () => {
+    setFilters({
+      year: '',
+      minRating: 0,
+      language: '',
+      sortBy: 'popularity.desc',
+    });
+    setSelectedGenreId(null);
   };
 
   return (
@@ -96,7 +125,7 @@ export default function MoviesPage() {
           <div>
             <h1 className="text-2xl sm:text-3xl font-extrabold text-white">Movies Catalog</h1>
             <p className="text-xs sm:text-sm text-zinc-400">
-              Browse blockbuster films, classics, and filter by genre and rating.
+              Browse blockbuster films, filter by era, rating, language, and genre.
             </p>
           </div>
         </div>
@@ -108,8 +137,8 @@ export default function MoviesPage() {
               <ArrowUpDown className="w-3.5 h-3.5" />
             </div>
             <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
+              value={filters.sortBy}
+              onChange={(e) => setFilters({ ...filters, sortBy: e.target.value })}
               className="appearance-none bg-zinc-900 border border-zinc-700 hover:border-zinc-500 text-white text-xs font-semibold rounded-xl pl-9 pr-9 py-2.5 focus:outline-none focus:border-red-500 cursor-pointer shadow-lg transition-colors"
             >
               <option value="popularity.desc">🔥 Most Popular</option>
@@ -121,8 +150,19 @@ export default function MoviesPage() {
         </div>
       </div>
 
+      {/* Advanced Filter Suite Drawer */}
+      <div className="pt-4 pb-2">
+        <AdvancedFilterDrawer
+          isOpen={isFilterDrawerOpen}
+          onToggle={() => setIsFilterDrawerOpen(!isFilterDrawerOpen)}
+          filters={filters}
+          onFilterChange={setFilters}
+          onReset={handleResetFilters}
+        />
+      </div>
+
       {/* Genre Pills */}
-      <div className="w-full py-3">
+      <div className="w-full py-2">
         <GenrePills
           genres={genres}
           activeGenreId={selectedGenreId}
@@ -173,7 +213,7 @@ export default function MoviesPage() {
         </>
       ) : (
         <div className="py-20 text-center text-zinc-400">
-          No movies found for this filter.
+          No movies found matching these filter criteria.
         </div>
       )}
     </div>
