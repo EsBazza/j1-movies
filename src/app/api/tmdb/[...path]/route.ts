@@ -27,7 +27,7 @@ export async function GET(
       {
         error: 'TMDB API Key missing',
         message:
-          'Please ensure your TMDB API key or Read Access Token is defined in .env or .env.local (e.g. TMDB_API_KEY=your_key or TMDB_READ_ACCESS_TOKEN=your_token).',
+          'Please ensure your TMDB API key or Read Access Token is defined in your environment variables (e.g. TMDB_API_KEY or TMDB_READ_ACCESS_TOKEN).',
       },
       { status: 401 }
     );
@@ -50,11 +50,19 @@ export async function GET(
   }
 
   try {
+    const isDetail =
+      endpoint.includes('details') ||
+      endpoint.includes('credits') ||
+      endpoint.startsWith('movie/') ||
+      endpoint.startsWith('tv/') ||
+      endpoint.startsWith('person/');
+
+    const cacheTime = isDetail ? 86400 : 3600;
+
     const response = await fetch(targetUrl.toString(), {
       headers,
       next: {
-        // Cache listings for 1 hour, details for 24 hours
-        revalidate: endpoint.includes('details') || endpoint.includes('credits') ? 86400 : 3600,
+        revalidate: cacheTime,
       },
     });
 
@@ -70,7 +78,11 @@ export async function GET(
     }
 
     const data = await response.json();
-    return NextResponse.json(data);
+    return NextResponse.json(data, {
+      headers: {
+        'Cache-Control': `public, s-maxage=${cacheTime}, stale-while-revalidate=86400`,
+      },
+    });
   } catch (error: any) {
     return NextResponse.json(
       {
