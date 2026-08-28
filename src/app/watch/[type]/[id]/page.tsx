@@ -245,12 +245,13 @@ function WatchContent({
               {details.genres && details.genres.length > 0 && (
                 <div className="flex flex-wrap gap-2 pt-2">
                   {details.genres.map((g) => (
-                    <span
+                    <Link
                       key={g.id}
-                      className="px-3 py-1 rounded-full bg-zinc-800/80 text-zinc-300 text-xs font-medium border border-zinc-700/50"
+                      href={`/genre/${g.id}`}
+                      className="px-3 py-1 rounded-full bg-zinc-800/90 hover:bg-red-600 hover:text-white text-zinc-300 text-xs font-semibold border border-zinc-700/60 hover:border-red-500 transition-all hover:scale-105"
                     >
-                      {g.name}
-                    </span>
+                      {g.name} &rarr;
+                    </Link>
                   ))}
                 </div>
               )}

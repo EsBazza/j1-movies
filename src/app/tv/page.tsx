@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Tv, Filter, Loader2 } from 'lucide-react';
+import { Tv, Filter, Loader2, ArrowUpDown } from 'lucide-react';
 import {
   getPopularTV,
   getTVByGenre,
@@ -17,6 +17,7 @@ import { ApiKeyWarning } from '@/components/common/ApiKeyWarning';
 export default function TVPage() {
   const [genres, setGenres] = useState<TMDBGenre[]>([]);
   const [selectedGenreId, setSelectedGenreId] = useState<number | null>(null);
+  const [sortBy, setSortBy] = useState<string>('popularity.desc');
   const [shows, setShows] = useState<NormalizedMedia[]>([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -44,8 +45,8 @@ export default function TVPage() {
 
       try {
         const res = selectedGenreId
-          ? await getTVByGenre(selectedGenreId, 1)
-          : await getPopularTV(1);
+          ? await getTVByGenre(selectedGenreId, 1, sortBy)
+          : await getTVByGenre('', 1, sortBy);
 
         const items = (res.results || []).map((t) => normalizeMediaItem(t, 'tv'));
         setShows(items);
@@ -59,7 +60,7 @@ export default function TVPage() {
     }
 
     loadTV();
-  }, [selectedGenreId]);
+  }, [selectedGenreId, sortBy]);
 
   const handleLoadMore = async () => {
     if (page >= totalPages || isLoadingMore) return;
@@ -68,8 +69,8 @@ export default function TVPage() {
     try {
       const nextPage = page + 1;
       const res = selectedGenreId
-        ? await getTVByGenre(selectedGenreId, nextPage)
-        : await getPopularTV(nextPage);
+        ? await getTVByGenre(selectedGenreId, nextPage, sortBy)
+        : await getTVByGenre('', nextPage, sortBy);
 
       const newItems = (res.results || []).map((t) => normalizeMediaItem(t, 'tv'));
       setShows((prev) => [...prev, ...newItems]);
@@ -92,19 +93,38 @@ export default function TVPage() {
           <div>
             <h1 className="text-2xl sm:text-3xl font-extrabold text-white">TV Shows & Series</h1>
             <p className="text-xs sm:text-sm text-zinc-400">
-              Explore binge-worthy series, dramas, and trending seasons.
+              Explore binge-worthy series, dramas, and filter by genre and rating.
             </p>
           </div>
         </div>
 
-        {/* Genre Filter */}
-        <div className="w-full md:w-auto max-w-2xl">
-          <GenrePills
-            genres={genres}
-            activeGenreId={selectedGenreId}
-            onSelectGenre={setSelectedGenreId}
-          />
+        {/* Sort By Dropdown */}
+        <div className="flex items-center gap-2 self-start md:self-auto">
+          <div className="relative flex items-center">
+            <div className="absolute left-3 pointer-events-none text-cyan-400">
+              <ArrowUpDown className="w-3.5 h-3.5" />
+            </div>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="appearance-none bg-zinc-900 border border-zinc-700 hover:border-zinc-500 text-white text-xs font-semibold rounded-xl pl-9 pr-9 py-2.5 focus:outline-none focus:border-cyan-400 cursor-pointer shadow-lg transition-colors"
+            >
+              <option value="popularity.desc">🔥 Most Popular</option>
+              <option value="vote_average.desc">⭐ Highest Rated</option>
+              <option value="first_air_date.desc">📅 Newest Releases</option>
+              <option value="original_title.asc">🔤 Title (A - Z)</option>
+            </select>
+          </div>
         </div>
+      </div>
+
+      {/* Genre Filter */}
+      <div className="w-full py-3">
+        <GenrePills
+          genres={genres}
+          activeGenreId={selectedGenreId}
+          onSelectGenre={setSelectedGenreId}
+        />
       </div>
 
       {/* Grid */}

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Film, Filter, Loader2 } from 'lucide-react';
+import { Film, Filter, Loader2, ArrowUpDown } from 'lucide-react';
 import {
   getPopularMovies,
   getMoviesByGenre,
@@ -17,6 +17,7 @@ import { ApiKeyWarning } from '@/components/common/ApiKeyWarning';
 export default function MoviesPage() {
   const [genres, setGenres] = useState<TMDBGenre[]>([]);
   const [selectedGenreId, setSelectedGenreId] = useState<number | null>(null);
+  const [sortBy, setSortBy] = useState<string>('popularity.desc');
   const [movies, setMovies] = useState<NormalizedMedia[]>([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -37,7 +38,7 @@ export default function MoviesPage() {
     loadGenres();
   }, []);
 
-  // Fetch Movies on genre change or initial load
+  // Fetch Movies on genre change or sort change
   useEffect(() => {
     async function loadMovies() {
       setIsLoading(true);
@@ -46,8 +47,8 @@ export default function MoviesPage() {
 
       try {
         const res = selectedGenreId
-          ? await getMoviesByGenre(selectedGenreId, 1)
-          : await getPopularMovies(1);
+          ? await getMoviesByGenre(selectedGenreId, 1, sortBy)
+          : await getMoviesByGenre('', 1, sortBy);
 
         const items = (res.results || []).map((m) => normalizeMediaItem(m, 'movie'));
         setMovies(items);
@@ -61,7 +62,7 @@ export default function MoviesPage() {
     }
 
     loadMovies();
-  }, [selectedGenreId]);
+  }, [selectedGenreId, sortBy]);
 
   // Load More Pages
   const handleLoadMore = async () => {
@@ -71,8 +72,8 @@ export default function MoviesPage() {
     try {
       const nextPage = page + 1;
       const res = selectedGenreId
-        ? await getMoviesByGenre(selectedGenreId, nextPage)
-        : await getPopularMovies(nextPage);
+        ? await getMoviesByGenre(selectedGenreId, nextPage, sortBy)
+        : await getMoviesByGenre('', nextPage, sortBy);
 
       const newItems = (res.results || []).map((m) => normalizeMediaItem(m, 'movie'));
       setMovies((prev) => [...prev, ...newItems]);
@@ -95,19 +96,38 @@ export default function MoviesPage() {
           <div>
             <h1 className="text-2xl sm:text-3xl font-extrabold text-white">Movies Catalog</h1>
             <p className="text-xs sm:text-sm text-zinc-400">
-              Browse blockbuster films, classics, and newly released cinema.
+              Browse blockbuster films, classics, and filter by genre and rating.
             </p>
           </div>
         </div>
 
-        {/* Genre Pill Filter */}
-        <div className="w-full md:w-auto max-w-2xl">
-          <GenrePills
-            genres={genres}
-            activeGenreId={selectedGenreId}
-            onSelectGenre={setSelectedGenreId}
-          />
+        {/* Sort By Dropdown */}
+        <div className="flex items-center gap-2 self-start md:self-auto">
+          <div className="relative flex items-center">
+            <div className="absolute left-3 pointer-events-none text-red-500">
+              <ArrowUpDown className="w-3.5 h-3.5" />
+            </div>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="appearance-none bg-zinc-900 border border-zinc-700 hover:border-zinc-500 text-white text-xs font-semibold rounded-xl pl-9 pr-9 py-2.5 focus:outline-none focus:border-red-500 cursor-pointer shadow-lg transition-colors"
+            >
+              <option value="popularity.desc">🔥 Most Popular</option>
+              <option value="vote_average.desc">⭐ Highest Rated</option>
+              <option value="primary_release_date.desc">📅 Newest Releases</option>
+              <option value="original_title.asc">🔤 Title (A - Z)</option>
+            </select>
+          </div>
         </div>
+      </div>
+
+      {/* Genre Pills */}
+      <div className="w-full py-3">
+        <GenrePills
+          genres={genres}
+          activeGenreId={selectedGenreId}
+          onSelectGenre={setSelectedGenreId}
+        />
       </div>
 
       {/* Content Grid */}
@@ -142,7 +162,7 @@ export default function MoviesPage() {
                 {isLoadingMore ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin text-red-500" />
-                    <span>Loading Cinema...</span>
+                    <span>Loading Movies...</span>
                   </>
                 ) : (
                   <span>Load More Movies</span>
@@ -153,7 +173,7 @@ export default function MoviesPage() {
         </>
       ) : (
         <div className="py-20 text-center text-zinc-400">
-          No movies found for this category.
+          No movies found for this filter.
         </div>
       )}
     </div>

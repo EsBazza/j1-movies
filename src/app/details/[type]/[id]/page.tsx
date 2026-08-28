@@ -224,16 +224,17 @@ export default function MediaDetailsPage({
                 )}
               </div>
 
-              {/* Genre Pills */}
+              {/* Clickable Genre Pills */}
               {details.genres && details.genres.length > 0 && (
                 <div className="flex flex-wrap gap-2">
                   {details.genres.map((g) => (
-                    <span
+                    <Link
                       key={g.id}
-                      className="px-3 py-1 rounded-full bg-zinc-800/80 border border-zinc-700/60 text-zinc-300 text-xs font-medium"
+                      href={`/genre/${g.id}`}
+                      className="px-3.5 py-1.5 rounded-full bg-zinc-900/90 hover:bg-red-600 hover:text-white border border-zinc-700/60 hover:border-red-500 text-zinc-300 text-xs font-semibold transition-all shadow-sm hover:scale-105"
                     >
-                      {g.name}
-                    </span>
+                      {g.name} &rarr;
+                    </Link>
                   ))}
                 </div>
               )}

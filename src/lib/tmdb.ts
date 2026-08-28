@@ -106,20 +106,36 @@ export async function getTopRatedTV(page: number = 1): Promise<TMDBPaginatedResp
   return fetchFromTMDB<TMDBPaginatedResponse<TMDBMediaItem>>('tv/top_rated', { page });
 }
 
-export async function getMoviesByGenre(genreId: number, page: number = 1): Promise<TMDBPaginatedResponse<TMDBMediaItem>> {
-  return fetchFromTMDB<TMDBPaginatedResponse<TMDBMediaItem>>('discover/movie', {
+export async function getMoviesByGenre(
+  genreId: number | string,
+  page: number = 1,
+  sortBy: string = 'popularity.desc'
+): Promise<TMDBPaginatedResponse<TMDBMediaItem>> {
+  const params: Record<string, string | number> = {
     with_genres: genreId,
-    sort_by: 'popularity.desc',
+    sort_by: sortBy,
     page,
-  });
+  };
+  if (sortBy === 'vote_average.desc') {
+    params['vote_count.gte'] = 100;
+  }
+  return fetchFromTMDB<TMDBPaginatedResponse<TMDBMediaItem>>('discover/movie', params);
 }
 
-export async function getTVByGenre(genreId: number, page: number = 1): Promise<TMDBPaginatedResponse<TMDBMediaItem>> {
-  return fetchFromTMDB<TMDBPaginatedResponse<TMDBMediaItem>>('discover/tv', {
+export async function getTVByGenre(
+  genreId: number | string,
+  page: number = 1,
+  sortBy: string = 'popularity.desc'
+): Promise<TMDBPaginatedResponse<TMDBMediaItem>> {
+  const params: Record<string, string | number> = {
     with_genres: genreId,
-    sort_by: 'popularity.desc',
+    sort_by: sortBy,
     page,
-  });
+  };
+  if (sortBy === 'vote_average.desc') {
+    params['vote_count.gte'] = 50;
+  }
+  return fetchFromTMDB<TMDBPaginatedResponse<TMDBMediaItem>>('discover/tv', params);
 }
 
 export async function getMovieDetails(id: number | string): Promise<TMDBMovieDetails> {
