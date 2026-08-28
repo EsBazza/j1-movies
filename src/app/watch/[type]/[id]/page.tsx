@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useEffect, use, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import React, { useState, useEffect, Suspense } from 'react';
+import { useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import {
@@ -34,14 +34,13 @@ import { Badge } from '@/components/ui/Badge';
 import { useUserStore } from '@/lib/store';
 import { formatRuntime, formatYear, cn } from '@/lib/utils';
 
-function WatchContent({
-  type,
-  id,
-}: {
-  type: MediaType;
-  id: string;
-}) {
+function WatchContent() {
+  const routeParams = useParams();
   const searchParams = useSearchParams();
+
+  const type = ((routeParams?.type as string) || 'movie') as MediaType;
+  const id = (routeParams?.id as string) || '';
+
   const seasonParam = searchParams.get('season');
   const episodeParam = searchParams.get('episode');
 
@@ -54,6 +53,8 @@ function WatchContent({
   const { saveProgress } = useUserStore();
 
   useEffect(() => {
+    if (!id) return;
+
     async function loadData() {
       setIsLoading(true);
       try {
@@ -298,18 +299,10 @@ function WatchContent({
   );
 }
 
-export default function WatchPage({
-  params,
-}: {
-  params: Promise<{ type: string; id: string }>;
-}) {
-  const resolvedParams = use(params);
-  const type = resolvedParams.type as MediaType;
-  const id = resolvedParams.id;
-
+export default function WatchPage() {
   return (
     <Suspense fallback={<div className="min-h-screen pt-28 text-center text-zinc-400">Loading Cinema Stream...</div>}>
-      <WatchContent type={type} id={id} />
+      <WatchContent />
     </Suspense>
   );
 }

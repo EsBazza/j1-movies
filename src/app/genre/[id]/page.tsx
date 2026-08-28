@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useEffect, use, Suspense } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import React, { useState, useEffect, Suspense } from 'react';
+import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
   Sparkles,
@@ -10,7 +10,6 @@ import {
   Film,
   Tv,
   Loader2,
-  SlidersHorizontal,
 } from 'lucide-react';
 import {
   getMoviesByGenre,
@@ -55,10 +54,12 @@ const GENRE_MAP: Record<string, string> = {
   '10768': 'War & Politics',
 };
 
-function GenreContent({ genreId }: { genreId: string }) {
+function GenreContent() {
+  const routeParams = useParams();
   const searchParams = useSearchParams();
   const router = useRouter();
 
+  const genreId = (routeParams?.id as string) || '';
   const typeParam = (searchParams.get('type') as MediaType | 'all') || 'all';
   const sortParam = searchParams.get('sort_by') || 'popularity.desc';
 
@@ -73,6 +74,8 @@ function GenreContent({ genreId }: { genreId: string }) {
 
   // Fetch Genre Name
   useEffect(() => {
+    if (!genreId) return;
+
     async function loadGenreName() {
       try {
         const [mRes, tRes] = await Promise.all([
@@ -93,6 +96,8 @@ function GenreContent({ genreId }: { genreId: string }) {
 
   // Load Content for Genre
   useEffect(() => {
+    if (!genreId) return;
+
     async function loadGenreMedia() {
       setIsLoading(true);
       setPage(1);
@@ -118,12 +123,11 @@ function GenreContent({ genreId }: { genreId: string }) {
           const normMovies = (mRes.results || []).map((m) => normalizeMediaItem(m, 'movie'));
           const normTv = (tRes.results || []).map((t) => normalizeMediaItem(t, 'tv'));
 
-          // Interleave or combine and sort locally
+          // Combine
           const combined = [...normMovies, ...normTv];
           if (sortBy === 'vote_average.desc') {
             combined.sort((a, b) => b.rating - a.rating);
           } else {
-            // By popularity
             combined.sort((a, b) => (b.rating || 0) - (a.rating || 0));
           }
 
@@ -141,7 +145,7 @@ function GenreContent({ genreId }: { genreId: string }) {
   }, [genreId, mediaType, sortBy]);
 
   const handleLoadMore = async () => {
-    if (page >= totalPages || isLoadingMore) return;
+    if (page >= totalPages || isLoadingMore || !genreId) return;
     setIsLoadingMore(true);
 
     try {
@@ -317,17 +321,10 @@ function GenreContent({ genreId }: { genreId: string }) {
   );
 }
 
-export default function GenrePage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
-  const resolvedParams = use(params);
-  const genreId = resolvedParams.id;
-
+export default function GenrePage() {
   return (
-    <Suspense fallback={<div className="min-h-screen pt-28 text-center text-zinc-400">Loading Genre...</div>}>
-      <GenreContent genreId={genreId} />
+    <Suspense fallback={<div className="min-h-screen pt-28 text-center text-zinc-400">Loading Genre Explorer...</div>}>
+      <GenreContent />
     </Suspense>
   );
 }

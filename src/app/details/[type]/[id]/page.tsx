@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useEffect, use } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import {
@@ -40,14 +41,10 @@ import { Modal } from '@/components/ui/Modal';
 import { Badge } from '@/components/ui/Badge';
 import { SkeletonBanner } from '@/components/ui/SkeletonBanner';
 
-export default function MediaDetailsPage({
-  params,
-}: {
-  params: Promise<{ type: string; id: string }>;
-}) {
-  const resolvedParams = use(params);
-  const type = resolvedParams.type as MediaType;
-  const id = resolvedParams.id;
+export default function MediaDetailsPage() {
+  const routeParams = useParams();
+  const type = ((routeParams?.type as string) || 'movie') as MediaType;
+  const id = (routeParams?.id as string) || '';
 
   const [details, setDetails] = useState<TMDBMovieDetails | TMDBTVDetails | null>(null);
   const [selectedSeasonNum, setSelectedSeasonNum] = useState<number>(1);
@@ -58,6 +55,8 @@ export default function MediaDetailsPage({
 
   // Load Main Media Details
   useEffect(() => {
+    if (!id) return;
+
     async function loadData() {
       setIsLoading(true);
       try {
