@@ -3,20 +3,36 @@
 import React, { useState, useEffect, use, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { Star, Film, Tv, ArrowLeft, Bookmark, Sparkles, Layers, Info } from 'lucide-react';
+import Image from 'next/image';
+import {
+  Star,
+  Film,
+  Tv,
+  ArrowLeft,
+  Bookmark,
+  Sparkles,
+  Layers,
+  Info,
+  Calendar,
+  Clock,
+  Share2,
+} from 'lucide-react';
 import {
   getMovieDetails,
   getTVDetails,
+  getBackdropUrl,
+  getPosterUrl,
   normalizeMediaItem,
 } from '@/lib/tmdb';
 import { TMDBMovieDetails, TMDBTVDetails, MediaType } from '@/types/tmdb';
 import { VideasyPlayer } from '@/components/player/VideasyPlayer';
 import { EpisodeDrawer } from '@/components/player/EpisodeDrawer';
 import { BookmarkButton } from '@/components/common/BookmarkButton';
+import { CastList } from '@/components/media/CastList';
 import { MediaCarousel } from '@/components/media/MediaCarousel';
 import { Badge } from '@/components/ui/Badge';
 import { useUserStore } from '@/lib/store';
-import { formatYear } from '@/lib/utils';
+import { formatRuntime, formatYear, cn } from '@/lib/utils';
 
 function WatchContent({
   type,
@@ -34,6 +50,7 @@ function WatchContent({
 
   const [details, setDetails] = useState<TMDBMovieDetails | TMDBTVDetails | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isTheaterMode, setIsTheaterMode] = useState(false);
   const { saveProgress } = useUserStore();
 
   useEffect(() => {
@@ -84,8 +101,11 @@ function WatchContent({
   if (isLoading) {
     return (
       <div className="min-h-screen pt-28 flex flex-col items-center justify-center text-center px-4">
-        <div className="w-12 h-12 rounded-full border-4 border-red-600 border-t-transparent animate-spin mb-4" />
-        <p className="text-sm font-semibold text-zinc-300">Setting up your cinema stream...</p>
+        <div className="relative">
+          <div className="w-16 h-16 rounded-full border-4 border-red-600/30 border-t-red-600 animate-spin mb-4" />
+        </div>
+        <p className="text-base font-bold text-white tracking-wide">Configuring Cinema Stream...</p>
+        <p className="text-xs text-zinc-400 mt-1">Connecting to TMDB & Videasy cluster</p>
       </div>
     );
   }
@@ -109,94 +129,170 @@ function WatchContent({
 
   const title = details.title || details.name || 'Untitled';
   const releaseDate = details.release_date || details.first_air_date || '';
+  const runtime = (details as TMDBMovieDetails).runtime;
   const recommendations = (details.recommendations?.results || details.similar?.results || [])
-    .slice(0, 10)
+    .slice(0, 12)
     .map((m) => normalizeMediaItem(m, type));
 
   return (
-    <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 sm:pt-24 pb-20 flex flex-col gap-8">
-      {/* Top Navigation Back Action */}
-      <div className="flex items-center justify-between">
-        <Link
-          href={`/details/${type}/${id}`}
-          className="flex items-center gap-2 text-xs font-semibold text-zinc-400 hover:text-white transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          <span>Back to Details</span>
-        </Link>
-
-        <div className="flex items-center gap-2">
-          <BookmarkButton
-            item={{
-              id: details.id,
-              type,
-              title,
-              poster_path: details.poster_path,
-              backdrop_path: details.backdrop_path,
-              vote_average: details.vote_average,
-              release_date: releaseDate,
-            }}
-            variant="button"
-          />
-        </div>
+    <div className="w-full min-h-screen pb-24 relative overflow-hidden">
+      {/* Background Ambient Glow */}
+      <div className="fixed inset-0 pointer-events-none -z-10 opacity-30">
+        <Image
+          src={getBackdropUrl(details.backdrop_path || details.poster_path, 'w1280')}
+          alt={title}
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover filter blur-3xl"
+        />
+        <div className="absolute inset-0 bg-zinc-950/85" />
       </div>
 
-      {/* Main Player & TV Sidebar Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-        {/* Left Player Area */}
-        <div className={type === 'tv' ? 'lg:col-span-2 flex flex-col gap-4' : 'lg:col-span-3 flex flex-col gap-4'}>
-          <VideasyPlayer
-            type={type}
-            tmdbId={details.id}
-            season={season}
-            episode={episode}
-            title={title}
-          />
+      <div
+        className={cn(
+          'mx-auto px-4 sm:px-6 lg:px-8 pt-20 sm:pt-24 flex flex-col gap-6 transition-all duration-500',
+          isTheaterMode ? 'max-w-[96vw]' : 'max-w-7xl'
+        )}
+      >
+        {/* Top Header Bar */}
+        <div className="flex items-center justify-between gap-4 pb-2">
+          <Link
+            href={`/details/${type}/${id}`}
+            className="flex items-center gap-2 text-xs font-semibold text-zinc-300 hover:text-white bg-zinc-900/80 hover:bg-zinc-800 px-4 py-2 rounded-xl border border-zinc-800 transition-all shadow-md"
+          >
+            <ArrowLeft className="w-4 h-4 text-red-500" />
+            <span>Details & Trailers</span>
+          </Link>
 
-          {/* Title and Metadata below player */}
-          <div className="flex flex-col gap-3 pt-2">
-            <div className="flex items-center gap-2 flex-wrap">
-              <Badge variant="accent" className="capitalize">
-                {type === 'movie' ? 'Movie' : `Season ${season} • Episode ${episode}`}
-              </Badge>
-              {details.vote_average > 0 && (
-                <Badge variant="rating" className="flex items-center gap-1">
-                  <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
-                  <span>{Math.round(details.vote_average * 10) / 10}</span>
-                </Badge>
-              )}
-              {releaseDate && <Badge variant="outline">{formatYear(releaseDate)}</Badge>}
-              <Badge variant="hd">1080p / 4K</Badge>
-            </div>
-
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-white">{title}</h1>
-            <p className="text-sm text-zinc-400 leading-relaxed max-w-4xl">{details.overview}</p>
+          <div className="flex items-center gap-3">
+            <BookmarkButton
+              item={{
+                id: details.id,
+                type,
+                title,
+                poster_path: details.poster_path,
+                backdrop_path: details.backdrop_path,
+                vote_average: details.vote_average,
+                release_date: releaseDate,
+              }}
+              variant="button"
+            />
           </div>
         </div>
 
-        {/* Right TV Episodes Drawer (TV Series Only) */}
-        {type === 'tv' && (
-          <div className="lg:col-span-1">
-            <EpisodeDrawer
-              tvId={details.id}
-              tvDetails={details as TMDBTVDetails}
-              currentSeason={season}
-              currentEpisode={episode}
+        {/* Video Player & Episode Sidebar Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          {/* Main Video Player */}
+          <div
+            className={cn(
+              'flex flex-col gap-5 transition-all duration-300',
+              isTheaterMode
+                ? 'lg:col-span-12'
+                : type === 'tv'
+                ? 'lg:col-span-8'
+                : 'lg:col-span-12'
+            )}
+          >
+            <VideasyPlayer
+              type={type}
+              tmdbId={details.id}
+              season={season}
+              episode={episode}
+              title={title}
+              backdropPath={details.backdrop_path}
+              isTheaterMode={isTheaterMode}
+              onToggleTheater={() => setIsTheaterMode((prev) => !prev)}
+            />
+
+            {/* Title & Metadata Card below player */}
+            <div className="p-6 rounded-2xl bg-zinc-900/80 border border-zinc-800 backdrop-blur-xl shadow-xl flex flex-col gap-3">
+              <div className="flex items-center gap-2 flex-wrap">
+                <Badge variant="accent" className="capitalize font-bold">
+                  {type === 'movie' ? 'Movie' : `Season ${season} • Episode ${episode}`}
+                </Badge>
+                {details.vote_average > 0 && (
+                  <Badge variant="rating" className="flex items-center gap-1 bg-black/60 backdrop-blur-md">
+                    <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                    <span>{Math.round(details.vote_average * 10) / 10} TMDB Score</span>
+                  </Badge>
+                )}
+                {releaseDate && (
+                  <Badge variant="outline" className="bg-black/40">
+                    <Calendar className="w-3 h-3 mr-1" />
+                    {formatYear(releaseDate)}
+                  </Badge>
+                )}
+                {runtime ? (
+                  <Badge variant="outline" className="bg-black/40">
+                    <Clock className="w-3 h-3 mr-1" />
+                    {formatRuntime(runtime)}
+                  </Badge>
+                ) : null}
+                <Badge variant="hd">Full HD 1080p</Badge>
+              </div>
+
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-white tracking-tight">
+                {title}
+              </h1>
+
+              {details.overview && (
+                <p className="text-sm text-zinc-300 leading-relaxed max-w-4xl pt-1">
+                  {details.overview}
+                </p>
+              )}
+
+              {details.genres && details.genres.length > 0 && (
+                <div className="flex flex-wrap gap-2 pt-2">
+                  {details.genres.map((g) => (
+                    <span
+                      key={g.id}
+                      className="px-3 py-1 rounded-full bg-zinc-800/80 text-zinc-300 text-xs font-medium border border-zinc-700/50"
+                    >
+                      {g.name}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* TV Episodes Drawer Sidebar */}
+          {type === 'tv' && (
+            <div
+              className={cn(
+                'w-full transition-all duration-300',
+                isTheaterMode ? 'lg:col-span-12' : 'lg:col-span-4'
+              )}
+            >
+              <EpisodeDrawer
+                tvId={details.id}
+                tvDetails={details as TMDBTVDetails}
+                currentSeason={season}
+                currentEpisode={episode}
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Cast & Crew Carousel */}
+        {details.credits?.cast && (
+          <div className="pt-8 border-t border-zinc-800/80">
+            <CastList cast={details.credits.cast} />
+          </div>
+        )}
+
+        {/* Recommendations */}
+        {recommendations.length > 0 && (
+          <div className="pt-6 border-t border-zinc-800/80">
+            <MediaCarousel
+              title="More Like This"
+              icon={Sparkles}
+              items={recommendations}
             />
           </div>
         )}
       </div>
-
-      {/* Recommendations */}
-      {recommendations.length > 0 && (
-        <div className="pt-8 border-t border-zinc-800">
-          <MediaCarousel
-            title="More Like This"
-            icon={Sparkles}
-            items={recommendations}
-          />
-        </div>
-      )}
     </div>
   );
 }
@@ -211,7 +307,7 @@ export default function WatchPage({
   const id = resolvedParams.id;
 
   return (
-    <Suspense fallback={<div className="min-h-screen pt-28 text-center text-zinc-400">Loading Cinema Player...</div>}>
+    <Suspense fallback={<div className="min-h-screen pt-28 text-center text-zinc-400">Loading Cinema Stream...</div>}>
       <WatchContent type={type} id={id} />
     </Suspense>
   );
