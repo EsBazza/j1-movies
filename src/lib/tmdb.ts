@@ -53,29 +53,72 @@ export function normalizeMediaItem(item: TMDBMediaItem, fallbackType: MediaType 
 }
 
 /**
- * Helper to fetch from internal /api/tmdb proxy
+ * Helper to fetch from internal /api/tmdb proxy (client) or direct TMDB API (server)
  */
 async function fetchFromTMDB<T>(path: string, params: Record<string, string | number> = {}): Promise<T> {
   const isClient = typeof window !== 'undefined';
-  const baseUrl = isClient ? '' : (process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000');
   
-  const searchParams = new URLSearchParams();
+  if (isClient) {
+    const searchParams = new URLSearchParams();
+    Object.entries(params).forEach(([key, val]) => {
+      if (val !== undefined && val !== null) {
+        searchParams.set(key, String(val));
+      }
+    });
+
+    const queryStr = searchParams.toString();
+    const url = `/api/tmdb/${path}${queryStr ? `?${queryStr}` : ''}`;
+
+    const res = await fetch(url, {
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({}));
+      throw new Error(errorData.message || errorData.error || `TMDB API Request Failed: ${res.status}`);
+    }
+
+    return res.json();
+  }
+
+  // Server-side (SSR / Static Generation / Build time)
+  const apiKey =
+    process.env.TMDB_API_KEY ||
+    process.env.NEXT_PUBLIC_TMDB_API_KEY ||
+    process.env.TMDB_KEY ||
+    process.env.API_KEY;
+
+  const readAccessToken =
+    process.env.TMDB_READ_ACCESS_TOKEN ||
+    process.env.NEXT_PUBLIC_TMDB_READ_ACCESS_TOKEN ||
+    process.env.TMDB_TOKEN ||
+    process.env.TMDB_ACCESS_TOKEN;
+
+  const targetUrl = new URL(`https://api.themoviedb.org/3/${path}`);
   Object.entries(params).forEach(([key, val]) => {
     if (val !== undefined && val !== null) {
-      searchParams.set(key, String(val));
+      targetUrl.searchParams.set(key, String(val));
     }
   });
 
-  const queryStr = searchParams.toString();
-  const url = `${baseUrl}/api/tmdb/${path}${queryStr ? `?${queryStr}` : ''}`;
+  const headers: HeadersInit = {
+    'Accept': 'application/json',
+  };
 
-  const res = await fetch(url, {
-    headers: { 'Content-Type': 'application/json' },
+  if (readAccessToken) {
+    headers['Authorization'] = `Bearer ${readAccessToken}`;
+  } else if (apiKey) {
+    targetUrl.searchParams.set('api_key', apiKey);
+  }
+
+  const res = await fetch(targetUrl.toString(), {
+    headers,
+    next: { revalidate: 3600 },
   });
 
   if (!res.ok) {
     const errorData = await res.json().catch(() => ({}));
-    throw new Error(errorData.message || errorData.error || `TMDB API Request Failed: ${res.status}`);
+    throw new Error(errorData.message || errorData.status_message || `TMDB API Request Failed: ${res.status}`);
   }
 
   return res.json();
