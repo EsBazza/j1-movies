@@ -5,7 +5,11 @@ export interface VideasyOptions {
   episodeList?: boolean;
 }
 
-const DEFAULT_BASE_URL = process.env.NEXT_PUBLIC_VIDEASY_BASE_URL || 'https://player.videasy.net';
+const DEFAULT_BASE_URL =
+  process.env.NEXT_PUBLIC_VIDEASY_BASE_URL ||
+  process.env.VIDEASY_BASE_URL ||
+  process.env.VIDEASY_URL ||
+  'https://player.videasy.net';
 const DEFAULT_BRAND_COLOR = 'e50914'; // Crimson / Netflix Red accent
 
 /**

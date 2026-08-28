@@ -10,14 +10,24 @@ export async function GET(
   const endpoint = path.join('/');
   const searchParams = request.nextUrl.searchParams;
 
-  const apiKey = process.env.TMDB_API_KEY;
-  const readAccessToken = process.env.TMDB_READ_ACCESS_TOKEN;
+  const apiKey =
+    process.env.TMDB_API_KEY ||
+    process.env.NEXT_PUBLIC_TMDB_API_KEY ||
+    process.env.TMDB_KEY ||
+    process.env.API_KEY;
+
+  const readAccessToken =
+    process.env.TMDB_READ_ACCESS_TOKEN ||
+    process.env.NEXT_PUBLIC_TMDB_READ_ACCESS_TOKEN ||
+    process.env.TMDB_TOKEN ||
+    process.env.TMDB_ACCESS_TOKEN;
 
   if (!apiKey && !readAccessToken) {
     return NextResponse.json(
       {
-        error: 'TMDB_API_KEY or TMDB_READ_ACCESS_TOKEN is missing',
-        message: 'Please set TMDB_API_KEY in your .env.local file. You can obtain a free API key at https://www.themoviedb.org/settings/api',
+        error: 'TMDB API Key missing',
+        message:
+          'Please ensure your TMDB API key or Read Access Token is defined in .env or .env.local (e.g. TMDB_API_KEY=your_key or TMDB_READ_ACCESS_TOKEN=your_token).',
       },
       { status: 401 }
     );
