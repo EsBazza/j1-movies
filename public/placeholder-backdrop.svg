@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="100%" height="100%">
+  <defs>
+    <linearGradient id="backdropGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#141414"/>
+      <stop offset="50%" stop-color="#0a0a0a"/>
+      <stop offset="100%" stop-color="#141414"/>
+    </linearGradient>
+  </defs>
+  <rect width="100%" height="100%" fill="url(#backdropGrad)"/>
+  <circle cx="640" cy="330" r="50" fill="#262626" />
+  <polygon points="630,310 660,330 630,350" fill="#e50914" />
+  <text x="640" y="420" fill="#737373" font-family="system-ui, -apple-system, sans-serif" font-size="24" font-weight="600" text-anchor="middle">J1 Cinema Streaming</text>
+</svg>

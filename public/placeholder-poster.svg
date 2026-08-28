@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 750" width="100%" height="100%">
+  <defs>
+    <linearGradient id="posterGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#18181b"/>
+      <stop offset="50%" stop-color="#09090b"/>
+      <stop offset="100%" stop-color="#18181b"/>
+    </linearGradient>
+  </defs>
+  <rect width="100%" height="100%" fill="url(#posterGrad)"/>
+  <circle cx="250" cy="330" r="45" fill="#27272a" />
+  <path d="M225 380 L275 380 L250 330 Z" fill="#3f3f46" opacity="0.3"/>
+  <path d="M235 315 L275 340 L235 365 Z" fill="#e50914" />
+  <text x="250" y="440" fill="#71717a" font-family="system-ui, -apple-system, sans-serif" font-size="20" font-weight="600" text-anchor="middle">No Artwork Available</text>
+  <text x="250" y="470" fill="#52525b" font-family="system-ui, -apple-system, sans-serif" font-size="14" text-anchor="middle">J1 Movies</text>
+</svg>

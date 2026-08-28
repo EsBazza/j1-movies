@@ -1,0 +1,155 @@
+import {
+  TMDBGenre,
+  TMDBMediaItem,
+  TMDBMovieDetails,
+  TMDBPaginatedResponse,
+  TMDBSeason,
+  TMDBTVDetails,
+  MediaType,
+  NormalizedMedia,
+} from '@/types/tmdb';
+
+const TMDB_IMAGE_BASE = 'https://image.tmdb.org/t/p';
+
+/**
+ * Build TMDB image URL with resolution sizing
+ */
+export function getImageUrl(
+  path: string | null | undefined,
+  size: 'w185' | 'w300' | 'w342' | 'w500' | 'w780' | 'w1280' | 'original' = 'w500'
+): string {
+  if (!path) return '/placeholder-poster.svg';
+  return `${TMDB_IMAGE_BASE}/${size}${path}`;
+}
+
+export function getPosterUrl(path: string | null | undefined, size: 'w185' | 'w342' | 'w500' | 'w780' = 'w500'): string {
+  return getImageUrl(path, size);
+}
+
+export function getBackdropUrl(path: string | null | undefined, size: 'w780' | 'w1280' | 'original' = 'original'): string {
+  if (!path) return '/placeholder-backdrop.svg';
+  return `${TMDB_IMAGE_BASE}/${size}${path}`;
+}
+
+/**
+ * Standardizes raw TMDB items across Movies, TV, and Multi-search responses
+ */
+export function normalizeMediaItem(item: TMDBMediaItem, fallbackType: MediaType = 'movie'): NormalizedMedia {
+  const type: MediaType = item.media_type || fallbackType;
+  const title = item.title || item.name || item.original_title || item.original_name || 'Untitled';
+  const releaseDate = item.release_date || item.first_air_date || '';
+
+  return {
+    id: item.id,
+    type,
+    title,
+    overview: item.overview || '',
+    posterPath: item.poster_path,
+    backdropPath: item.backdrop_path,
+    rating: typeof item.vote_average === 'number' ? Math.round(item.vote_average * 10) / 10 : 0,
+    releaseDate,
+    genres: item.genres,
+  };
+}
+
+/**
+ * Helper to fetch from internal /api/tmdb proxy
+ */
+async function fetchFromTMDB<T>(path: string, params: Record<string, string | number> = {}): Promise<T> {
+  const isClient = typeof window !== 'undefined';
+  const baseUrl = isClient ? '' : (process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000');
+  
+  const searchParams = new URLSearchParams();
+  Object.entries(params).forEach(([key, val]) => {
+    if (val !== undefined && val !== null) {
+      searchParams.set(key, String(val));
+    }
+  });
+
+  const queryStr = searchParams.toString();
+  const url = `${baseUrl}/api/tmdb/${path}${queryStr ? `?${queryStr}` : ''}`;
+
+  const res = await fetch(url, {
+    headers: { 'Content-Type': 'application/json' },
+  });
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.message || errorData.error || `TMDB API Request Failed: ${res.status}`);
+  }
+
+  return res.json();
+}
+
+// ----------------- TMDB API ENDPOINTS -----------------
+
+export async function getTrending(
+  mediaType: 'all' | 'movie' | 'tv' = 'all',
+  timeWindow: 'day' | 'week' = 'day'
+): Promise<TMDBPaginatedResponse<TMDBMediaItem>> {
+  return fetchFromTMDB<TMDBPaginatedResponse<TMDBMediaItem>>(`trending/${mediaType}/${timeWindow}`);
+}
+
+export async function getPopularMovies(page: number = 1): Promise<TMDBPaginatedResponse<TMDBMediaItem>> {
+  return fetchFromTMDB<TMDBPaginatedResponse<TMDBMediaItem>>('movie/popular', { page });
+}
+
+export async function getTopRatedMovies(page: number = 1): Promise<TMDBPaginatedResponse<TMDBMediaItem>> {
+  return fetchFromTMDB<TMDBPaginatedResponse<TMDBMediaItem>>('movie/top_rated', { page });
+}
+
+export async function getPopularTV(page: number = 1): Promise<TMDBPaginatedResponse<TMDBMediaItem>> {
+  return fetchFromTMDB<TMDBPaginatedResponse<TMDBMediaItem>>('tv/popular', { page });
+}
+
+export async function getTopRatedTV(page: number = 1): Promise<TMDBPaginatedResponse<TMDBMediaItem>> {
+  return fetchFromTMDB<TMDBPaginatedResponse<TMDBMediaItem>>('tv/top_rated', { page });
+}
+
+export async function getMoviesByGenre(genreId: number, page: number = 1): Promise<TMDBPaginatedResponse<TMDBMediaItem>> {
+  return fetchFromTMDB<TMDBPaginatedResponse<TMDBMediaItem>>('discover/movie', {
+    with_genres: genreId,
+    sort_by: 'popularity.desc',
+    page,
+  });
+}
+
+export async function getTVByGenre(genreId: number, page: number = 1): Promise<TMDBPaginatedResponse<TMDBMediaItem>> {
+  return fetchFromTMDB<TMDBPaginatedResponse<TMDBMediaItem>>('discover/tv', {
+    with_genres: genreId,
+    sort_by: 'popularity.desc',
+    page,
+  });
+}
+
+export async function getMovieDetails(id: number | string): Promise<TMDBMovieDetails> {
+  return fetchFromTMDB<TMDBMovieDetails>(`movie/${id}`, {
+    append_to_response: 'credits,videos,recommendations,similar',
+  });
+}
+
+export async function getTVDetails(id: number | string): Promise<TMDBTVDetails> {
+  return fetchFromTMDB<TMDBTVDetails>(`tv/${id}`, {
+    append_to_response: 'credits,videos,recommendations,similar',
+  });
+}
+
+export async function getTVSeason(tvId: number | string, seasonNumber: number): Promise<TMDBSeason> {
+  return fetchFromTMDB<TMDBSeason>(`tv/${tvId}/season/${seasonNumber}`);
+}
+
+export async function searchMulti(query: string, page: number = 1): Promise<TMDBPaginatedResponse<TMDBMediaItem>> {
+  return fetchFromTMDB<TMDBPaginatedResponse<TMDBMediaItem>>('search/multi', {
+    query,
+    page,
+    include_adult: 'false',
+  });
+}
+
+export async function getMovieGenres(): Promise<{ genres: TMDBGenre[] }> {
+  return fetchFromTMDB<{ genres: TMDBGenre[] }>('genre/movie/list');
+}
+
+export async function getTVGenres(): Promise<{ genres: TMDBGenre[] }> {
+  return fetchFromTMDB<{ genres: TMDBGenre[] }>('genre/tv/list');
+}
