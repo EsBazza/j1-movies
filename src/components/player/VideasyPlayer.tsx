@@ -7,8 +7,7 @@ import {
   RefreshCw,
   Maximize,
   Minimize,
-  ShieldCheck,
-  ShieldAlert,
+  Shield,
 } from 'lucide-react';
 import { getVideasyPlayerUrl } from '@/lib/videasy';
 import { MediaType } from '@/types/tmdb';
@@ -32,7 +31,6 @@ export function VideasyPlayer({
   const [isLoading, setIsLoading] = useState(true);
   const [reloadKey, setReloadKey] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [adBlockSandbox, setAdBlockSandbox] = useState(true);
   const playerContainerRef = useRef<HTMLDivElement>(null);
 
   const playerUrl = getVideasyPlayerUrl(type, tmdbId, season, episode, {
@@ -109,19 +107,13 @@ export function VideasyPlayer({
           </div>
         )}
 
-        {/* Videasy Iframe Embed */}
+        {/* Videasy Iframe Embed without sandbox restriction */}
         <iframe
-          key={`${playerUrl}-${reloadKey}-${adBlockSandbox ? 'sandboxed' : 'unrestricted'}`}
+          key={`${playerUrl}-${reloadKey}`}
           src={playerUrl}
           title={`Videasy player - ${title}`}
           onLoad={() => setIsLoading(false)}
-          // Sandboxing restricts popups and tab hijacking
-          sandbox={
-            adBlockSandbox
-              ? 'allow-scripts allow-same-origin allow-forms allow-presentation'
-              : 'allow-scripts allow-same-origin allow-forms allow-presentation allow-popups allow-popups-to-escape-sandbox allow-top-navigation-by-user-activation'
-          }
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen *"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
           allowFullScreen
           className="w-full h-full border-0 relative z-0"
         />
@@ -140,38 +132,16 @@ export function VideasyPlayer({
 
       {/* Under-Player Stream Helper & Controls Toolbar */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 text-xs text-zinc-400">
-        <div className="flex items-center gap-2 flex-wrap">
-          {/* Ad-Block Sandbox Status Indicator & Toggle */}
-          <button
-            type="button"
-            onClick={() => setAdBlockSandbox((prev) => !prev)}
-            className={cn(
-              'flex items-center gap-1.5 px-3 py-1.5 rounded-lg border font-medium transition-all cursor-pointer',
-              adBlockSandbox
-                ? 'bg-emerald-950/40 text-emerald-400 border-emerald-500/40 hover:bg-emerald-950/60'
-                : 'bg-amber-950/30 text-amber-400 border-amber-500/40 hover:bg-amber-950/50'
-            )}
-            title="Click to toggle Popup/Ad-block sandbox protection"
-          >
-            {adBlockSandbox ? (
-              <>
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-                <span>Popups & Ads Blocked (Protected)</span>
-              </>
-            ) : (
-              <>
-                <ShieldAlert className="w-3.5 h-3.5 text-amber-400" />
-                <span>Ad Sandbox Disabled</span>
-              </>
-            )}
-          </button>
+        <div className="flex items-center gap-2 text-zinc-400">
+          <Shield className="w-3.5 h-3.5 text-zinc-400" />
+          <span>Tip: Use an ad-blocker like uBlock Origin or Brave for an ad-free experience.</span>
         </div>
 
         {/* Action Buttons */}
         <div className="flex items-center gap-2">
           <button
             onClick={toggleFullscreen}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white border border-zinc-800 transition-colors cursor-pointer"
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-zinc-200 hover:text-white border border-zinc-700/80 transition-all hover:scale-105 cursor-pointer shadow-md"
           >
             {isFullscreen ? (
               <>
@@ -190,7 +160,7 @@ export function VideasyPlayer({
             onClick={handleReload}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white border border-zinc-800 transition-colors cursor-pointer"
           >
-            <RefreshCw className="w-3.5 h-3.5" />
+            <RefreshCw className="w-3 h-3" />
             <span>Reload Stream</span>
           </button>
         </div>
