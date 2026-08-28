@@ -18,8 +18,8 @@ interface MediaCardProps {
 export function MediaCard({ item, priority = false }: MediaCardProps) {
   return (
     <div className="group relative flex flex-col w-full rounded-2xl overflow-hidden bg-zinc-900/50 border border-zinc-800/80 hover:border-red-500/50 transition-all duration-300 hover:shadow-2xl hover:shadow-red-950/20 hover:-translate-y-1">
-      {/* Poster Aspect Container */}
-      <div className="relative aspect-[2/3] w-full overflow-hidden bg-zinc-950">
+      {/* Poster Aspect Container with Luxury Shine Sheen */}
+      <div className="relative aspect-[2/3] w-full overflow-hidden bg-zinc-950 shine-overlay">
         <Image
           src={getPosterUrl(item.posterPath, 'w500')}
           alt={item.title}
