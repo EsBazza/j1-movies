@@ -39,7 +39,7 @@ export function MediaCarousel({
   if (!isLoading && items.length === 0) return null;
 
   return (
-    <section className="relative w-full py-4 group">
+    <section className="relative w-full py-4 group/carousel">
       {/* Header */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between mb-4">
         <div className="flex items-center gap-2.5">
@@ -63,7 +63,7 @@ export function MediaCarousel({
         <button
           onClick={() => handleScroll('left')}
           aria-label="Scroll left"
-          className="absolute -left-1 md:left-2 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-black/80 hover:bg-red-600 text-white flex items-center justify-center backdrop-blur-md opacity-0 group-hover:opacity-100 transition-all duration-300 shadow-xl border border-white/10 cursor-pointer disabled:opacity-0"
+          className="absolute -left-1 md:left-2 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-black/80 hover:bg-red-600 text-white flex items-center justify-center backdrop-blur-md opacity-0 group-hover/carousel:opacity-100 transition-all duration-300 shadow-xl border border-white/10 cursor-pointer disabled:opacity-0"
         >
           <ChevronLeft className="w-6 h-6" />
         </button>
@@ -90,7 +90,7 @@ export function MediaCarousel({
         <button
           onClick={() => handleScroll('right')}
           aria-label="Scroll right"
-          className="absolute -right-1 md:right-2 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-black/80 hover:bg-red-600 text-white flex items-center justify-center backdrop-blur-md opacity-0 group-hover:opacity-100 transition-all duration-300 shadow-xl border border-white/10 cursor-pointer"
+          className="absolute -right-1 md:right-2 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-black/80 hover:bg-red-600 text-white flex items-center justify-center backdrop-blur-md opacity-0 group-hover/carousel:opacity-100 transition-all duration-300 shadow-xl border border-white/10 cursor-pointer"
         >
           <ChevronRight className="w-6 h-6" />
         </button>

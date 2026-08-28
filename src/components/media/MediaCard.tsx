@@ -21,7 +21,7 @@ export function MediaCard({ item, priority = false }: MediaCardProps) {
 
   return (
     <>
-      <div className="group relative flex flex-col w-full rounded-2xl overflow-hidden bg-zinc-900/50 border border-zinc-800/80 hover:border-red-500/50 transition-all duration-300 hover:shadow-2xl hover:shadow-red-950/20 hover:-translate-y-1">
+      <div className="group/card relative flex flex-col w-full rounded-2xl overflow-hidden bg-zinc-900/50 border border-zinc-800/80 hover:border-red-500/50 transition-all duration-300 hover:shadow-2xl hover:shadow-red-950/20 hover:-translate-y-1">
         {/* Poster Aspect Container with Luxury Shine Sheen */}
         <div className="relative aspect-[2/3] w-full overflow-hidden bg-zinc-950 shine-overlay">
           <Image
@@ -30,7 +30,7 @@ export function MediaCard({ item, priority = false }: MediaCardProps) {
             fill
             sizes="(max-width: 640px) 45vw, (max-width: 1024px) 25vw, 220px"
             priority={priority}
-            className="object-cover transition-transform duration-700 group-hover:scale-108"
+            className="object-cover transition-transform duration-700 group-hover/card:scale-108"
           />
 
           {/* Top Badges & Bookmark Action Overlay */}
@@ -52,7 +52,7 @@ export function MediaCard({ item, priority = false }: MediaCardProps) {
                   setIsPreviewOpen(true);
                 }}
                 title="Quick Preview"
-                className="w-8 h-8 rounded-full bg-black/70 hover:bg-red-600 text-white flex items-center justify-center backdrop-blur-md border border-white/10 transition-all shadow-md hover:scale-105 cursor-pointer opacity-0 group-hover:opacity-100"
+                className="w-8 h-8 rounded-full bg-black/70 hover:bg-red-600 text-white flex items-center justify-center backdrop-blur-md border border-white/10 transition-all shadow-md hover:scale-105 cursor-pointer opacity-0 group-hover/card:opacity-100"
               >
                 <Eye className="w-3.5 h-3.5" />
               </button>
@@ -71,12 +71,12 @@ export function MediaCard({ item, priority = false }: MediaCardProps) {
             </div>
           </div>
 
-          {/* Play Button Overlay on Hover */}
+          {/* Play Button Overlay on Individual Card Hover Only */}
           <Link
             href={`/watch/${item.type}/${item.id}`}
-            className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center z-10"
+            className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity duration-300 flex items-center justify-center z-10"
           >
-            <div className="w-13 h-13 rounded-full bg-red-600 text-white flex items-center justify-center shadow-xl shadow-red-600/50 transform scale-75 group-hover:scale-100 transition-transform duration-300 border border-red-400/30">
+            <div className="w-13 h-13 rounded-full bg-red-600 text-white flex items-center justify-center shadow-xl shadow-red-600/50 transform scale-75 group-hover/card:scale-100 transition-transform duration-300 border border-red-400/30">
               <Play className="w-5 h-5 fill-white ml-0.5" />
             </div>
           </Link>
@@ -84,7 +84,7 @@ export function MediaCard({ item, priority = false }: MediaCardProps) {
 
         {/* Info Details below */}
         <Link href={`/details/${item.type}/${item.id}`} className="p-3.5 flex flex-col gap-1.5 bg-zinc-900/60 backdrop-blur-sm">
-          <h3 className="font-bold text-sm text-zinc-100 truncate group-hover:text-red-400 transition-colors">
+          <h3 className="font-bold text-sm text-zinc-100 truncate group-hover/card:text-red-400 transition-colors">
             {item.title}
           </h3>
           <div className="flex items-center justify-between text-xs text-zinc-400 font-medium">
