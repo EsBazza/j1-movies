@@ -7,6 +7,7 @@ import {
   Maximize,
   Minimize,
   Sparkles,
+  Tv,
 } from 'lucide-react';
 import { getVideasyPlayerUrl } from '@/lib/videasy';
 import { MediaType } from '@/types/tmdb';
@@ -19,6 +20,8 @@ interface VideasyPlayerProps {
   episode?: number;
   title: string;
   backdropPath?: string | null;
+  isTheaterMode?: boolean;
+  onToggleTheater?: () => void;
 }
 
 export function VideasyPlayer({
@@ -28,6 +31,8 @@ export function VideasyPlayer({
   episode = 1,
   title,
   backdropPath,
+  isTheaterMode = false,
+  onToggleTheater,
 }: VideasyPlayerProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [reloadKey, setReloadKey] = useState(0);
@@ -72,7 +77,7 @@ export function VideasyPlayer({
     }
   }, []);
 
-  // Listen for Fullscreen Change & Keyboard Shortcuts (F)
+  // Listen for Fullscreen Change & Keyboard Shortcuts (F, T)
   useEffect(() => {
     const handleFullscreenChange = () => {
       setIsFullscreen(!!document.fullscreenElement);
@@ -86,6 +91,9 @@ export function VideasyPlayer({
       if (e.key.toLowerCase() === 'f') {
         e.preventDefault();
         toggleFullscreen();
+      } else if (e.key.toLowerCase() === 't' && onToggleTheater) {
+        e.preventDefault();
+        onToggleTheater();
       }
     };
 
@@ -100,7 +108,7 @@ export function VideasyPlayer({
       document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [toggleFullscreen]);
+  }, [toggleFullscreen, onToggleTheater]);
 
   return (
     <div className="relative w-full flex flex-col group">
@@ -116,6 +124,8 @@ export function VideasyPlayer({
           'relative w-full bg-black overflow-hidden shadow-2xl shadow-black transition-all duration-300',
           isFullscreen
             ? 'fixed inset-0 z-50 h-screen w-screen rounded-none flex items-center justify-center'
+            : isTheaterMode
+            ? 'aspect-[21/9] min-h-[480px] max-h-[75vh] rounded-2xl border border-red-500/20 shadow-red-950/20'
             : 'aspect-video rounded-2xl border border-zinc-800/80 hover:border-zinc-700'
         )}
       >
@@ -151,13 +161,29 @@ export function VideasyPlayer({
           className="w-full h-full border-0 relative z-0"
         />
 
-        {/* Floating In-Player Cinema Toolbar Overlay (Hover / Fullscreen) */}
+        {/* Floating Top-Right Cinema Toolbar Overlay (Theater & Fullscreen Side-by-Side) */}
         <div
           className={cn(
             'absolute top-4 right-4 z-20 flex items-center gap-2 transition-opacity duration-300 pointer-events-auto',
             showControls || isFullscreen ? 'opacity-100' : 'opacity-0'
           )}
         >
+          {onToggleTheater && !isFullscreen && (
+            <button
+              onClick={onToggleTheater}
+              title={isTheaterMode ? 'Exit Theater Mode [T]' : 'Enter Theater Mode [T]'}
+              className={cn(
+                'flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold backdrop-blur-md border transition-all hover:scale-105 cursor-pointer shadow-xl',
+                isTheaterMode
+                  ? 'bg-red-600 text-white border-red-500 shadow-red-600/40'
+                  : 'bg-black/75 hover:bg-zinc-800 text-zinc-200 border-white/10'
+              )}
+            >
+              <Tv className="w-4 h-4" />
+              <span>{isTheaterMode ? 'Default View' : 'Theater [T]'}</span>
+            </button>
+          )}
+
           <button
             onClick={toggleFullscreen}
             title={isFullscreen ? 'Exit Fullscreen [Esc or F]' : 'Enter Cinema Fullscreen [F]'}
@@ -166,7 +192,7 @@ export function VideasyPlayer({
             {isFullscreen ? (
               <>
                 <Minimize className="w-4 h-4" />
-                <span>Exit Fullscreen</span>
+                <span>Exit [Esc]</span>
               </>
             ) : (
               <>
@@ -182,7 +208,7 @@ export function VideasyPlayer({
       <div className="flex items-center justify-between pt-2.5 px-1 text-xs text-zinc-500">
         <div className="flex items-center gap-2">
           <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-          <span className="font-medium text-zinc-400">HD Stream Connected</span>
+          <span className="font-medium text-zinc-400">Videasy HD Stream</span>
         </div>
 
         <button
