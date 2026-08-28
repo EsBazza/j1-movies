@@ -202,8 +202,6 @@ function WatchContent() {
               episode={episode}
               title={title}
               backdropPath={details.backdrop_path}
-              isTheaterMode={isTheaterMode}
-              onToggleTheater={() => setIsTheaterMode((prev) => !prev)}
             />
 
             {/* Title & Metadata Card below player */}
