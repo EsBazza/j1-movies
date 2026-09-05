@@ -40,6 +40,7 @@ import {
   MediaType,
 } from '@/types/tmdb';
 import { formatRuntime, formatYear, formatEndTime, formatCurrency, formatDateFull, cn } from '@/lib/utils';
+import { extractPaletteFromImage, DEFAULT_PALETTE, ExtractedPalette } from '@/lib/colorExtractor';
 import { BookmarkButton } from '@/components/common/BookmarkButton';
 import { CastList } from '@/components/media/CastList';
 import { MediaCarousel } from '@/components/media/MediaCarousel';
@@ -53,6 +54,7 @@ export default function MediaDetailsPage() {
   const id = (routeParams?.id as string) || '';
 
   const [details, setDetails] = useState<TMDBMovieDetails | TMDBTVDetails | null>(null);
+  const [palette, setPalette] = useState<ExtractedPalette>(DEFAULT_PALETTE);
   const [selectedSeasonNum, setSelectedSeasonNum] = useState<number>(1);
   const [seasonData, setSeasonData] = useState<TMDBSeason | null>(null);
   const [isSeasonLoading, setIsSeasonLoading] = useState(false);
@@ -71,9 +73,17 @@ export default function MediaDetailsPage() {
         if (type === 'movie') {
           const res = await getMovieDetails(id);
           setDetails(res);
+          if (res.backdrop_path || res.poster_path) {
+            const sampleUrl = getBackdropUrl(res.backdrop_path || res.poster_path, 'w780');
+            extractPaletteFromImage(sampleUrl).then(setPalette);
+          }
         } else {
           const res = await getTVDetails(id);
           setDetails(res);
+          if (res.backdrop_path || res.poster_path) {
+            const sampleUrl = getBackdropUrl(res.backdrop_path || res.poster_path, 'w780');
+            extractPaletteFromImage(sampleUrl).then(setPalette);
+          }
           const firstSeason = res.seasons?.find((s) => s.season_number > 0) || res.seasons?.[0];
           if (firstSeason) {
             setSelectedSeasonNum(firstSeason.season_number);
@@ -166,8 +176,27 @@ export default function MediaDetailsPage() {
 
   return (
     <div className="w-full flex flex-col min-h-screen relative overflow-hidden bg-[#07090e]">
-      {/* 1. Dynamic Ambient Color Halo Layer */}
+      {/* 1. Dynamic Ambient Color Lighting & Halo Layers */}
       <div className="fixed inset-0 pointer-events-none -z-10 overflow-hidden">
+        {/* Dynamic Primary Color Aura (Top Hero Bloom) */}
+        <div
+          className="absolute -top-[15%] left-1/2 -translate-x-1/2 w-[100vw] h-[800px] rounded-full filter blur-[150px] opacity-70 transition-all duration-1000"
+          style={{ backgroundColor: palette.primaryGlow }}
+        />
+
+        {/* Dynamic Secondary Color Aura (Side Bloom) */}
+        <div
+          className="absolute top-[35%] -right-[15%] w-[65vw] h-[650px] rounded-full filter blur-[160px] opacity-50 transition-all duration-1000"
+          style={{ backgroundColor: palette.secondaryGlow }}
+        />
+
+        {/* Dynamic Tertiary Color Aura (Lower Body Bloom) */}
+        <div
+          className="absolute top-[65%] -left-[10%] w-[60vw] h-[700px] rounded-full filter blur-[170px] opacity-40 transition-all duration-1000"
+          style={{ backgroundColor: palette.primaryGlow }}
+        />
+
+        {/* Dynamic Full Backdrop Blur Layer */}
         {details.backdrop_path && (
           <Image
             src={getBackdropUrl(details.backdrop_path, 'w1280')}
@@ -175,14 +204,16 @@ export default function MediaDetailsPage() {
             fill
             priority
             sizes="100vw"
-            className="object-cover filter blur-[100px] opacity-35 scale-125"
+            className="object-cover filter blur-[130px] saturate-200 opacity-35 scale-135 transition-opacity duration-1000"
           />
         )}
-        <div className="absolute inset-0 bg-[#07090e]/75" />
+
+        {/* Deep luxury ambient base overlay */}
+        <div className="absolute inset-0 bg-[#07090e]/75 backdrop-blur-3xl" />
       </div>
 
-      {/* 2. Hero Section with Background Video Trailer (CineJoy Style) */}
-      <div className="relative w-full min-h-[580px] lg:min-h-[720px] overflow-hidden flex flex-col justify-end">
+      {/* 2. Expansive Hero Section with High-Visibility Background Video Trailer */}
+      <div className="relative w-full min-h-[720px] sm:min-h-[820px] lg:min-h-[920px] xl:min-h-[960px] overflow-hidden flex flex-col justify-end">
         {/* Background Video Trailer Layer */}
         {mainTrailer ? (
           <div className="absolute inset-0 w-full h-full pointer-events-none overflow-hidden select-none -z-0">
@@ -193,7 +224,7 @@ export default function MediaDetailsPage() {
               }&loop=1&playlist=${mainTrailer.key}&controls=0&showinfo=0&rel=0&iv_load_policy=3&modestbranding=1&playsinline=1&enablejsapi=1`}
               title="Ambient trailer background"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[160vw] h-[160vh] min-w-full min-h-full object-cover scale-125 opacity-70 filter brightness-60"
+              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[112vw] h-[112vh] min-w-full min-h-full object-cover scale-105 opacity-90 md:opacity-95 filter brightness-90 md:brightness-95 contrast-[1.02]"
             />
           </div>
         ) : (
@@ -204,17 +235,18 @@ export default function MediaDetailsPage() {
               fill
               priority
               sizes="100vw"
-              className="object-cover object-top filter brightness-50"
+              className="object-cover object-top filter brightness-70"
             />
           </div>
         )}
 
-        {/* Cinematic Vignette Gradients for Legibility */}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#07090e] via-[#07090e]/60 to-transparent pointer-events-none z-10" />
-        <div className="absolute inset-0 bg-gradient-to-r from-[#07090e] via-[#07090e]/50 to-transparent pointer-events-none z-10" />
+        {/* Cinematic Vignette Gradients Tuned for Visibility */}
+        <div className="absolute inset-0 bg-gradient-to-t from-[#07090e] via-[#07090e]/35 to-transparent pointer-events-none z-10" />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#07090e]/85 via-[#07090e]/20 to-transparent pointer-events-none z-10" />
+        <div className="absolute inset-x-0 top-0 h-44 bg-gradient-to-b from-[#07090e]/80 via-[#07090e]/30 to-transparent pointer-events-none z-10" />
 
         {/* Hero Content Overlay (Left Info + Right Stats) */}
-        <div className="relative max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 pt-32 pb-12 z-20 flex flex-col lg:flex-row items-end justify-between gap-8">
+        <div className="relative max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 pt-36 pb-16 z-20 flex flex-col lg:flex-row items-end justify-between gap-10">
           {/* Left Column: Title, Genres, Actions, Synopsis */}
           <div className="flex-1 flex flex-col gap-4 max-w-3xl">
             {/* Title: Official TMDB Graphic Logo with Text Fallback */}
@@ -227,13 +259,13 @@ export default function MediaDetailsPage() {
 
               if (logo?.file_path) {
                 return (
-                  <div className="relative w-full max-w-[280px] sm:max-w-[380px] md:max-w-[480px] h-20 sm:h-28 md:h-36 my-1">
+                  <div className="relative w-full max-w-[320px] sm:max-w-[440px] md:max-w-[560px] h-24 sm:h-32 md:h-44 my-2">
                     <Image
                       src={getLogoUrl(logo.file_path, 'w500')}
                       alt={title}
                       fill
                       priority
-                      className="object-contain object-left filter drop-shadow-[0_10px_25px_rgba(0,0,0,0.9)]"
+                      className="object-contain object-left filter drop-shadow-[0_12px_28px_rgba(0,0,0,0.95)]"
                     />
                   </div>
                 );
@@ -407,7 +439,7 @@ export default function MediaDetailsPage() {
       </div>
 
       {/* 3. Main Body Content Sections */}
-      <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-10 flex flex-col gap-12 z-20">
+      <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-16 flex flex-col gap-16 z-20">
         {/* Cast Showcase (Circular Avatars) */}
         {details.credits?.cast && <CastList cast={details.credits.cast} />}
 
