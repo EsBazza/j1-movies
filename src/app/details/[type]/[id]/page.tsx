@@ -28,6 +28,7 @@ import {
   getBackdropUrl,
   getPosterUrl,
   getImageUrl,
+  getLogoUrl,
   normalizeMediaItem,
 } from '@/lib/tmdb';
 import {
@@ -216,10 +217,34 @@ export default function MediaDetailsPage() {
         <div className="relative max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 pt-32 pb-12 z-20 flex flex-col lg:flex-row items-end justify-between gap-8">
           {/* Left Column: Title, Genres, Actions, Synopsis */}
           <div className="flex-1 flex flex-col gap-4 max-w-3xl">
-            {/* Title */}
-            <h1 className="text-4xl sm:text-5xl md:text-6xl font-black text-white tracking-tight leading-tight">
-              {title}
-            </h1>
+            {/* Title: Official TMDB Graphic Logo with Text Fallback */}
+            {(() => {
+              const logo =
+                details.images?.logos?.find((l) => l.iso_639_1 === 'en' && l.file_path?.endsWith('.png')) ||
+                details.images?.logos?.find((l) => l.iso_639_1 === 'en') ||
+                details.images?.logos?.find((l) => l.file_path?.endsWith('.png')) ||
+                details.images?.logos?.[0];
+
+              if (logo?.file_path) {
+                return (
+                  <div className="relative w-full max-w-[280px] sm:max-w-[380px] md:max-w-[480px] h-20 sm:h-28 md:h-36 my-1">
+                    <Image
+                      src={getLogoUrl(logo.file_path, 'w500')}
+                      alt={title}
+                      fill
+                      priority
+                      className="object-contain object-left filter drop-shadow-[0_10px_25px_rgba(0,0,0,0.9)]"
+                    />
+                  </div>
+                );
+              }
+
+              return (
+                <h1 className="text-4xl sm:text-5xl md:text-6xl font-black text-white tracking-tight leading-tight">
+                  {title}
+                </h1>
+              );
+            })()}
 
             {/* Bulleted Genre List */}
             {details.genres && details.genres.length > 0 && (

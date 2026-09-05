@@ -1,11 +1,11 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Play, Info, Star, Sparkles, Film, Tv } from 'lucide-react';
 import { NormalizedMedia } from '@/types/tmdb';
-import { getBackdropUrl } from '@/lib/tmdb';
+import { getBackdropUrl, getLogoUrl, getMovieDetails, getTVDetails } from '@/lib/tmdb';
 import { formatYear } from '@/lib/utils';
 import { BookmarkButton } from '@/components/common/BookmarkButton';
 import { Badge } from '@/components/ui/Badge';
@@ -15,6 +15,41 @@ interface HeroBannerProps {
 }
 
 export function HeroBanner({ item }: HeroBannerProps) {
+  const [logoPath, setLogoPath] = useState<string | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    async function loadLogo() {
+      try {
+        const details =
+          item.type === 'movie'
+            ? await getMovieDetails(item.id)
+            : await getTVDetails(item.id);
+
+        if (!isMounted) return;
+
+        const logo =
+          details.images?.logos?.find((l) => l.iso_639_1 === 'en' && l.file_path?.endsWith('.png')) ||
+          details.images?.logos?.find((l) => l.iso_639_1 === 'en') ||
+          details.images?.logos?.find((l) => l.file_path?.endsWith('.png')) ||
+          details.images?.logos?.[0];
+
+        if (logo?.file_path) {
+          setLogoPath(logo.file_path);
+        } else {
+          setLogoPath(null);
+        }
+      } catch {
+        if (isMounted) setLogoPath(null);
+      }
+    }
+
+    loadLogo();
+    return () => {
+      isMounted = false;
+    };
+  }, [item.id, item.type]);
+
   return (
     <div className="relative w-full h-[75vh] min-h-[540px] max-h-[820px] overflow-hidden">
       {/* High-res Backdrop Image with Multi-layer Vignettes */}
@@ -61,10 +96,22 @@ export function HeroBanner({ item }: HeroBannerProps) {
             </Badge>
           </div>
 
-          {/* Title */}
-          <h1 className="text-3xl sm:text-5xl md:text-6xl font-black text-white tracking-tight drop-shadow-2xl leading-[1.1]">
-            {item.title}
-          </h1>
+          {/* Title: Official TMDB Graphic Logo with Text Fallback */}
+          {logoPath ? (
+            <div className="relative w-full max-w-[260px] sm:max-w-[340px] md:max-w-[420px] h-16 sm:h-24 md:h-28 my-1">
+              <Image
+                src={getLogoUrl(logoPath, 'w500')}
+                alt={item.title}
+                fill
+                priority
+                className="object-contain object-left filter drop-shadow-[0_8px_20px_rgba(0,0,0,0.9)]"
+              />
+            </div>
+          ) : (
+            <h1 className="text-3xl sm:text-5xl md:text-6xl font-black text-white tracking-tight drop-shadow-2xl leading-[1.1]">
+              {item.title}
+            </h1>
+          )}
 
           {/* Overview */}
           <p className="text-sm sm:text-base text-zinc-200 line-clamp-3 leading-relaxed drop-shadow-lg max-w-xl font-normal">

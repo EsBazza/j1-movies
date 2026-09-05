@@ -31,6 +31,11 @@ export function getBackdropUrl(path: string | null | undefined, size: 'w780' | '
   return `${TMDB_IMAGE_BASE}/${size}${path}`;
 }
 
+export function getLogoUrl(path: string | null | undefined, size: 'w300' | 'w500' | 'original' = 'w500'): string {
+  if (!path) return '';
+  return `${TMDB_IMAGE_BASE}/${size}${path}`;
+}
+
 /**
  * Standardizes raw TMDB items across Movies, TV, and Multi-search responses
  */
@@ -183,13 +188,15 @@ export async function getTVByGenre(
 
 export async function getMovieDetails(id: number | string): Promise<TMDBMovieDetails> {
   return fetchFromTMDB<TMDBMovieDetails>(`movie/${id}`, {
-    append_to_response: 'credits,videos,recommendations,similar',
+    append_to_response: 'credits,videos,recommendations,similar,images',
+    include_image_language: 'en,null',
   });
 }
 
 export async function getTVDetails(id: number | string): Promise<TMDBTVDetails> {
   return fetchFromTMDB<TMDBTVDetails>(`tv/${id}`, {
-    append_to_response: 'credits,videos,recommendations,similar',
+    append_to_response: 'credits,videos,recommendations,similar,images',
+    include_image_language: 'en,null',
   });
 }
 
