@@ -182,9 +182,9 @@ export default function MediaDetailsPage() {
 
   return (
     <div className="w-full flex flex-col min-h-screen relative bg-transparent">
-      {/* 1. Dynamic Ambient Color Lighting Canvas (Covers entire screen from Hero through Footer seamlessly) */}
+      {/* 1. Dynamic Multi-Color Ambient Lighting Canvas (Covers entire screen from Hero through Footer seamlessly) */}
       <div className="fixed inset-0 pointer-events-none -z-10 overflow-hidden">
-        {/* Dynamic Blurred Backdrop Image */}
+        {/* Dynamic High-Diffusion Multi-Color Backdrop Image */}
         {details.backdrop_path && (
           <div className="absolute inset-0 pointer-events-none">
             <Image
@@ -193,56 +193,56 @@ export default function MediaDetailsPage() {
               fill
               priority
               sizes="100vw"
-              className="object-cover filter blur-[140px] saturate-[2.0] opacity-35 scale-135 transition-opacity duration-1000"
+              className="object-cover filter blur-[105px] saturate-[2.8] contrast-[1.15] opacity-50 scale-135 transition-opacity duration-1000"
             />
           </div>
         )}
 
-        {/* Dynamic Primary Color Aura (Top Center Hero Bloom) */}
+        {/* Spot 1: Vibrant Primary Color Bloom (Top Left - Behind Title) */}
         <div
-          className="absolute -top-[10%] left-1/2 -translate-x-1/2 w-[120vw] h-[900px] rounded-full filter blur-[140px] opacity-75 transition-all duration-1000"
+          className="absolute -top-[10%] -left-[15%] w-[85vw] h-[900px] rounded-full filter blur-[140px] opacity-75 transition-all duration-1000"
           style={{ backgroundColor: palette.primaryGlow }}
         />
 
-        {/* Dynamic Primary Color Aura (Left Side Bloom - Hero & Body) */}
+        {/* Spot 2: Vibrant Secondary Color Bloom (Top Right - Behind Hero Stats) */}
         <div
-          className="absolute top-[25%] -left-[20%] w-[90vw] h-[950px] rounded-full filter blur-[150px] opacity-75 transition-all duration-1000"
-          style={{ backgroundColor: palette.primaryGlow }}
-        />
-
-        {/* Dynamic Secondary Color Aura (Right Side Bloom - Stats & Grid) */}
-        <div
-          className="absolute top-[35%] -right-[20%] w-[90vw] h-[950px] rounded-full filter blur-[150px] opacity-65 transition-all duration-1000"
+          className="absolute top-[5%] -right-[15%] w-[85vw] h-[900px] rounded-full filter blur-[150px] opacity-65 transition-all duration-1000"
           style={{ backgroundColor: palette.secondaryGlow }}
         />
 
-        {/* Dynamic Ambient Color Aura (Lower Body & Footer) */}
+        {/* Spot 3: Chromatic Tertiary Color Bloom (Mid Body - Behind Cast & Episodes) */}
         <div
-          className="absolute -bottom-[10%] left-1/2 -translate-x-1/2 w-[100vw] h-[950px] rounded-full filter blur-[160px] opacity-65 transition-all duration-1000"
-          style={{ backgroundColor: palette.secondaryGlow }}
+          className="absolute top-[40%] -left-[20%] w-[90vw] h-[950px] rounded-full filter blur-[160px] opacity-70 transition-all duration-1000"
+          style={{ backgroundColor: palette.tertiaryGlow }}
         />
 
-        {/* Dynamic Symmetrical Radial Mesh Lighting */}
+        {/* Spot 4: Atmospheric Quaternary Color Bloom (Lower Body & Footer) */}
         <div
-          className="absolute inset-0 opacity-45 transition-all duration-1000"
+          className="absolute top-[65%] -right-[20%] w-[95vw] h-[1000px] rounded-full filter blur-[160px] opacity-60 transition-all duration-1000"
+          style={{ backgroundColor: palette.quaternaryGlow }}
+        />
+
+        {/* Multi-Point Chromatic Radial Mesh Lighting */}
+        <div
+          className="absolute inset-0 opacity-50 transition-all duration-1000"
           style={{
-            background: `radial-gradient(ellipse 90% 70% at 10% 30%, ${palette.primaryGlow}, transparent 70%), radial-gradient(ellipse 90% 70% at 90% 40%, ${palette.secondaryGlow}, transparent 70%), radial-gradient(ellipse 100% 70% at 50% 85%, ${palette.primaryGlow}, transparent 70%)`,
+            background: `radial-gradient(ellipse 90% 70% at 15% 20%, ${palette.primaryGlow}, transparent 60%), radial-gradient(ellipse 90% 70% at 85% 30%, ${palette.secondaryGlow}, transparent 60%), radial-gradient(ellipse 90% 70% at 20% 65%, ${palette.tertiaryGlow}, transparent 60%), radial-gradient(ellipse 100% 70% at 80% 85%, ${palette.quaternaryGlow}, transparent 60%)`,
           }}
         />
 
         {/* Unified luxury dark base overlay */}
-        <div className="absolute inset-0 bg-[#07090e]/65" />
+        <div className="absolute inset-0 bg-[#07090e]/60" />
       </div>
 
-      {/* 2. Expansive Hero Section with Smooth Ambient Blend into Body */}
+      {/* 2. Expansive Hero Section with 4-Way Smooth Feathered Video Dissolve */}
       <div className="relative w-full min-h-[720px] sm:min-h-[820px] lg:min-h-[920px] xl:min-h-[960px] overflow-hidden flex flex-col justify-end">
-        {/* Background Video Trailer Layer with Soft Feathered Bottom Fade */}
+        {/* Background Video Trailer Layer with 4-Edge Radial Feathering */}
         {mainTrailer ? (
           <div
             className="absolute inset-0 w-full h-full pointer-events-none overflow-hidden select-none -z-0"
             style={{
-              maskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 60%, rgba(0,0,0,0) 100%)',
-              WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 60%, rgba(0,0,0,0) 100%)',
+              maskImage: 'radial-gradient(ellipse 95% 85% at 50% 35%, rgba(0,0,0,1) 45%, rgba(0,0,0,0) 95%)',
+              WebkitMaskImage: 'radial-gradient(ellipse 95% 85% at 50% 35%, rgba(0,0,0,1) 45%, rgba(0,0,0,0) 95%)',
             }}
           >
             <iframe
@@ -252,15 +252,15 @@ export default function MediaDetailsPage() {
               }&loop=1&playlist=${mainTrailer.key}&controls=0&showinfo=0&rel=0&iv_load_policy=3&modestbranding=1&playsinline=1&enablejsapi=1`}
               title="Ambient trailer background"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[112vw] h-[112vh] min-w-full min-h-full object-cover scale-105 opacity-90 md:opacity-95 filter brightness-90 md:brightness-95 contrast-[1.02]"
+              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[130vw] h-[130vh] min-w-full min-h-full object-cover scale-110 opacity-90 md:opacity-95 filter brightness-90 md:brightness-95 contrast-[1.02] border-0 outline-none"
             />
           </div>
         ) : (
           <div
             className="absolute inset-0 w-full h-full pointer-events-none -z-0"
             style={{
-              maskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 60%, rgba(0,0,0,0) 100%)',
-              WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 60%, rgba(0,0,0,0) 100%)',
+              maskImage: 'radial-gradient(ellipse 95% 85% at 50% 35%, rgba(0,0,0,1) 45%, rgba(0,0,0,0) 95%)',
+              WebkitMaskImage: 'radial-gradient(ellipse 95% 85% at 50% 35%, rgba(0,0,0,1) 45%, rgba(0,0,0,0) 95%)',
             }}
           >
             <Image
@@ -275,8 +275,8 @@ export default function MediaDetailsPage() {
         )}
 
         {/* Soft Vignette Gradients for Title Legibility without Left Black Occlusion */}
-        <div className="absolute inset-0 bg-gradient-to-r from-black/25 via-transparent to-transparent pointer-events-none z-10" />
-        <div className="absolute inset-x-0 top-0 h-36 bg-gradient-to-b from-black/40 to-transparent pointer-events-none z-10" />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/20 via-transparent to-transparent pointer-events-none z-10" />
+        <div className="absolute inset-x-0 top-0 h-36 bg-gradient-to-b from-black/35 to-transparent pointer-events-none z-10" />
 
         {/* Hero Content Overlay (Left Info + Right Stats) */}
         <div className="relative max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 pt-36 pb-16 z-20 flex flex-col lg:flex-row items-end justify-between gap-10">

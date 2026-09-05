@@ -3,50 +3,122 @@ export interface ExtractedPalette {
   primaryGlow: string;
   secondary: string;
   secondaryGlow: string;
+  tertiary: string;
+  tertiaryGlow: string;
+  quaternary: string;
+  quaternaryGlow: string;
   accent: string;
   ambientGradient: string;
 }
 
 export const DEFAULT_PALETTE: ExtractedPalette = {
   primary: 'rgb(229, 9, 20)',
-  primaryGlow: 'rgba(229, 9, 20, 0.55)',
+  primaryGlow: 'rgba(229, 9, 20, 0.65)',
   secondary: 'rgb(59, 130, 246)',
-  secondaryGlow: 'rgba(59, 130, 246, 0.45)',
+  secondaryGlow: 'rgba(59, 130, 246, 0.55)',
+  tertiary: 'rgb(168, 85, 247)',
+  tertiaryGlow: 'rgba(168, 85, 247, 0.5)',
+  quaternary: 'rgb(245, 158, 11)',
+  quaternaryGlow: 'rgba(245, 158, 11, 0.45)',
   accent: 'rgb(234, 179, 8)',
-  ambientGradient: 'radial-gradient(circle at 50% 25%, rgba(229,9,20,0.4) 0%, rgba(10,12,18,0.85) 60%, #07090e 100%)',
+  ambientGradient:
+    'radial-gradient(circle at 20% 20%, rgba(229,9,20,0.5) 0%, transparent 60%), radial-gradient(circle at 80% 30%, rgba(59,130,246,0.45) 0%, transparent 60%), radial-gradient(circle at 30% 75%, rgba(168,85,247,0.4) 0%, transparent 60%), radial-gradient(circle at 80% 80%, rgba(245,158,11,0.35) 0%, #07090e 90%)',
 };
 
-// Genre color presets for instant vivid aura before image finishes loading
-const GENRE_PALETTES: Record<number, { primary: [number, number, number]; secondary: [number, number, number] }> = {
-  28: { primary: [239, 68, 68], secondary: [249, 115, 22] },   // Action: Flame Red & Orange
-  12: { primary: [16, 185, 129], secondary: [59, 130, 246] },  // Adventure: Emerald & Sky
-  16: { primary: [168, 85, 247], secondary: [236, 72, 153] },  // Animation: Violet & Pink
-  35: { primary: [234, 179, 8], secondary: [249, 115, 22] },   // Comedy: Gold & Amber
-  80: { primary: [100, 116, 139], secondary: [225, 29, 72] },  // Crime: Slate & Crimson
-  18: { primary: [99, 102, 241], secondary: [14, 165, 233] },   // Drama: Indigo & Cyan
-  14: { primary: [147, 51, 234], secondary: [59, 130, 246] },  // Fantasy: Purple & Royal Blue
-  27: { primary: [185, 28, 28], secondary: [88, 28, 135] },    // Horror: Blood Red & Dark Violet
-  878: { primary: [6, 182, 212], secondary: [139, 92, 246] },  // Sci-Fi: Neon Cyan & Purple
-  53: { primary: [217, 70, 239], secondary: [239, 68, 68] },   // Thriller: Magenta & Red
+// Genre vibrant multi-color palettes
+const GENRE_PALETTES: Record<
+  number,
+  {
+    primary: [number, number, number];
+    secondary: [number, number, number];
+    tertiary: [number, number, number];
+    quaternary: [number, number, number];
+  }
+> = {
+  28: {
+    primary: [239, 68, 68],     // Crimson Flame
+    secondary: [249, 115, 22],   // Burning Orange
+    tertiary: [234, 179, 8],     // Gold Ember
+    quaternary: [147, 51, 234],  // Electric Purple
+  },
+  12: {
+    primary: [14, 165, 233],    // Ocean Cyan
+    secondary: [16, 185, 129],   // Emerald Forest
+    tertiary: [245, 158, 11],    // Golden Sun
+    quaternary: [99, 102, 241],  // Royal Indigo
+  },
+  16: {
+    primary: [236, 72, 153],    // Sakura Pink
+    secondary: [147, 51, 234],   // Twilight Violet
+    tertiary: [6, 182, 212],     // Sky Cyan
+    quaternary: [251, 146, 60],  // Sunset Peach
+  },
+  35: {
+    primary: [234, 179, 8],     // Sunny Gold
+    secondary: [249, 115, 22],   // Tangerine
+    tertiary: [236, 72, 153],    // Fuchsia
+    quaternary: [16, 185, 129],  // Mint Green
+  },
+  80: {
+    primary: [225, 29, 72],     // Blood Crimson
+    secondary: [79, 70, 229],    // Deep Indigo
+    tertiary: [148, 163, 184],   // Steel Slate
+    quaternary: [180, 83, 9],    // Noir Amber
+  },
+  18: {
+    primary: [99, 102, 241],    // Velvet Indigo
+    secondary: [217, 70, 239],   // Orchid Magenta
+    tertiary: [14, 165, 233],    // Horizon Blue
+    quaternary: [245, 158, 11],  // Warm Glow
+  },
+  14: {
+    primary: [168, 85, 247],    // Mystical Purple
+    secondary: [59, 130, 246],   // Arcane Blue
+    tertiary: [236, 72, 153],    // Fairy Pink
+    quaternary: [20, 184, 166],  // Crystal Teal
+  },
+  27: {
+    primary: [185, 28, 28],     // Dark Blood Red
+    secondary: [88, 28, 135],    // Shadow Plum
+    tertiary: [15, 23, 42],      // Obsidian
+    quaternary: [194, 65, 12],   // Rust Orange
+  },
+  878: {
+    primary: [6, 182, 212],     // Cyber Cyan
+    secondary: [168, 85, 247],   // Neon Violet
+    tertiary: [236, 72, 153],    // Laser Magenta
+    quaternary: [59, 130, 246],  // Deep Space Blue
+  },
+  53: {
+    primary: [225, 29, 72],     // Danger Red
+    secondary: [147, 51, 234],   // Dark Violet
+    tertiary: [249, 115, 22],    // Warning Orange
+    quaternary: [15, 118, 110],  // Deep Teal
+  },
 };
 
 export function getPaletteForGenre(genreId?: number): ExtractedPalette {
   if (genreId && GENRE_PALETTES[genreId]) {
-    const { primary: p, secondary: s } = GENRE_PALETTES[genreId];
+    const { primary: p, secondary: s, tertiary: t, quaternary: q } = GENRE_PALETTES[genreId];
     return {
       primary: `rgb(${p[0]}, ${p[1]}, ${p[2]})`,
-      primaryGlow: `rgba(${p[0]}, ${p[1]}, ${p[2]}, 0.55)`,
+      primaryGlow: `rgba(${p[0]}, ${p[1]}, ${p[2]}, 0.65)`,
       secondary: `rgb(${s[0]}, ${s[1]}, ${s[2]})`,
-      secondaryGlow: `rgba(${s[0]}, ${s[1]}, ${s[2]}, 0.45)`,
+      secondaryGlow: `rgba(${s[0]}, ${s[1]}, ${s[2]}, 0.55)`,
+      tertiary: `rgb(${t[0]}, ${t[1]}, ${t[2]})`,
+      tertiaryGlow: `rgba(${t[0]}, ${t[1]}, ${t[2]}, 0.5)`,
+      quaternary: `rgb(${q[0]}, ${q[1]}, ${q[2]})`,
+      quaternaryGlow: `rgba(${q[0]}, ${q[1]}, ${q[2]}, 0.45)`,
       accent: `rgb(${p[0]}, ${p[1]}, ${p[2]})`,
-      ambientGradient: `radial-gradient(circle at 50% 25%, rgba(${p[0]},${p[1]},${p[2]},0.45) 0%, rgba(${s[0]},${s[1]},${s[2]},0.25) 50%, #07090e 90%)`,
+      ambientGradient: `radial-gradient(circle at 15% 20%, rgba(${p[0]},${p[1]},${p[2]},0.55) 0%, transparent 60%), radial-gradient(circle at 85% 30%, rgba(${s[0]},${s[1]},${s[2]},0.5) 0%, transparent 60%), radial-gradient(circle at 25% 70%, rgba(${t[0]},${t[1]},${t[2]},0.45) 0%, transparent 60%), radial-gradient(circle at 80% 80%, rgba(${q[0]},${q[1]},${q[2]},0.4) 0%, #07090e 90%)`,
     };
   }
   return DEFAULT_PALETTE;
 }
 
 /**
- * Extracts vibrant dominant & secondary mood lighting colors from a media backdrop image.
+ * Extracts a rich multi-color palette (primary, secondary, tertiary, quaternary)
+ * from a media backdrop image using an off-screen HTML5 canvas.
  */
 export function extractPaletteFromImage(
   imgSrc: string | null | undefined,
@@ -74,10 +146,7 @@ export function extractPaletteFromImage(
         ctx.drawImage(img, 0, 0, 64, 36);
 
         const imgData = ctx.getImageData(0, 0, 64, 36).data;
-        let rTotal = 0, gTotal = 0, bTotal = 0, count = 0;
-        let dominantR = 229, dominantG = 9, dominantB = 20;
-        let secR = 59, secG = 130, secB = 246;
-        let maxSat = -1;
+        const colorBuckets: Array<{ r: number; g: number; b: number; sat: number; count: number }> = [];
 
         for (let i = 0; i < imgData.length; i += 16) {
           const r = imgData[i];
@@ -85,48 +154,71 @@ export function extractPaletteFromImage(
           const b = imgData[i + 2];
           const brightness = (r + g + b) / 3;
 
+          // Exclude extreme whites and extreme blacks
           if (brightness > 20 && brightness < 240) {
-            rTotal += r;
-            gTotal += g;
-            bTotal += b;
-            count++;
-
             const max = Math.max(r, g, b);
             const min = Math.min(r, g, b);
             const sat = max === 0 ? 0 : (max - min) / max;
 
-            if (sat > maxSat) {
-              secR = dominantR;
-              secG = dominantG;
-              secB = dominantB;
-              maxSat = sat;
-              dominantR = r;
-              dominantG = g;
-              dominantB = b;
+            // Group into color buckets
+            let found = false;
+            for (const bucket of colorBuckets) {
+              const dist = Math.abs(bucket.r - r) + Math.abs(bucket.g - g) + Math.abs(bucket.b - b);
+              if (dist < 70) {
+                bucket.count++;
+                bucket.r = Math.round((bucket.r + r) / 2);
+                bucket.g = Math.round((bucket.g + g) / 2);
+                bucket.b = Math.round((bucket.b + b) / 2);
+                bucket.sat = Math.max(bucket.sat, sat);
+                found = true;
+                break;
+              }
+            }
+            if (!found && colorBuckets.length < 12) {
+              colorBuckets.push({ r, g, b, sat, count: 1 });
             }
           }
         }
 
-        if (count > 0 && maxSat < 0.2) {
-          dominantR = Math.min(255, Math.round((rTotal / count) * 1.3));
-          dominantG = Math.min(255, Math.round((gTotal / count) * 1.3));
-          dominantB = Math.min(255, Math.round((bTotal / count) * 1.3));
+        // Sort by saturation and prominence
+        colorBuckets.sort((a, b) => b.sat * 1.5 + (b.count / 100) - (a.sat * 1.5 + (a.count / 100)));
+
+        if (colorBuckets.length < 2) {
+          return resolve(defaultGenre);
         }
 
-        const primary = `rgb(${dominantR}, ${dominantG}, ${dominantB})`;
-        const primaryGlow = `rgba(${dominantR}, ${dominantG}, ${dominantB}, 0.55)`;
-        const secondary = `rgb(${secR}, ${secG}, ${secB})`;
-        const secondaryGlow = `rgba(${secR}, ${secG}, ${secB}, 0.45)`;
-        const accent = `rgb(${dominantR}, ${dominantG}, ${dominantB})`;
+        const p = colorBuckets[0] || { r: 229, g: 9, b: 20 };
+        const s = colorBuckets[1] || { r: 59, g: 130, b: 246 };
+        const t = colorBuckets[2] || { r: Math.round((p.r + 80) % 255), g: Math.round((p.g + 40) % 255), b: 220 };
+        const q = colorBuckets[3] || { r: 245, g: 158, b: 11 };
 
-        const ambientGradient = `radial-gradient(circle at 50% 25%, rgba(${dominantR},${dominantG},${dominantB},0.5) 0%, rgba(${secR},${secG},${secB},0.3) 50%, #07090e 90%)`;
+        // Boost vibrancy for radiant ambient lighting
+        const boost = (val: number) => Math.min(255, Math.round(val * 1.15));
+
+        const primary = `rgb(${boost(p.r)}, ${boost(p.g)}, ${boost(p.b)})`;
+        const primaryGlow = `rgba(${boost(p.r)}, ${boost(p.g)}, ${boost(p.b)}, 0.65)`;
+
+        const secondary = `rgb(${boost(s.r)}, ${boost(s.g)}, ${boost(s.b)})`;
+        const secondaryGlow = `rgba(${boost(s.r)}, ${boost(s.g)}, ${boost(s.b)}, 0.55)`;
+
+        const tertiary = `rgb(${boost(t.r)}, ${boost(t.g)}, ${boost(t.b)})`;
+        const tertiaryGlow = `rgba(${boost(t.r)}, ${boost(t.g)}, ${boost(t.b)}, 0.5)`;
+
+        const quaternary = `rgb(${boost(q.r)}, ${boost(q.g)}, ${boost(q.b)})`;
+        const quaternaryGlow = `rgba(${boost(q.r)}, ${boost(q.g)}, ${boost(q.b)}, 0.45)`;
+
+        const ambientGradient = `radial-gradient(circle at 15% 20%, ${primaryGlow} 0%, transparent 60%), radial-gradient(circle at 85% 30%, ${secondaryGlow} 0%, transparent 60%), radial-gradient(circle at 25% 70%, ${tertiaryGlow} 0%, transparent 60%), radial-gradient(circle at 80% 80%, ${quaternaryGlow} 0%, #07090e 90%)`;
 
         resolve({
           primary,
           primaryGlow,
           secondary,
           secondaryGlow,
-          accent,
+          tertiary,
+          tertiaryGlow,
+          quaternary,
+          quaternaryGlow,
+          accent: primary,
           ambientGradient,
         });
       } catch {
@@ -139,4 +231,3 @@ export function extractPaletteFromImage(
     };
   });
 }
-
