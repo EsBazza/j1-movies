@@ -41,6 +41,17 @@ export function formatRuntime(minutes?: number): string {
   return `${hrs}h ${mins}m`;
 }
 
+export function formatSeconds(seconds?: number): string {
+  if (!seconds || seconds <= 0) return '0:00';
+  const hrs = Math.floor(seconds / 3600);
+  const mins = Math.floor((seconds % 3600) / 60);
+  const secs = Math.floor(seconds % 60);
+  if (hrs > 0) {
+    return `${hrs}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  }
+  return `${mins}:${secs.toString().padStart(2, '0')}`;
+}
+
 export function formatYear(dateStr?: string): string {
   if (!dateStr) return '';
   return dateStr.split('-')[0] || '';

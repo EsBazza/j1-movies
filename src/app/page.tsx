@@ -1,17 +1,19 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
-import { Flame, Star, Film, Tv, Sparkles, Swords, Compass } from 'lucide-react';
+import React, { useEffect, useState, useCallback } from 'react';
+import Image from 'next/image';
+import { Flame, Star, Film, Tv, Sparkles, Swords } from 'lucide-react';
 import {
   getTrending,
   getPopularMovies,
   getTopRatedMovies,
   getPopularTV,
-  getTopRatedTV,
   getMoviesByGenre,
   normalizeMediaItem,
+  getBackdropUrl,
 } from '@/lib/tmdb';
 import { NormalizedMedia } from '@/types/tmdb';
+import { extractPaletteFromImage, getPaletteForGenre, DEFAULT_PALETTE, ExtractedPalette } from '@/lib/colorExtractor';
 import { HeroBanner } from '@/components/media/HeroBanner';
 import { MediaCarousel } from '@/components/media/MediaCarousel';
 import { ContinueWatchingRow } from '@/components/media/ContinueWatchingRow';
@@ -20,6 +22,7 @@ import { ApiKeyWarning } from '@/components/common/ApiKeyWarning';
 
 export default function HomePage() {
   const [heroItem, setHeroItem] = useState<NormalizedMedia | null>(null);
+  const [palette, setPalette] = useState<ExtractedPalette>(DEFAULT_PALETTE);
   const [trending, setTrending] = useState<NormalizedMedia[]>([]);
   const [popularMovies, setPopularMovies] = useState<NormalizedMedia[]>([]);
   const [topRatedMovies, setTopRatedMovies] = useState<NormalizedMedia[]>([]);
@@ -29,6 +32,17 @@ export default function HomePage() {
   
   const [isLoading, setIsLoading] = useState(true);
   const [apiError, setApiError] = useState(false);
+
+  const handleActiveHeroChange = useCallback((activeItem: NormalizedMedia) => {
+    setHeroItem(activeItem);
+    const genreId = activeItem.genres?.[0]?.id;
+    if (activeItem.backdropPath || activeItem.posterPath) {
+      const sampleUrl = getBackdropUrl(activeItem.backdropPath || activeItem.posterPath, 'w780');
+      extractPaletteFromImage(sampleUrl, genreId).then(setPalette);
+    } else if (genreId) {
+      setPalette(getPaletteForGenre(genreId));
+    }
+  }, []);
 
   useEffect(() => {
     async function loadContent() {
@@ -84,11 +98,17 @@ export default function HomePage() {
         setActionMovies(normalizedAction);
         setSciFiMovies(normalizedSciFi);
 
-        // Pick top featured item for hero banner
-        if (normalizedTrending.length > 0) {
-          setHeroItem(normalizedTrending[0]);
-        } else if (normalizedPopMovies.length > 0) {
-          setHeroItem(normalizedPopMovies[0]);
+        // Initial featured item
+        const featured = normalizedTrending.length > 0 ? normalizedTrending[0] : normalizedPopMovies[0];
+        if (featured) {
+          setHeroItem(featured);
+          const genreId = featured.genres?.[0]?.id;
+          if (featured.backdropPath || featured.posterPath) {
+            const sampleUrl = getBackdropUrl(featured.backdropPath || featured.posterPath, 'w780');
+            extractPaletteFromImage(sampleUrl, genreId).then(setPalette);
+          } else if (genreId) {
+            setPalette(getPaletteForGenre(genreId));
+          }
         }
       } catch (err) {
         console.error('Failed to load homepage data:', err);
@@ -109,17 +129,85 @@ export default function HomePage() {
     );
   }
 
-  return (
-    <div className="flex flex-col w-full pb-16">
-      {/* Hero Spotlight Section */}
-      {isLoading ? (
-        <SkeletonBanner />
-      ) : heroItem ? (
-        <HeroBanner item={heroItem} />
-      ) : null}
+  const featuredItems = trending.length > 0 ? trending.slice(0, 8) : popularMovies.slice(0, 8);
+  const activeHero = heroItem || featuredItems[0];
 
-      {/* Main Content Rows */}
-      <div className="relative -mt-8 sm:-mt-12 z-20 flex flex-col gap-6 md:gap-8">
+  return (
+    <div className="flex flex-col w-full pb-32 relative bg-transparent min-h-screen">
+      {/* 1. Dynamic Multi-Color Ambient Lighting Canvas (Covers entire screen from Hero through Footer seamlessly) */}
+      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+        {/* Dynamic High-Diffusion Multi-Color Backdrop Image */}
+        {(activeHero?.backdropPath || activeHero?.posterPath) && (
+          <div className="absolute -inset-[15%] pointer-events-none overflow-hidden">
+            <Image
+              src={getBackdropUrl(activeHero.backdropPath || activeHero.posterPath, 'w1280')}
+              alt=""
+              fill
+              priority
+              sizes="100vw"
+              className="object-cover scale-135 filter blur-[80px] saturate-[280%] brightness-80 opacity-80 transition-all duration-1000"
+            />
+          </div>
+        )}
+
+        {/* Spot 1: Vibrant Primary Color Bloom (Top Left - Behind Title) */}
+        <div
+          className="absolute -top-[10%] -left-[15%] w-[85vw] h-[900px] rounded-full filter blur-[90px] opacity-95 transition-all duration-1000 mix-blend-screen"
+          style={{ backgroundColor: palette.primaryGlow }}
+        />
+
+        {/* Spot 2: Vibrant Secondary Color Bloom (Top Right - Behind Hero Stats) */}
+        <div
+          className="absolute top-[5%] -right-[15%] w-[85vw] h-[900px] rounded-full filter blur-[90px] opacity-90 transition-all duration-1000 mix-blend-screen"
+          style={{ backgroundColor: palette.secondaryGlow }}
+        />
+
+        {/* Spot 3: Chromatic Tertiary Color Bloom (Mid Body - Behind Continue Watching & Trending) */}
+        <div
+          className="absolute top-[35%] -left-[20%] w-[90vw] h-[950px] rounded-full filter blur-[100px] opacity-85 transition-all duration-1000 mix-blend-screen"
+          style={{ backgroundColor: palette.tertiaryGlow }}
+        />
+
+        {/* Spot 4: Atmospheric Quaternary Color Bloom (Lower Body & Footer) */}
+        <div
+          className="absolute top-[60%] -right-[20%] w-[95vw] h-[1000px] rounded-full filter blur-[110px] opacity-85 transition-all duration-1000 mix-blend-screen"
+          style={{ backgroundColor: palette.quaternaryGlow }}
+        />
+
+        {/* Spot 5: Central Chromatic Mixing Orb */}
+        <div
+          className="absolute top-[20%] left-[20%] w-[60vw] h-[600px] rounded-full filter blur-[90px] opacity-80 transition-all duration-1000 mix-blend-screen"
+          style={{ backgroundColor: palette.primaryGlow }}
+        />
+
+        {/* Multi-Point Chromatic Radial Mesh Lighting */}
+        <div
+          className="absolute inset-0 opacity-75 transition-all duration-1000"
+          style={{
+            background: `radial-gradient(ellipse 90% 70% at 15% 20%, ${palette.primaryGlow}, transparent 60%), radial-gradient(ellipse 90% 70% at 85% 30%, ${palette.secondaryGlow}, transparent 60%), radial-gradient(ellipse 90% 70% at 20% 65%, ${palette.tertiaryGlow}, transparent 60%), radial-gradient(ellipse 100% 70% at 80% 85%, ${palette.quaternaryGlow}, transparent 60%)`,
+          }}
+        />
+
+        {/* Soft atmospheric overlay */}
+        <div className="absolute inset-0 bg-[#07090e]/30" />
+      </div>
+
+      {/* Hero Spotlight Section */}
+      <div className="relative z-10">
+        {isLoading ? (
+          <SkeletonBanner />
+        ) : (
+          <HeroBanner
+            items={featuredItems}
+            item={heroItem || featuredItems[0]}
+            palette={palette}
+            onActiveItemChange={handleActiveHeroChange}
+          />
+        )}
+      </div>
+
+      {/* Spacious Main Content Rows (Starting naturally after the Hero Section) */}
+      <div className="relative pt-6 sm:pt-10 md:pt-14 z-20 flex flex-col gap-12 sm:gap-16 md:gap-20 max-w-[1750px] mx-auto w-full px-6 sm:px-10 lg:px-16 xl:px-20">
         {/* Continue Watching (Local Storage) */}
         <ContinueWatchingRow />
 
@@ -129,6 +217,7 @@ export default function HomePage() {
           icon={Flame}
           items={trending}
           isLoading={isLoading}
+          fullWidth={true}
         />
 
         {/* Popular Movies */}
@@ -138,6 +227,7 @@ export default function HomePage() {
           items={popularMovies}
           seeAllHref="/movies"
           isLoading={isLoading}
+          fullWidth={true}
         />
 
         {/* Popular TV Shows */}
@@ -147,6 +237,7 @@ export default function HomePage() {
           items={popularTV}
           seeAllHref="/tv"
           isLoading={isLoading}
+          fullWidth={true}
         />
 
         {/* Top Rated Cinema */}
@@ -155,6 +246,7 @@ export default function HomePage() {
           icon={Star}
           items={topRatedMovies}
           isLoading={isLoading}
+          fullWidth={true}
         />
 
         {/* Action & Adventure */}
@@ -163,6 +255,7 @@ export default function HomePage() {
           icon={Swords}
           items={actionMovies}
           isLoading={isLoading}
+          fullWidth={true}
         />
 
         {/* Sci-Fi & Cyberpunk */}
@@ -171,8 +264,11 @@ export default function HomePage() {
           icon={Sparkles}
           items={sciFiMovies}
           isLoading={isLoading}
+          fullWidth={true}
         />
       </div>
     </div>
   );
 }
+
+

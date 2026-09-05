@@ -2,16 +2,13 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import Image from 'next/image';
+import { usePathname } from 'next/navigation';
 import {
   Film,
   Tv,
   Bookmark,
-  Clapperboard,
   Search,
-  ArrowLeft,
-  Settings,
-  Sparkles,
 } from 'lucide-react';
 import { SearchBar } from '@/components/common/SearchBar';
 import { useUserStore } from '@/lib/store';
@@ -19,7 +16,6 @@ import { cn } from '@/lib/utils';
 
 export function Navbar() {
   const pathname = usePathname();
-  const router = useRouter();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const { watchlist, hasHydrated } = useUserStore();
@@ -44,38 +40,34 @@ export function Navbar() {
     },
   ];
 
-  const showBackButton = pathname !== '/' && !pathname.startsWith('/#');
+  if (pathname?.startsWith('/watch')) {
+    return null;
+  }
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 pointer-events-none transition-all duration-300">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 flex items-center justify-between gap-4">
-        {/* Top-Left: Minimal Back Button & Brand Logo */}
-        <div className="flex items-center gap-3 pointer-events-auto">
-          {showBackButton && (
-            <button
-              onClick={() => router.back()}
-              title="Go back"
-              className="w-10 h-10 rounded-full bg-black/50 hover:bg-zinc-800/80 backdrop-blur-xl border border-white/10 flex items-center justify-center text-zinc-300 hover:text-white transition-all shadow-xl hover:scale-105 cursor-pointer"
-            >
-              <ArrowLeft className="w-4 h-4" />
-            </button>
-          )}
-
+      <div className="w-full px-6 sm:px-10 lg:px-12 pt-4 sm:pt-6 flex items-center justify-between gap-4">
+        {/* Top-Left: Brand Logo (Positioned at far top-left) */}
+        <div className="flex items-center pointer-events-auto">
           <Link
             href="/"
-            className="flex items-center gap-2.5 px-3.5 py-2 rounded-2xl bg-black/40 hover:bg-black/60 backdrop-blur-xl border border-white/10 transition-all shadow-xl group cursor-pointer"
+            className="flex items-center group cursor-pointer transition-transform hover:scale-105 active:scale-95"
           >
-            <div className="relative w-7 h-7 rounded-lg bg-gradient-to-tr from-red-600 to-rose-500 flex items-center justify-center shadow-md shadow-red-600/40">
-              <Clapperboard className="w-4 h-4 text-white" />
+            <div className="relative h-9 sm:h-11 md:h-12 flex items-center">
+              <Image
+                src="/logo.png"
+                alt="J1 Movies"
+                width={190}
+                height={50}
+                priority
+                className="h-8 sm:h-10 md:h-11 w-auto object-contain filter drop-shadow-[0_4px_16px_rgba(0,0,0,0.85)]"
+              />
             </div>
-            <span className="text-sm font-black tracking-tight text-white group-hover:text-red-400 transition-colors">
-              J1<span className="text-red-500">.</span>
-            </span>
           </Link>
         </div>
 
-        {/* Top-Right: Floating Glass Pill Navbar (CineJoy Style) */}
-        <div className="flex items-center gap-2 pointer-events-auto">
+        {/* Top-Right: Floating Glass Pill Navbar (Visible on md+ screens) */}
+        <div className="hidden md:flex items-center gap-2 pointer-events-auto">
           {isSearchOpen ? (
             <div className="flex items-center gap-2 animate-in fade-in zoom-in-95 duration-200">
               <SearchBar />

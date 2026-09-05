@@ -203,6 +203,10 @@ export interface WatchHistoryItem {
   season?: number;
   episode?: number;
   episodeTitle?: string;
+  progressSeconds?: number;
+  durationSeconds?: number;
+  progressPercent?: number;
+  timestampFormatted?: string;
   lastWatchedAt: number;
 }
 

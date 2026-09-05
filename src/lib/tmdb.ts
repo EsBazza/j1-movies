@@ -200,6 +200,34 @@ export async function getTVDetails(id: number | string): Promise<TMDBTVDetails> 
   });
 }
 
+export async function getMediaVideos(type: MediaType, id: number | string): Promise<import('@/types/tmdb').TMDBVideoResponse> {
+  return fetchFromTMDB<import('@/types/tmdb').TMDBVideoResponse>(`${type}/${id}/videos`);
+}
+
+const trailerCache = new Map<string, string | null>();
+
+export async function getTrailerKey(type: MediaType, id: number | string): Promise<string | null> {
+  const cacheKey = `${type}-${id}`;
+  if (trailerCache.has(cacheKey)) {
+    return trailerCache.get(cacheKey) || null;
+  }
+  try {
+    const res = await getMediaVideos(type, id);
+    const videos = (res?.results || []).filter((v) => v.site === 'YouTube');
+    const trailer =
+      videos.find((v) => v.type === 'Trailer') ||
+      videos.find((v) => v.type === 'Teaser') ||
+      videos.find((v) => v.type === 'Clip') ||
+      videos[0];
+    const key = trailer?.key || null;
+    trailerCache.set(cacheKey, key);
+    return key;
+  } catch {
+    trailerCache.set(cacheKey, null);
+    return null;
+  }
+}
+
 export async function getTVSeason(tvId: number | string, seasonNumber: number): Promise<TMDBSeason> {
   return fetchFromTMDB<TMDBSeason>(`tv/${tvId}/season/${seasonNumber}`);
 }

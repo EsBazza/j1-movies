@@ -1,30 +1,38 @@
 'use client';
-
 import React from 'react';
 import Link from 'next/link';
-import { Clapperboard, ArrowUp } from 'lucide-react';
+import Image from 'next/image';
+import { usePathname } from 'next/navigation';
+import { ArrowUp } from 'lucide-react';
 
 export function Footer() {
+  const pathname = usePathname();
+
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
+
+  if (pathname?.startsWith('/watch')) {
+    return null;
+  }
 
   return (
     <footer className="w-full pt-16 pb-24 md:pb-16 text-zinc-400 text-xs mt-12 relative overflow-hidden">
       <div className="max-w-4xl mx-auto px-4 text-center flex flex-col items-center gap-4">
         {/* Centered Logo & Branding */}
         <Link href="/" className="flex items-center gap-2 group cursor-pointer">
-          <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-red-600 to-rose-500 flex items-center justify-center shadow-lg shadow-red-600/30">
-            <Clapperboard className="w-3.5 h-3.5 text-white" />
-          </div>
-          <span className="text-base font-black tracking-tight text-white group-hover:text-red-400 transition-colors">
-            J1<span className="text-red-500">MOVIES</span>
-          </span>
+          <Image
+            src="/logo.png"
+            alt="J1 Movies"
+            width={140}
+            height={40}
+            className="h-8 w-auto object-contain transition-transform group-hover:scale-105"
+          />
         </Link>
 
-        {/* Minimal Legal / Disclaimer Text */}
-        <p className="text-[11px] text-zinc-400 max-w-lg leading-relaxed">
-          J1 Movies does not host, store, or distribute any media files on its servers. All metadata is powered by TMDB, and all streaming content is linked to third-party providers.
+        {/* Minimal Legal / Disclaimer Text with Pop Animation */}
+        <p className="group/disclaimer text-[11px] text-zinc-400 max-w-lg leading-relaxed px-4 py-2 rounded-2xl border border-transparent hover:border-white/10 hover:bg-white/[0.04] hover:shadow-[0_8px_30px_rgba(229,9,20,0.12)] hover:text-zinc-200 transform hover:scale-[1.03] transition-all duration-300 cursor-default select-none">
+          <strong className="text-zinc-300 font-bold group-hover/disclaimer:text-white transition-colors">J1 Movies</strong> does not host, store, or distribute any media files on its servers. All metadata is powered by <strong className="text-zinc-300 font-bold group-hover/disclaimer:text-red-400 transition-colors">TMDB</strong>, and all streaming content is linked to third-party providers.
         </p>
 
         {/* Quick Links */}

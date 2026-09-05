@@ -42,10 +42,13 @@ export function MediaCarousel({
 
   const containerClass = fullWidth
     ? 'w-full'
-    : 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8';
+    : 'max-w-[1750px] mx-auto px-4 sm:px-6 lg:px-12 xl:px-16';
 
   return (
-    <section className="relative w-full py-4 group/carousel">
+    <section
+      className="relative w-full py-4 group/carousel"
+      style={{ contentVisibility: 'auto', containIntrinsicSize: '0 380px' }}
+    >
       {/* Header */}
       <div className={`${containerClass} flex items-center justify-between mb-4`}>
         <div className="flex items-center gap-2.5">
@@ -56,7 +59,7 @@ export function MediaCarousel({
         {seeAllHref && (
           <Link
             href={seeAllHref}
-            className="text-xs md:text-sm font-semibold text-red-500 hover:text-red-400 transition-colors"
+            className="text-xs md:text-sm font-bold text-red-400 hover:text-red-300 transition-colors"
           >
             Explore All →
           </Link>
@@ -69,7 +72,7 @@ export function MediaCarousel({
         <button
           onClick={() => handleScroll('left')}
           aria-label="Scroll left"
-          className="absolute -left-1 md:left-2 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-black/80 hover:bg-red-600 text-white flex items-center justify-center backdrop-blur-md opacity-0 group-hover/carousel:opacity-100 transition-all duration-300 shadow-xl border border-white/10 cursor-pointer disabled:opacity-0"
+          className="absolute -left-3 md:-left-4 top-1/2 -translate-y-1/2 z-30 w-11 h-11 rounded-full bg-black/85 hover:bg-red-600 text-white flex items-center justify-center backdrop-blur-xl opacity-0 group-hover/carousel:opacity-100 transition-all duration-300 shadow-2xl border border-white/15 cursor-pointer hover:scale-105"
         >
           <ChevronLeft className="w-6 h-6" />
         </button>
@@ -77,16 +80,16 @@ export function MediaCarousel({
         {/* Scrollable Track */}
         <div
           ref={scrollContainerRef}
-          className="flex items-stretch gap-4 overflow-x-auto no-scrollbar scroll-smooth py-2"
+          className="flex items-stretch gap-5 sm:gap-6 overflow-x-auto no-scrollbar scroll-smooth py-6 px-1"
         >
           {isLoading
-            ? Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="w-[160px] sm:w-[190px] md:w-[210px] flex-shrink-0">
+            ? Array.from({ length: 7 }).map((_, i) => (
+                <div key={i} className="w-[170px] sm:w-[200px] md:w-[230px] flex-shrink-0">
                   <SkeletonCard />
                 </div>
               ))
             : items.map((item) => (
-                <div key={`${item.type}-${item.id}`} className="w-[160px] sm:w-[190px] md:w-[210px] flex-shrink-0">
+                <div key={`${item.type}-${item.id}`} className="w-[170px] sm:w-[200px] md:w-[230px] flex-shrink-0">
                   <MediaCard item={item} />
                 </div>
               ))}
@@ -96,7 +99,7 @@ export function MediaCarousel({
         <button
           onClick={() => handleScroll('right')}
           aria-label="Scroll right"
-          className="absolute -right-1 md:right-2 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-black/80 hover:bg-red-600 text-white flex items-center justify-center backdrop-blur-md opacity-0 group-hover/carousel:opacity-100 transition-all duration-300 shadow-xl border border-white/10 cursor-pointer"
+          className="absolute -right-3 md:-right-4 top-1/2 -translate-y-1/2 z-30 w-11 h-11 rounded-full bg-black/85 hover:bg-red-600 text-white flex items-center justify-center backdrop-blur-xl opacity-0 group-hover/carousel:opacity-100 transition-all duration-300 shadow-2xl border border-white/15 cursor-pointer hover:scale-105"
         >
           <ChevronRight className="w-6 h-6" />
         </button>
@@ -104,3 +107,4 @@ export function MediaCarousel({
     </section>
   );
 }
+
