@@ -48,39 +48,39 @@ export function CastList({ cast }: CastListProps) {
 
       <div
         ref={scrollRef}
-        className="flex items-start gap-5 sm:gap-6 overflow-x-auto pb-4 scroll-smooth scrollbar-none no-scrollbar"
+        className="flex items-start gap-6 sm:gap-8 overflow-x-auto pb-4 scroll-smooth scrollbar-none no-scrollbar"
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
         {topCast.map((person) => (
           <Link
             key={person.id}
             href={`/person/${person.id}`}
-            className="w-20 sm:w-24 flex-shrink-0 flex flex-col items-center text-center group cursor-pointer"
+            className="w-24 sm:w-28 md:w-32 flex-shrink-0 flex flex-col items-center text-center group cursor-pointer"
           >
             {/* Circular Avatar Headshot */}
-            <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden bg-zinc-900 border border-white/15 group-hover:border-white/60 mb-2 transition-all duration-300 group-hover:scale-105 shadow-xl shadow-black/40">
+            <div className="relative w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 rounded-full overflow-hidden bg-zinc-900 border border-white/20 group-hover:border-white/70 mb-3 transition-all duration-300 group-hover:scale-105 shadow-2xl shadow-black/60">
               {person.profile_path ? (
                 <Image
                   src={getImageUrl(person.profile_path, 'w185')}
                   alt={person.name}
                   fill
-                  sizes="80px"
+                  sizes="120px"
                   className="object-cover group-hover:scale-110 transition-transform duration-300"
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center bg-zinc-900 text-zinc-600">
-                  <User className="w-7 h-7" />
+                  <User className="w-9 h-9" />
                 </div>
               )}
             </div>
 
             {/* Actor Name */}
-            <span className="font-bold text-xs text-zinc-100 line-clamp-1 group-hover:text-white transition-colors">
+            <span className="font-bold text-xs sm:text-sm text-zinc-100 line-clamp-1 group-hover:text-white transition-colors">
               {person.name}
             </span>
 
             {/* Character Role */}
-            <span className="text-[11px] text-zinc-400 line-clamp-1 mt-0.5">
+            <span className="text-xs text-zinc-400 line-clamp-1 mt-0.5 font-medium">
               {person.character || 'Cast'}
             </span>
           </Link>

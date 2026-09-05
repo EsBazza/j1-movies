@@ -183,59 +183,65 @@ export default function MediaDetailsPage() {
   return (
     <div className="w-full flex flex-col min-h-screen relative bg-transparent">
       {/* 1. Dynamic Multi-Color Ambient Lighting Canvas (Covers entire screen from Hero through Footer seamlessly) */}
-      <div className="fixed inset-0 pointer-events-none -z-10 overflow-hidden">
+      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
         {/* Dynamic High-Diffusion Multi-Color Backdrop Image */}
         {details.backdrop_path && (
-          <div className="absolute inset-0 pointer-events-none">
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              filter: 'blur(75px) saturate(280%) contrast(115%)',
+              opacity: 0.65,
+            }}
+          >
             <Image
               src={getBackdropUrl(details.backdrop_path, 'w1280')}
               alt=""
               fill
               priority
               sizes="100vw"
-              className="object-cover filter blur-[105px] saturate-[2.8] contrast-[1.15] opacity-50 scale-135 transition-opacity duration-1000"
+              className="object-cover scale-135 transition-opacity duration-1000"
             />
           </div>
         )}
 
         {/* Spot 1: Vibrant Primary Color Bloom (Top Left - Behind Title) */}
         <div
-          className="absolute -top-[10%] -left-[15%] w-[85vw] h-[900px] rounded-full filter blur-[140px] opacity-75 transition-all duration-1000"
+          className="absolute -top-[10%] -left-[15%] w-[85vw] h-[900px] rounded-full filter blur-[120px] opacity-80 transition-all duration-1000"
           style={{ backgroundColor: palette.primaryGlow }}
         />
 
         {/* Spot 2: Vibrant Secondary Color Bloom (Top Right - Behind Hero Stats) */}
         <div
-          className="absolute top-[5%] -right-[15%] w-[85vw] h-[900px] rounded-full filter blur-[150px] opacity-65 transition-all duration-1000"
+          className="absolute top-[5%] -right-[15%] w-[85vw] h-[900px] rounded-full filter blur-[130px] opacity-75 transition-all duration-1000"
           style={{ backgroundColor: palette.secondaryGlow }}
         />
 
         {/* Spot 3: Chromatic Tertiary Color Bloom (Mid Body - Behind Cast & Episodes) */}
         <div
-          className="absolute top-[40%] -left-[20%] w-[90vw] h-[950px] rounded-full filter blur-[160px] opacity-70 transition-all duration-1000"
+          className="absolute top-[35%] -left-[20%] w-[90vw] h-[950px] rounded-full filter blur-[140px] opacity-75 transition-all duration-1000"
           style={{ backgroundColor: palette.tertiaryGlow }}
         />
 
         {/* Spot 4: Atmospheric Quaternary Color Bloom (Lower Body & Footer) */}
         <div
-          className="absolute top-[65%] -right-[20%] w-[95vw] h-[1000px] rounded-full filter blur-[160px] opacity-60 transition-all duration-1000"
+          className="absolute top-[60%] -right-[20%] w-[95vw] h-[1000px] rounded-full filter blur-[140px] opacity-70 transition-all duration-1000"
           style={{ backgroundColor: palette.quaternaryGlow }}
         />
 
         {/* Multi-Point Chromatic Radial Mesh Lighting */}
         <div
-          className="absolute inset-0 opacity-50 transition-all duration-1000"
+          className="absolute inset-0 opacity-55 transition-all duration-1000"
           style={{
             background: `radial-gradient(ellipse 90% 70% at 15% 20%, ${palette.primaryGlow}, transparent 60%), radial-gradient(ellipse 90% 70% at 85% 30%, ${palette.secondaryGlow}, transparent 60%), radial-gradient(ellipse 90% 70% at 20% 65%, ${palette.tertiaryGlow}, transparent 60%), radial-gradient(ellipse 100% 70% at 80% 85%, ${palette.quaternaryGlow}, transparent 60%)`,
           }}
         />
 
         {/* Unified luxury dark base overlay */}
-        <div className="absolute inset-0 bg-[#07090e]/60" />
+        <div className="absolute inset-0 bg-[#07090e]/50" />
       </div>
 
       {/* 2. Expansive Hero Section with 4-Way Smooth Feathered Video Dissolve */}
-      <div className="relative w-full min-h-[720px] sm:min-h-[820px] lg:min-h-[920px] xl:min-h-[960px] overflow-hidden flex flex-col justify-end">
+      <div className="relative w-full min-h-[740px] sm:min-h-[840px] lg:min-h-[940px] xl:min-h-[980px] overflow-hidden flex flex-col justify-end z-10">
         {/* Background Video Trailer Layer with 4-Edge Radial Feathering */}
         {mainTrailer ? (
           <div
@@ -279,9 +285,9 @@ export default function MediaDetailsPage() {
         <div className="absolute inset-x-0 top-0 h-36 bg-gradient-to-b from-black/35 to-transparent pointer-events-none z-10" />
 
         {/* Hero Content Overlay (Left Info + Right Stats) */}
-        <div className="relative max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 pt-36 pb-16 z-20 flex flex-col lg:flex-row items-end justify-between gap-10">
+        <div className="relative max-w-[1750px] mx-auto w-full px-6 sm:px-10 lg:px-16 xl:px-20 pt-36 pb-16 z-20 flex flex-col lg:flex-row items-end justify-between gap-12">
           {/* Left Column: Title, Genres, Actions, Synopsis */}
-          <div className="flex-1 flex flex-col gap-4 max-w-3xl">
+          <div className="flex-1 flex flex-col gap-5 max-w-4xl">
             {/* Title: Official TMDB Graphic Logo with Text Fallback */}
             {(() => {
               const logo =
@@ -292,7 +298,7 @@ export default function MediaDetailsPage() {
 
               if (logo?.file_path) {
                 return (
-                  <div className="relative w-full max-w-[320px] sm:max-w-[440px] md:max-w-[560px] h-24 sm:h-32 md:h-44 my-2">
+                  <div className="relative w-full max-w-[380px] sm:max-w-[520px] md:max-w-[680px] lg:max-w-[780px] h-28 sm:h-36 md:h-48 lg:h-56 my-2">
                     <Image
                       src={getLogoUrl(logo.file_path, 'w500')}
                       alt={title}
@@ -305,7 +311,7 @@ export default function MediaDetailsPage() {
               }
 
               return (
-                <h1 className="text-4xl sm:text-5xl md:text-6xl font-black text-white tracking-tight leading-tight">
+                <h1 className="text-5xl sm:text-6xl md:text-7xl font-black text-white tracking-tight leading-tight">
                   {title}
                 </h1>
               );
@@ -421,34 +427,34 @@ export default function MediaDetailsPage() {
             )}
           </div>
 
-          {/* Right Column: Cinema Stats Card (CineJoy Style) */}
-          <div className="w-full lg:w-72 rounded-2xl bg-black/40 backdrop-blur-2xl border border-white/10 p-5 flex flex-col gap-3 shadow-2xl">
+          {/* Right Column: Cinema Stats Card (CineJoy Style - Expanded & Prominent) */}
+          <div className="w-full lg:w-84 xl:w-96 rounded-3xl bg-black/50 backdrop-blur-2xl border border-white/15 p-6 flex flex-col gap-3.5 shadow-2xl">
             {runtime ? (
-              <div className="flex items-center justify-between text-xs pb-2 border-b border-white/[0.06]">
-                <span className="text-zinc-400">Runtime</span>
+              <div className="flex items-center justify-between text-xs sm:text-sm pb-2.5 border-b border-white/[0.08]">
+                <span className="text-zinc-400 font-medium">Runtime</span>
                 <span className="text-zinc-100 font-semibold text-right">{formatEndTime(runtime)}</span>
               </div>
             ) : null}
 
-            <div className="flex items-center justify-between text-xs pb-2 border-b border-white/[0.06]">
-              <span className="text-zinc-400">Language</span>
+            <div className="flex items-center justify-between text-xs sm:text-sm pb-2.5 border-b border-white/[0.08]">
+              <span className="text-zinc-400 font-medium">Language</span>
               <span className="text-zinc-100 font-bold uppercase">{details.original_language || 'EN'}</span>
             </div>
 
-            <div className="flex items-center justify-between text-xs pb-2 border-b border-white/[0.06]">
-              <span className="text-zinc-400">Release Date</span>
+            <div className="flex items-center justify-between text-xs sm:text-sm pb-2.5 border-b border-white/[0.08]">
+              <span className="text-zinc-400 font-medium">Release Date</span>
               <span className="text-zinc-100 font-semibold">{formatDateFull(releaseDate)}</span>
             </div>
 
             {type === 'movie' && (
               <>
-                <div className="flex items-center justify-between text-xs pb-2 border-b border-white/[0.06]">
-                  <span className="text-zinc-400">Budget</span>
+                <div className="flex items-center justify-between text-xs sm:text-sm pb-2.5 border-b border-white/[0.08]">
+                  <span className="text-zinc-400 font-medium">Budget</span>
                   <span className="text-zinc-100 font-semibold">{formatCurrency(budget)}</span>
                 </div>
 
-                <div className="flex items-center justify-between text-xs pb-2 border-b border-white/[0.06]">
-                  <span className="text-zinc-400">Revenue</span>
+                <div className="flex items-center justify-between text-xs sm:text-sm pb-2.5 border-b border-white/[0.08]">
+                  <span className="text-zinc-400 font-medium">Revenue</span>
                   <span className="text-zinc-100 font-semibold">{formatCurrency(revenue)}</span>
                 </div>
               </>
@@ -457,10 +463,10 @@ export default function MediaDetailsPage() {
             {/* Production Studios */}
             {companies.length > 0 && (
               <div className="flex items-center gap-2 pt-1 flex-wrap">
-                {companies.slice(0, 3).map((comp) => (
+                {companies.slice(0, 4).map((comp) => (
                   <span
                     key={comp.id}
-                    className="text-[10px] px-2 py-0.5 rounded bg-zinc-900/80 border border-white/10 text-zinc-300 font-medium"
+                    className="text-[11px] px-2.5 py-1 rounded-md bg-zinc-900/90 border border-white/10 text-zinc-300 font-medium"
                   >
                     {comp.name}
                   </span>
@@ -471,8 +477,8 @@ export default function MediaDetailsPage() {
         </div>
       </div>
 
-      {/* 3. Main Body Content Sections */}
-      <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-16 flex flex-col gap-16 z-20">
+      {/* 3. Main Body Content Sections (Widescreen Spacious Layout) */}
+      <div className="max-w-[1750px] mx-auto w-full px-6 sm:px-10 lg:px-16 xl:px-20 py-16 flex flex-col gap-16 z-20">
         {/* Cast Showcase (Circular Avatars) */}
         {details.credits?.cast && <CastList cast={details.credits.cast} />}
 
@@ -481,11 +487,11 @@ export default function MediaDetailsPage() {
           <div className="w-full flex flex-col gap-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
-                <h3 className="text-xl sm:text-2xl font-bold text-white tracking-tight flex items-center gap-2">
-                  <Layers className="w-5 h-5 text-red-500" />
+                <h3 className="text-2xl sm:text-3xl font-black text-white tracking-tight flex items-center gap-2">
+                  <Layers className="w-6 h-6 text-red-500" />
                   <span>Episodes & Seasons</span>
                 </h3>
-                <p className="text-xs text-zinc-400">
+                <p className="text-xs sm:text-sm text-zinc-400">
                   Select a season and episode to stream.
                 </p>
               </div>
@@ -495,7 +501,7 @@ export default function MediaDetailsPage() {
                 <select
                   value={selectedSeasonNum}
                   onChange={(e) => setSelectedSeasonNum(Number(e.target.value))}
-                  className="appearance-none bg-zinc-900/80 border border-white/10 text-white text-xs font-semibold rounded-xl px-4 py-2.5 pr-9 focus:outline-none focus:border-red-500 cursor-pointer shadow-lg backdrop-blur-xl"
+                  className="appearance-none bg-zinc-900/90 border border-white/15 text-white text-xs sm:text-sm font-semibold rounded-xl px-4 py-2.5 pr-9 focus:outline-none focus:border-red-500 cursor-pointer shadow-lg backdrop-blur-xl"
                 >
                   {seasons.map((s) => (
                     <option key={s.id} value={s.season_number}>
@@ -513,7 +519,7 @@ export default function MediaDetailsPage() {
                 Loading season {selectedSeasonNum} episodes...
               </div>
             ) : seasonData?.episodes && seasonData.episodes.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-5">
                 {seasonData.episodes.map((ep: TMDBEpisode) => (
                   <Link
                     key={ep.id}
@@ -525,7 +531,7 @@ export default function MediaDetailsPage() {
                         src={getImageUrl(ep.still_path || details.backdrop_path, 'w500')}
                         alt={ep.name}
                         fill
-                        sizes="(max-width: 640px) 100vw, 300px"
+                        sizes="(max-width: 640px) 100vw, 350px"
                         className="object-cover group-hover:scale-105 transition-transform duration-300"
                       />
                       <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
@@ -557,27 +563,27 @@ export default function MediaDetailsPage() {
           </div>
         )}
 
-        {/* 4. "Trailers & Clips" Multi-Video Gallery (Screenshot 2 Style) */}
+        {/* 4. "Trailers & Clips" Multi-Video Gallery */}
         {allVideos.length > 0 && (
-          <div className="w-full flex flex-col gap-4">
+          <div className="w-full flex flex-col gap-5">
             <div className="flex items-center justify-between">
-              <h3 className="text-xl sm:text-2xl font-bold text-white tracking-tight">Trailers</h3>
-              <span className="text-xs text-zinc-500">{allVideos.length} Videos Available</span>
+              <h3 className="text-2xl sm:text-3xl font-black text-white tracking-tight">Trailers & Clips</h3>
+              <span className="text-xs sm:text-sm text-zinc-400 font-semibold">{allVideos.length} Videos Available</span>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {allVideos.slice(0, 8).map((vid) => (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5">
+              {allVideos.slice(0, 10).map((vid) => (
                 <button
                   key={vid.id}
                   onClick={() => setSelectedModalVideo(vid)}
-                  className="group flex flex-col rounded-2xl overflow-hidden bg-zinc-900/40 border border-white/10 hover:border-white/25 hover:bg-zinc-900/70 transition-all text-left cursor-pointer p-2.5 shadow-xl"
+                  className="group flex flex-col rounded-2xl overflow-hidden bg-zinc-900/40 border border-white/10 hover:border-white/25 hover:bg-zinc-900/70 transition-all text-left cursor-pointer p-3 shadow-xl"
                 >
                   <div className="relative aspect-video w-full rounded-xl overflow-hidden bg-black mb-2.5">
                     <Image
                       src={`https://img.youtube.com/vi/${vid.key}/hqdefault.jpg`}
                       alt={vid.name}
                       fill
-                      sizes="(max-width: 640px) 100vw, 300px"
+                      sizes="(max-width: 640px) 100vw, 350px"
                       className="object-cover group-hover:scale-105 transition-transform duration-300 brightness-90"
                     />
                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
@@ -590,10 +596,10 @@ export default function MediaDetailsPage() {
                     </div>
                   </div>
 
-                  <span className="font-bold text-xs text-zinc-100 line-clamp-1 group-hover:text-red-400 transition-colors">
+                  <span className="font-bold text-xs sm:text-sm text-zinc-100 line-clamp-1 group-hover:text-red-400 transition-colors">
                     {vid.name}
                   </span>
-                  <span className="text-[11px] text-zinc-500 mt-0.5">{vid.type}</span>
+                  <span className="text-xs text-zinc-500 mt-0.5 font-medium">{vid.type}</span>
                 </button>
               ))}
             </div>
