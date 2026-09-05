@@ -156,7 +156,6 @@ export function VideasyPlayer({
           src={playerUrl}
           title={`Cinema player - ${title}`}
           onLoad={() => setIsLoading(false)}
-          sandbox="allow-scripts allow-same-origin allow-forms allow-presentation allow-downloads"
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen *; display-capture"
           allowFullScreen={true}
           className="w-full h-full border-0 relative z-0"
