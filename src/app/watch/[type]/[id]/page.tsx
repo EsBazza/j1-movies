@@ -25,7 +25,7 @@ import {
   normalizeMediaItem,
 } from '@/lib/tmdb';
 import { TMDBMovieDetails, TMDBTVDetails, MediaType } from '@/types/tmdb';
-import { UnifiedCinemaPlayer } from '@/components/player/UnifiedCinemaPlayer';
+import { VideasyPlayer } from '@/components/player/VideasyPlayer';
 import { EpisodeDrawer } from '@/components/player/EpisodeDrawer';
 import { BookmarkButton } from '@/components/common/BookmarkButton';
 import { CastList } from '@/components/media/CastList';
@@ -195,7 +195,7 @@ function WatchContent() {
                 : 'lg:col-span-12'
             )}
           >
-            <UnifiedCinemaPlayer
+            <VideasyPlayer
               type={type}
               tmdbId={details.id}
               season={season}

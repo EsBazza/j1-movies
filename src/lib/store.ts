@@ -16,7 +16,7 @@ const defaultData: UserStoreData = {
   watchlist: [],
   history: [],
   collections: [],
-  preferredServerId: 'vidlink',
+  preferredServerId: 'videasy',
 };
 
 function getStoredData(): UserStoreData {
@@ -30,7 +30,7 @@ function getStoredData(): UserStoreData {
       watchlist: Array.isArray(state.watchlist) ? state.watchlist : [],
       history: Array.isArray(state.history) ? state.history : [],
       collections: Array.isArray(state.collections) ? state.collections : [],
-      preferredServerId: state.preferredServerId || 'vidlink',
+      preferredServerId: state.preferredServerId || 'videasy',
     };
   } catch (e) {
     console.error('Error reading localStorage:', e);
