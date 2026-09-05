@@ -12,6 +12,11 @@ import {
   Subtitles,
   ExternalLink,
   Plus,
+  ChevronLeft,
+  ChevronRight,
+  Layers,
+  Check,
+  X,
 } from 'lucide-react';
 import { MediaType } from '@/types/tmdb';
 import { STREAMING_SERVERS, getPlayerUrlForServer } from '@/lib/playerSources';
@@ -47,7 +52,11 @@ export function UnifiedCinemaPlayer({
   const [customStreamUrl, setCustomStreamUrl] = useState<string>('');
   const [isCustomStreamActive, setIsCustomStreamActive] = useState(false);
   const [isCustomModalOpen, setIsCustomModalOpen] = useState(false);
+  const [isAllServersModalOpen, setIsAllServersModalOpen] = useState(false);
   const [customInputVal, setCustomInputVal] = useState('');
+
+  // Scroll container ref for server buttons
+  const serverScrollRef = useRef<HTMLDivElement>(null);
 
   // Iframe player states
   const [isIframeLoading, setIsIframeLoading] = useState(true);
@@ -68,6 +77,14 @@ export function UnifiedCinemaPlayer({
     setActiveServer(serverId);
     setPreferredServerId(serverId);
     setIsIframeLoading(true);
+    setIsAllServersModalOpen(false);
+  };
+
+  // Scroll helper buttons
+  const scrollServers = (direction: 'left' | 'right') => {
+    if (!serverScrollRef.current) return;
+    const scrollAmount = direction === 'left' ? -260 : 260;
+    serverScrollRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
   };
 
   // Fullscreen for Iframe Fallback Mode
@@ -108,56 +125,91 @@ export function UnifiedCinemaPlayer({
 
   return (
     <div className="w-full flex flex-col gap-3">
-      {/* Top Multi-Server Switcher Pill Bar */}
-      <div className="flex items-center justify-between flex-wrap gap-2 pb-1">
-        <div className="flex items-center gap-1.5 overflow-x-auto py-1 scrollbar-none">
-          {/* Active Verified Servers */}
-          {STREAMING_SERVERS.map((server) => {
-            const isSelected = activeServer === server.id && !isCustomStreamActive;
-            return (
-              <button
-                key={server.id}
-                onClick={() => handleServerChange(server.id)}
-                className={cn(
-                  'flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold border transition-all cursor-pointer shadow-sm flex-shrink-0',
-                  isSelected
-                    ? 'bg-red-600 text-white border-red-500 shadow-red-600/30 font-bold'
-                    : 'bg-zinc-900/90 hover:bg-zinc-800 text-zinc-400 hover:text-white border-zinc-800'
-                )}
-              >
-                <Server className="w-3 h-3" />
-                <span>{server.name}</span>
-                <span
+      {/* Top Multi-Server Switcher Bar with Scroll Arrows & View All Button */}
+      <div className="flex items-center justify-between gap-2 pb-1">
+        {/* Scrollable Container with Left/Right Scroll Controls */}
+        <div className="relative flex-1 flex items-center min-w-0">
+          {/* Scroll Left Button */}
+          <button
+            onClick={() => scrollServers('left')}
+            title="Scroll servers left"
+            className="p-1.5 rounded-lg bg-zinc-900/90 hover:bg-zinc-800 text-zinc-400 hover:text-white border border-zinc-800 transition-colors mr-1.5 flex-shrink-0 cursor-pointer shadow-sm"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+
+          {/* Scrollable Server Pills Row */}
+          <div
+            ref={serverScrollRef}
+            className="flex items-center gap-1.5 overflow-x-auto py-1 scroll-smooth no-scrollbar scrollbar-none"
+            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+          >
+            {/* Active Verified Servers */}
+            {STREAMING_SERVERS.map((server) => {
+              const isSelected = activeServer === server.id && !isCustomStreamActive;
+              return (
+                <button
+                  key={server.id}
+                  onClick={() => handleServerChange(server.id)}
                   className={cn(
-                    'text-[10px] px-1.5 py-0.5 rounded font-bold',
-                    isSelected ? 'bg-black/30 text-white' : 'bg-zinc-800 text-zinc-400'
+                    'flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold border transition-all cursor-pointer shadow-sm flex-shrink-0 whitespace-nowrap',
+                    isSelected
+                      ? 'bg-red-600 text-white border-red-500 shadow-red-600/30 font-bold'
+                      : 'bg-zinc-900/90 hover:bg-zinc-800 text-zinc-400 hover:text-white border-zinc-800'
                   )}
                 >
-                  {server.badge}
-                </span>
-              </button>
-            );
-          })}
+                  <Server className="w-3 h-3" />
+                  <span>{server.name}</span>
+                  <span
+                    className={cn(
+                      'text-[10px] px-1.5 py-0.5 rounded font-bold',
+                      isSelected ? 'bg-black/30 text-white' : 'bg-zinc-800 text-zinc-400'
+                    )}
+                  >
+                    {server.badge}
+                  </span>
+                </button>
+              );
+            })}
 
-          {/* Custom Stream / ArtPlayer Option */}
+            {/* Custom Stream / ArtPlayer Option */}
+            <button
+              onClick={() => setIsCustomModalOpen(true)}
+              className={cn(
+                'flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold border transition-all cursor-pointer shadow-sm flex-shrink-0 whitespace-nowrap',
+                isCustomStreamActive
+                  ? 'bg-purple-600 text-white border-purple-500 shadow-purple-600/30'
+                  : 'bg-zinc-900/90 hover:bg-zinc-800 text-purple-400 hover:text-purple-300 border-zinc-800'
+              )}
+            >
+              <Zap className="w-3 h-3 text-purple-400" />
+              <span>🎨 Direct Stream (ArtPlayer)</span>
+              {isCustomStreamActive && (
+                <span className="text-[10px] bg-black/40 text-purple-200 px-1.5 rounded font-bold">
+                  Active
+                </span>
+              )}
+            </button>
+          </div>
+
+          {/* Scroll Right Button */}
           <button
-            onClick={() => setIsCustomModalOpen(true)}
-            className={cn(
-              'flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all cursor-pointer shadow-sm flex-shrink-0',
-              isCustomStreamActive
-                ? 'bg-purple-600 text-white border-purple-500 shadow-purple-600/30'
-                : 'bg-zinc-900/90 hover:bg-zinc-800 text-purple-400 hover:text-purple-300 border-zinc-800'
-            )}
+            onClick={() => scrollServers('right')}
+            title="Scroll servers right"
+            className="p-1.5 rounded-lg bg-zinc-900/90 hover:bg-zinc-800 text-zinc-400 hover:text-white border border-zinc-800 transition-colors ml-1.5 flex-shrink-0 cursor-pointer shadow-sm"
           >
-            <Zap className="w-3 h-3 text-purple-400" />
-            <span>🎨 Direct Stream (ArtPlayer)</span>
-            {isCustomStreamActive && (
-              <span className="text-[10px] bg-black/40 text-purple-200 px-1.5 rounded font-bold">
-                Active
-              </span>
-            )}
+            <ChevronRight className="w-4 h-4" />
           </button>
         </div>
+
+        {/* 'View All Servers' Popover Modal Button */}
+        <button
+          onClick={() => setIsAllServersModalOpen(true)}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-zinc-900/90 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 hover:text-white text-xs font-semibold transition-colors cursor-pointer shadow-sm flex-shrink-0 whitespace-nowrap"
+        >
+          <Layers className="w-3.5 h-3.5 text-red-500" />
+          <span>All Servers ({STREAMING_SERVERS.length})</span>
+        </button>
       </div>
 
       {/* Main Video Cinema Screen */}
@@ -254,6 +306,97 @@ export function UnifiedCinemaPlayer({
               <RefreshCw className="w-3 h-3" />
               <span>Reload Stream</span>
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* 'All Streaming Servers' Modal Selector */}
+      {isAllServersModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="relative w-full max-w-lg rounded-2xl bg-[#090d16] border border-zinc-700 p-6 shadow-2xl flex flex-col gap-4">
+            <div className="flex items-center justify-between pb-2 border-b border-zinc-800">
+              <h3 className="text-base font-bold text-white flex items-center gap-2">
+                <Layers className="w-4 h-4 text-red-500" />
+                <span>Select Cinema Streaming Server</span>
+              </h3>
+              <button
+                onClick={() => setIsAllServersModalOpen(false)}
+                className="p-1 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <p className="text-xs text-zinc-400">
+              Select a streaming source from the cluster. If any server buffers or encounters regional blocks, simply choose another server below.
+            </p>
+
+            <div className="flex flex-col gap-2.5 max-h-[60vh] overflow-y-auto pr-1">
+              {STREAMING_SERVERS.map((server, index) => {
+                const isSelected = activeServer === server.id && !isCustomStreamActive;
+                return (
+                  <button
+                    key={server.id}
+                    onClick={() => handleServerChange(server.id)}
+                    className={cn(
+                      'flex items-center justify-between p-3.5 rounded-xl border text-left transition-all cursor-pointer',
+                      isSelected
+                        ? 'bg-red-600/15 border-red-500/60 text-white shadow-lg shadow-red-950/30'
+                        : 'bg-zinc-900/80 hover:bg-zinc-800/90 border-zinc-800 text-zinc-300'
+                    )}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div
+                        className={cn(
+                          'w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold',
+                          isSelected ? 'bg-red-600 text-white' : 'bg-zinc-800 text-zinc-400'
+                        )}
+                      >
+                        {index + 1}
+                      </div>
+                      <div>
+                        <div className="text-xs font-bold text-white flex items-center gap-2">
+                          <span>{server.name}</span>
+                          {isSelected && <span className="text-[10px] text-red-400 font-semibold">• Active</span>}
+                        </div>
+                        <div className="text-[11px] text-zinc-400 mt-0.5">{server.badge}</div>
+                      </div>
+                    </div>
+
+                    {isSelected && <Check className="w-4 h-4 text-red-500" />}
+                  </button>
+                );
+              })}
+
+              {/* Direct Stream ArtPlayer Option in Modal */}
+              <button
+                onClick={() => {
+                  setIsAllServersModalOpen(false);
+                  setIsCustomModalOpen(true);
+                }}
+                className={cn(
+                  'flex items-center justify-between p-3.5 rounded-xl border text-left transition-all cursor-pointer',
+                  isCustomStreamActive
+                    ? 'bg-purple-600/15 border-purple-500/60 text-white shadow-lg shadow-purple-950/30'
+                    : 'bg-zinc-900/80 hover:bg-zinc-800/90 border-zinc-800 text-zinc-300'
+                )}
+              >
+                <div className="flex items-center gap-3">
+                  <div
+                    className={cn(
+                      'w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold',
+                      isCustomStreamActive ? 'bg-purple-600 text-white' : 'bg-zinc-800 text-purple-400'
+                    )}
+                  >
+                    <Zap className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <div className="text-xs font-bold text-white">🎨 Direct Stream (ArtPlayer)</div>
+                    <div className="text-[11px] text-zinc-400 mt-0.5">Custom .m3u8 / .mp4 URL with Subtitle Sync</div>
+                  </div>
+                </div>
+              </button>
+            </div>
           </div>
         </div>
       )}
