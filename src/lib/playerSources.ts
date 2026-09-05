@@ -8,32 +8,32 @@ export interface StreamingSource {
 
 export const STREAMING_SERVERS: StreamingSource[] = [
   {
+    id: 'vidlink',
+    name: 'Server 1 (VidLink Fast HD)',
+    badge: '⚡ Ultra Fast (350ms)',
+    getMovieUrl: (id) => `https://vidlink.pro/movie/${id}?primaryColor=e50914&autoplay=true&subtitles=true`,
+    getTvUrl: (id, s, e) => `https://vidlink.pro/tv/${id}/${s}/${e}?primaryColor=e50914&autoplay=true&nextEpisode=true&subtitles=true`,
+  },
+  {
     id: 'videasy',
-    name: 'Server 1 (Videasy HD)',
-    badge: 'Ultra HD',
+    name: 'Server 2 (Videasy HD)',
+    badge: 'Clean Player',
     getMovieUrl: (id) => `https://player.videasy.net/movie/${id}?color=e50914&autoplay=1`,
     getTvUrl: (id, s, e) => `https://player.videasy.net/tv/${id}/${s}/${e}?color=e50914&autoplay=1&nextEpisode=1`,
   },
   {
-    id: 'vidlink',
-    name: 'Server 2 (VidLink Pro)',
-    badge: 'Multi-Audio',
-    getMovieUrl: (id) => `https://vidlink.pro/movie/${id}?primaryColor=e50914&autoplay=true`,
-    getTvUrl: (id, s, e) => `https://vidlink.pro/tv/${id}/${s}/${e}?primaryColor=e50914&autoplay=true`,
+    id: 'multiembed',
+    name: 'Server 3 (MultiEmbed VIP)',
+    badge: 'Multi-Language',
+    getMovieUrl: (id) => `https://multiembed.mov/?video_id=${id}&tmdb=1`,
+    getTvUrl: (id, s, e) => `https://multiembed.mov/?video_id=${id}&tmdb=1&s=${s}&e=${e}`,
   },
   {
-    id: 'vidsrc',
-    name: 'Server 3 (Vidsrc VIP)',
-    badge: 'Direct Stream',
-    getMovieUrl: (id) => `https://vidsrc.cc/v2/embed/movie/${id}`,
-    getTvUrl: (id, s, e) => `https://vidsrc.cc/v2/embed/tv/${id}/${s}/${e}`,
-  },
-  {
-    id: 'autoembed',
-    name: 'Server 4 (AutoEmbed Global)',
-    badge: 'Fast CDN',
-    getMovieUrl: (id) => `https://player.autoembed.cc/embed/movie/${id}`,
-    getTvUrl: (id, s, e) => `https://player.autoembed.cc/embed/tv/${id}/${s}/${e}`,
+    id: 'smashystream',
+    name: 'Server 4 (SmashyStream CDN)',
+    badge: 'Backup Fast',
+    getMovieUrl: (id) => `https://embed.smashystream.com/playere.php?tmdb=${id}`,
+    getTvUrl: (id, s, e) => `https://embed.smashystream.com/playere.php?tmdb=${id}&season=${s}&episode=${e}`,
   },
 ];
 
