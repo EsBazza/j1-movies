@@ -40,7 +40,7 @@ import {
   MediaType,
 } from '@/types/tmdb';
 import { formatRuntime, formatYear, formatEndTime, formatCurrency, formatDateFull, cn } from '@/lib/utils';
-import { extractPaletteFromImage, DEFAULT_PALETTE, ExtractedPalette } from '@/lib/colorExtractor';
+import { extractPaletteFromImage, getPaletteForGenre, DEFAULT_PALETTE, ExtractedPalette } from '@/lib/colorExtractor';
 import { BookmarkButton } from '@/components/common/BookmarkButton';
 import { CastList } from '@/components/media/CastList';
 import { MediaCarousel } from '@/components/media/MediaCarousel';
@@ -73,16 +73,22 @@ export default function MediaDetailsPage() {
         if (type === 'movie') {
           const res = await getMovieDetails(id);
           setDetails(res);
+          const genreId = res.genres?.[0]?.id;
           if (res.backdrop_path || res.poster_path) {
             const sampleUrl = getBackdropUrl(res.backdrop_path || res.poster_path, 'w780');
-            extractPaletteFromImage(sampleUrl).then(setPalette);
+            extractPaletteFromImage(sampleUrl, genreId).then(setPalette);
+          } else if (genreId) {
+            setPalette(getPaletteForGenre(genreId));
           }
         } else {
           const res = await getTVDetails(id);
           setDetails(res);
+          const genreId = res.genres?.[0]?.id;
           if (res.backdrop_path || res.poster_path) {
             const sampleUrl = getBackdropUrl(res.backdrop_path || res.poster_path, 'w780');
-            extractPaletteFromImage(sampleUrl).then(setPalette);
+            extractPaletteFromImage(sampleUrl, genreId).then(setPalette);
+          } else if (genreId) {
+            setPalette(getPaletteForGenre(genreId));
           }
           const firstSeason = res.seasons?.find((s) => s.season_number > 0) || res.seasons?.[0];
           if (firstSeason) {
@@ -175,41 +181,51 @@ export default function MediaDetailsPage() {
   const companies = details.production_companies || [];
 
   return (
-    <div className="w-full flex flex-col min-h-screen relative overflow-hidden bg-[#07090e]">
-      {/* 1. Dynamic Ambient Color Lighting & Halo Layers */}
-      <div className="fixed inset-0 pointer-events-none -z-10 overflow-hidden">
+    <div
+      className="w-full flex flex-col min-h-screen relative overflow-hidden transition-all duration-1000"
+      style={{
+        background: `radial-gradient(ellipse 110% 60% at 50% 0%, ${palette.primaryGlow}, transparent 70%), radial-gradient(ellipse 90% 50% at 95% 35%, ${palette.secondaryGlow}, transparent 65%), radial-gradient(ellipse 90% 60% at 5% 65%, ${palette.primaryGlow}, transparent 65%), radial-gradient(ellipse 100% 40% at 50% 98%, ${palette.secondaryGlow}, transparent 70%), #07090e`,
+      }}
+    >
+      {/* 1. Dynamic Ambient Color Lighting & Halo Layers across Whole Document */}
+      <div className="absolute inset-0 pointer-events-none -z-10 overflow-hidden">
         {/* Dynamic Primary Color Aura (Top Hero Bloom) */}
         <div
-          className="absolute -top-[15%] left-1/2 -translate-x-1/2 w-[100vw] h-[800px] rounded-full filter blur-[150px] opacity-70 transition-all duration-1000"
+          className="absolute -top-[10%] left-1/2 -translate-x-1/2 w-[110vw] h-[850px] rounded-full filter blur-[140px] opacity-80 transition-all duration-1000"
           style={{ backgroundColor: palette.primaryGlow }}
         />
 
-        {/* Dynamic Secondary Color Aura (Side Bloom) */}
+        {/* Dynamic Secondary Color Aura (Mid Body - Cast & Episodes) */}
         <div
-          className="absolute top-[35%] -right-[15%] w-[65vw] h-[650px] rounded-full filter blur-[160px] opacity-50 transition-all duration-1000"
+          className="absolute top-[32%] -right-[15%] w-[85vw] h-[950px] rounded-full filter blur-[160px] opacity-65 transition-all duration-1000"
           style={{ backgroundColor: palette.secondaryGlow }}
         />
 
-        {/* Dynamic Tertiary Color Aura (Lower Body Bloom) */}
+        {/* Dynamic Primary Color Aura (Lower Body - Trailers & Similar) */}
         <div
-          className="absolute top-[65%] -left-[10%] w-[60vw] h-[700px] rounded-full filter blur-[170px] opacity-40 transition-all duration-1000"
+          className="absolute top-[62%] -left-[15%] w-[85vw] h-[950px] rounded-full filter blur-[160px] opacity-60 transition-all duration-1000"
           style={{ backgroundColor: palette.primaryGlow }}
+        />
+
+        {/* Dynamic Accent Color Aura (Footer Base) */}
+        <div
+          className="absolute -bottom-[5%] left-1/2 -translate-x-1/2 w-[90vw] h-[650px] rounded-full filter blur-[150px] opacity-55 transition-all duration-1000"
+          style={{ backgroundColor: palette.secondaryGlow }}
         />
 
         {/* Dynamic Full Backdrop Blur Layer */}
         {details.backdrop_path && (
-          <Image
-            src={getBackdropUrl(details.backdrop_path, 'w1280')}
-            alt=""
-            fill
-            priority
-            sizes="100vw"
-            className="object-cover filter blur-[130px] saturate-200 opacity-35 scale-135 transition-opacity duration-1000"
-          />
+          <div className="fixed inset-0 pointer-events-none -z-20">
+            <Image
+              src={getBackdropUrl(details.backdrop_path, 'w1280')}
+              alt=""
+              fill
+              priority
+              sizes="100vw"
+              className="object-cover filter blur-[110px] saturate-[2.5] opacity-45 scale-130 transition-opacity duration-1000"
+            />
+          </div>
         )}
-
-        {/* Deep luxury ambient base overlay */}
-        <div className="absolute inset-0 bg-[#07090e]/75 backdrop-blur-3xl" />
       </div>
 
       {/* 2. Expansive Hero Section with High-Visibility Background Video Trailer */}
@@ -240,10 +256,10 @@ export default function MediaDetailsPage() {
           </div>
         )}
 
-        {/* Cinematic Vignette Gradients Tuned for Visibility */}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#07090e] via-[#07090e]/35 to-transparent pointer-events-none z-10" />
-        <div className="absolute inset-0 bg-gradient-to-r from-[#07090e]/85 via-[#07090e]/20 to-transparent pointer-events-none z-10" />
-        <div className="absolute inset-x-0 top-0 h-44 bg-gradient-to-b from-[#07090e]/80 via-[#07090e]/30 to-transparent pointer-events-none z-10" />
+        {/* Cinematic Vignette Gradients Tuned for Transparency & Visibility */}
+        <div className="absolute inset-0 bg-gradient-to-t from-[#07090e]/80 via-transparent to-transparent pointer-events-none z-10" />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#07090e]/80 via-transparent to-transparent pointer-events-none z-10" />
+        <div className="absolute inset-x-0 top-0 h-44 bg-gradient-to-b from-[#07090e]/80 via-[#07090e]/20 to-transparent pointer-events-none z-10" />
 
         {/* Hero Content Overlay (Left Info + Right Stats) */}
         <div className="relative max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 pt-36 pb-16 z-20 flex flex-col lg:flex-row items-end justify-between gap-10">
