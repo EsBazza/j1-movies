@@ -20,6 +20,13 @@ export interface TMDBMediaItem {
   vote_average: number;
   vote_count: number;
   popularity: number;
+  original_language?: string;
+  production_companies?: Array<{
+    id: number;
+    name: string;
+    logo_path: string | null;
+    origin_country: string;
+  }>;
   genre_ids?: number[];
   genres?: TMDBGenre[];
   adult?: boolean;

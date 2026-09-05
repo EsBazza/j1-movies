@@ -1,55 +1,86 @@
-import React from 'react';
+'use client';
+
+import React, { useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { TMDBCastMember } from '@/types/tmdb';
 import { getImageUrl } from '@/lib/tmdb';
-import { User, Sparkles } from 'lucide-react';
+import { User, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface CastListProps {
   cast: TMDBCastMember[];
 }
 
 export function CastList({ cast }: CastListProps) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+
   if (!cast || cast.length === 0) return null;
 
-  const topCast = cast.slice(0, 14);
+  const topCast = cast.slice(0, 18);
+
+  const scroll = (direction: 'left' | 'right') => {
+    if (!scrollRef.current) return;
+    const amount = direction === 'left' ? -300 : 300;
+    scrollRef.current.scrollBy({ left: amount, behavior: 'smooth' });
+  };
 
   return (
-    <div className="w-full">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-bold text-white flex items-center gap-2">
-          <User className="w-4 h-4 text-red-500" />
-          <span>Top Cast & Crew</span>
-        </h3>
-        <span className="text-xs text-zinc-500">Click to view full filmography</span>
+    <div className="w-full flex flex-col gap-4">
+      <div className="flex items-center justify-between">
+        <h3 className="text-xl sm:text-2xl font-bold text-white tracking-tight">Cast</h3>
+        {topCast.length > 6 && (
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={() => scroll('left')}
+              className="w-8 h-8 rounded-full bg-zinc-900/80 hover:bg-zinc-800 text-zinc-400 hover:text-white border border-white/10 flex items-center justify-center transition-colors cursor-pointer"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => scroll('right')}
+              className="w-8 h-8 rounded-full bg-zinc-900/80 hover:bg-zinc-800 text-zinc-400 hover:text-white border border-white/10 flex items-center justify-center transition-colors cursor-pointer"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        )}
       </div>
-      
-      <div className="flex items-start gap-4 overflow-x-auto no-scrollbar pb-3">
+
+      <div
+        ref={scrollRef}
+        className="flex items-start gap-5 sm:gap-6 overflow-x-auto pb-4 scroll-smooth scrollbar-none no-scrollbar"
+        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+      >
         {topCast.map((person) => (
           <Link
             key={person.id}
             href={`/person/${person.id}`}
-            className="w-24 sm:w-28 flex-shrink-0 flex flex-col items-center text-center group cursor-pointer"
+            className="w-20 sm:w-24 flex-shrink-0 flex flex-col items-center text-center group cursor-pointer"
           >
-            <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden bg-zinc-800 border-2 border-zinc-700/60 mb-2 group-hover:border-red-500 group-hover:scale-105 transition-all shadow-md group-hover:shadow-red-950/40">
+            {/* Circular Avatar Headshot */}
+            <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden bg-zinc-900 border border-white/15 group-hover:border-white/60 mb-2 transition-all duration-300 group-hover:scale-105 shadow-xl shadow-black/40">
               {person.profile_path ? (
                 <Image
                   src={getImageUrl(person.profile_path, 'w185')}
                   alt={person.name}
                   fill
-                  sizes="96px"
+                  sizes="80px"
                   className="object-cover group-hover:scale-110 transition-transform duration-300"
                 />
               ) : (
-                <div className="w-full h-full flex items-center justify-center bg-zinc-900 text-zinc-500">
-                  <User className="w-8 h-8" />
+                <div className="w-full h-full flex items-center justify-center bg-zinc-900 text-zinc-600">
+                  <User className="w-7 h-7" />
                 </div>
               )}
             </div>
-            <span className="font-semibold text-xs text-zinc-200 line-clamp-1 group-hover:text-red-400 transition-colors">
+
+            {/* Actor Name */}
+            <span className="font-bold text-xs text-zinc-100 line-clamp-1 group-hover:text-white transition-colors">
               {person.name}
             </span>
-            <span className="text-[11px] text-zinc-500 line-clamp-1">
+
+            {/* Character Role */}
+            <span className="text-[11px] text-zinc-400 line-clamp-1 mt-0.5">
               {person.character || 'Cast'}
             </span>
           </Link>

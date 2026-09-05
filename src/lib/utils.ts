@@ -58,3 +58,33 @@ export function formatRelativeTime(timestamp: number): string {
   if (days < 7) return `${days}d ago`;
   return new Date(timestamp).toLocaleDateString();
 }
+
+export function formatEndTime(minutes?: number): string {
+  if (!minutes || minutes <= 0) return '';
+  const runtimeFormatted = formatRuntime(minutes);
+  const now = new Date();
+  const end = new Date(now.getTime() + minutes * 60000);
+  const timeStr = end.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  return `${runtimeFormatted} • Ends ${timeStr}`;
+}
+
+export function formatCurrency(amount?: number): string {
+  if (!amount || amount <= 0) return '—';
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    maximumFractionDigits: 0,
+  }).format(amount);
+}
+
+export function formatDateFull(dateStr?: string): string {
+  if (!dateStr) return '—';
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return dateStr;
+  return d.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
+}
+

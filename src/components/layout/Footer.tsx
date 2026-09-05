@@ -1,49 +1,54 @@
+'use client';
+
 import React from 'react';
 import Link from 'next/link';
-import { Clapperboard, Heart } from 'lucide-react';
+import { Clapperboard, ArrowUp } from 'lucide-react';
 
 export function Footer() {
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
-    <footer className="w-full bg-[#05070b] border-t border-white/[0.06] pt-14 pb-24 md:pb-14 text-zinc-400 text-sm mt-24 relative overflow-hidden">
-      {/* Ambient background blur */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-24 bg-red-600/5 blur-3xl pointer-events-none -z-0" />
-
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 z-10">
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-8 pb-10 border-b border-white/[0.06]">
-          <div className="flex flex-col gap-2.5">
-            <Link href="/" className="flex items-center gap-2.5 group">
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-red-600 to-rose-500 flex items-center justify-center shadow-lg shadow-red-600/30">
-                <Clapperboard className="w-4 h-4 text-white" />
-              </div>
-              <span className="text-xl font-black tracking-tight text-white">
-                J1<span className="text-red-500 ml-1">Movies</span>
-              </span>
-            </Link>
-            <p className="text-xs text-zinc-400 max-w-md leading-relaxed">
-              Stream your favorite movies, TV series, and cinema classics in high-definition quality with your personal watchlist and watch history.
-            </p>
+    <footer className="w-full pt-16 pb-24 md:pb-16 text-zinc-400 text-xs mt-12 relative overflow-hidden">
+      <div className="max-w-4xl mx-auto px-4 text-center flex flex-col items-center gap-4">
+        {/* Centered Logo & Branding */}
+        <Link href="/" className="flex items-center gap-2 group cursor-pointer">
+          <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-red-600 to-rose-500 flex items-center justify-center shadow-lg shadow-red-600/30">
+            <Clapperboard className="w-3.5 h-3.5 text-white" />
           </div>
+          <span className="text-base font-black tracking-tight text-white group-hover:text-red-400 transition-colors">
+            J1<span className="text-red-500">MOVIES</span>
+          </span>
+        </Link>
 
-          <div className="flex flex-wrap gap-x-8 gap-y-3 text-xs font-semibold">
-            <Link href="/" className="hover:text-red-400 transition-colors">Home</Link>
-            <Link href="/movies" className="hover:text-red-400 transition-colors">Movies</Link>
-            <Link href="/tv" className="hover:text-red-400 transition-colors">TV Series</Link>
-            <Link href="/watchlist" className="hover:text-red-400 transition-colors">Watchlist</Link>
-            <Link href="/search" className="hover:text-red-400 transition-colors">Search</Link>
-          </div>
+        {/* Minimal Legal / Disclaimer Text */}
+        <p className="text-[11px] text-zinc-400 max-w-lg leading-relaxed">
+          J1 Movies does not host, store, or distribute any media files on its servers. All metadata is powered by TMDB, and all streaming content is linked to third-party providers.
+        </p>
+
+        {/* Quick Links */}
+        <div className="flex flex-wrap items-center justify-center gap-6 text-[11px] font-semibold text-zinc-300 pt-1">
+          <Link href="/" className="hover:text-white transition-colors">Home</Link>
+          <Link href="/movies" className="hover:text-white transition-colors">Movies</Link>
+          <Link href="/tv" className="hover:text-white transition-colors">Shows</Link>
+          <Link href="/watchlist" className="hover:text-white transition-colors">My List</Link>
+          <Link href="/search" className="hover:text-white transition-colors">Search</Link>
         </div>
 
-        <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-zinc-400">
-          <p className="flex items-center gap-1.5 font-medium">
-            <span>© {new Date().getFullYear()} J1 Movies. All rights reserved.</span>
-          </p>
-          <p className="flex items-center gap-1.5 text-zinc-300 font-semibold">
-            <span>Made with</span>
-            <Heart className="w-3.5 h-3.5 fill-red-500 text-red-500 inline" />
-            <span>by <strong className="text-white font-bold">bazza</strong></span>
-          </p>
-        </div>
+        <p className="text-[10px] text-zinc-400 mt-2">
+          © {new Date().getFullYear()} J1 Movies • Made with ❤️ by <strong className="text-zinc-300">bazza</strong>
+        </p>
       </div>
+
+      {/* Floating Scroll To Top Button */}
+      <button
+        onClick={scrollToTop}
+        title="Scroll to top"
+        className="fixed bottom-6 right-6 z-40 w-10 h-10 rounded-full bg-zinc-900/80 hover:bg-zinc-800 text-zinc-300 hover:text-white backdrop-blur-xl border border-white/10 flex items-center justify-center shadow-2xl transition-all hover:scale-110 cursor-pointer"
+      >
+        <ArrowUp className="w-4 h-4" />
+      </button>
     </footer>
   );
 }
