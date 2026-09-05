@@ -193,7 +193,7 @@ export default function MediaDetailsPage() {
               fill
               priority
               sizes="100vw"
-              className="object-cover filter blur-[90px] saturate-[2.2] opacity-40 scale-125 transition-opacity duration-1000"
+              className="object-cover filter blur-[140px] saturate-[2.0] opacity-35 scale-135 transition-opacity duration-1000"
             />
           </div>
         )}
@@ -228,11 +228,17 @@ export default function MediaDetailsPage() {
         <div className="absolute inset-0 bg-[#07090e]/70" />
       </div>
 
-      {/* 2. Expansive Hero Section with High-Visibility Background Video Trailer */}
+      {/* 2. Expansive Hero Section with Smooth Ambient Blend into Body */}
       <div className="relative w-full min-h-[720px] sm:min-h-[820px] lg:min-h-[920px] xl:min-h-[960px] overflow-hidden flex flex-col justify-end">
-        {/* Background Video Trailer Layer */}
+        {/* Background Video Trailer Layer with Soft Feathered Bottom Fade */}
         {mainTrailer ? (
-          <div className="absolute inset-0 w-full h-full pointer-events-none overflow-hidden select-none -z-0">
+          <div
+            className="absolute inset-0 w-full h-full pointer-events-none overflow-hidden select-none -z-0"
+            style={{
+              maskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 60%, rgba(0,0,0,0) 100%)',
+              WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 60%, rgba(0,0,0,0) 100%)',
+            }}
+          >
             <iframe
               key={`bg-trailer-${mainTrailer.key}-${isMuted ? 'muted' : 'unmuted'}`}
               src={`https://www.youtube-nocookie.com/embed/${mainTrailer.key}?autoplay=1&mute=${
@@ -244,7 +250,13 @@ export default function MediaDetailsPage() {
             />
           </div>
         ) : (
-          <div className="absolute inset-0 w-full h-full pointer-events-none -z-0">
+          <div
+            className="absolute inset-0 w-full h-full pointer-events-none -z-0"
+            style={{
+              maskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 60%, rgba(0,0,0,0) 100%)',
+              WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 60%, rgba(0,0,0,0) 100%)',
+            }}
+          >
             <Image
               src={getBackdropUrl(details.backdrop_path || details.poster_path, 'original')}
               alt={title}
@@ -256,10 +268,9 @@ export default function MediaDetailsPage() {
           </div>
         )}
 
-        {/* Cinematic Vignette Gradients Tuned for Transparency & Visibility */}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#07090e]/80 via-transparent to-transparent pointer-events-none z-10" />
-        <div className="absolute inset-0 bg-gradient-to-r from-[#07090e]/80 via-transparent to-transparent pointer-events-none z-10" />
-        <div className="absolute inset-x-0 top-0 h-44 bg-gradient-to-b from-[#07090e]/80 via-[#07090e]/20 to-transparent pointer-events-none z-10" />
+        {/* Soft Vignette Gradients for Title Legibility without Hard Lines */}
+        <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-transparent to-transparent pointer-events-none z-10" />
+        <div className="absolute inset-x-0 top-0 h-36 bg-gradient-to-b from-black/50 to-transparent pointer-events-none z-10" />
 
         {/* Hero Content Overlay (Left Info + Right Stats) */}
         <div className="relative max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 pt-36 pb-16 z-20 flex flex-col lg:flex-row items-end justify-between gap-10">
