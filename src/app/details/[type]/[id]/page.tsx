@@ -181,51 +181,51 @@ export default function MediaDetailsPage() {
   const companies = details.production_companies || [];
 
   return (
-    <div
-      className="w-full flex flex-col min-h-screen relative overflow-hidden transition-all duration-1000"
-      style={{
-        background: `radial-gradient(ellipse 110% 60% at 50% 0%, ${palette.primaryGlow}, transparent 70%), radial-gradient(ellipse 90% 50% at 95% 35%, ${palette.secondaryGlow}, transparent 65%), radial-gradient(ellipse 90% 60% at 5% 65%, ${palette.primaryGlow}, transparent 65%), radial-gradient(ellipse 100% 40% at 50% 98%, ${palette.secondaryGlow}, transparent 70%), #07090e`,
-      }}
-    >
-      {/* 1. Dynamic Ambient Color Lighting & Halo Layers across Whole Document */}
-      <div className="absolute inset-0 pointer-events-none -z-10 overflow-hidden">
-        {/* Dynamic Primary Color Aura (Top Hero Bloom) */}
-        <div
-          className="absolute -top-[10%] left-1/2 -translate-x-1/2 w-[110vw] h-[850px] rounded-full filter blur-[140px] opacity-80 transition-all duration-1000"
-          style={{ backgroundColor: palette.primaryGlow }}
-        />
-
-        {/* Dynamic Secondary Color Aura (Mid Body - Cast & Episodes) */}
-        <div
-          className="absolute top-[32%] -right-[15%] w-[85vw] h-[950px] rounded-full filter blur-[160px] opacity-65 transition-all duration-1000"
-          style={{ backgroundColor: palette.secondaryGlow }}
-        />
-
-        {/* Dynamic Primary Color Aura (Lower Body - Trailers & Similar) */}
-        <div
-          className="absolute top-[62%] -left-[15%] w-[85vw] h-[950px] rounded-full filter blur-[160px] opacity-60 transition-all duration-1000"
-          style={{ backgroundColor: palette.primaryGlow }}
-        />
-
-        {/* Dynamic Accent Color Aura (Footer Base) */}
-        <div
-          className="absolute -bottom-[5%] left-1/2 -translate-x-1/2 w-[90vw] h-[650px] rounded-full filter blur-[150px] opacity-55 transition-all duration-1000"
-          style={{ backgroundColor: palette.secondaryGlow }}
-        />
-
-        {/* Dynamic Full Backdrop Blur Layer */}
+    <div className="w-full flex flex-col min-h-screen relative bg-transparent">
+      {/* 1. Dynamic Ambient Color Lighting Canvas (Covers entire screen from Hero through Footer seamlessly) */}
+      <div className="fixed inset-0 pointer-events-none -z-10 overflow-hidden">
+        {/* Dynamic Blurred Backdrop Image */}
         {details.backdrop_path && (
-          <div className="fixed inset-0 pointer-events-none -z-20">
+          <div className="absolute inset-0 pointer-events-none">
             <Image
               src={getBackdropUrl(details.backdrop_path, 'w1280')}
               alt=""
               fill
               priority
               sizes="100vw"
-              className="object-cover filter blur-[110px] saturate-[2.5] opacity-45 scale-130 transition-opacity duration-1000"
+              className="object-cover filter blur-[90px] saturate-[2.2] opacity-40 scale-125 transition-opacity duration-1000"
             />
           </div>
         )}
+
+        {/* Dynamic Primary Color Aura (Top Hero Bloom) */}
+        <div
+          className="absolute -top-[10%] left-1/2 -translate-x-1/2 w-[120vw] h-[900px] rounded-full filter blur-[140px] opacity-75 transition-all duration-1000"
+          style={{ backgroundColor: palette.primaryGlow }}
+        />
+
+        {/* Dynamic Secondary Color Aura (Mid Screen - Cast & Episodes) */}
+        <div
+          className="absolute top-[35%] -right-[15%] w-[90vw] h-[900px] rounded-full filter blur-[160px] opacity-65 transition-all duration-1000"
+          style={{ backgroundColor: palette.secondaryGlow }}
+        />
+
+        {/* Dynamic Primary Color Aura (Lower Screen - Trailers & Recommendations & Footer) */}
+        <div
+          className="absolute -bottom-[10%] -left-[15%] w-[95vw] h-[950px] rounded-full filter blur-[160px] opacity-65 transition-all duration-1000"
+          style={{ backgroundColor: palette.primaryGlow }}
+        />
+
+        {/* Dynamic Radial Mesh Lighting */}
+        <div
+          className="absolute inset-0 opacity-40 transition-all duration-1000"
+          style={{
+            background: `radial-gradient(circle at 50% 15%, ${palette.primaryGlow}, transparent 70%), radial-gradient(circle at 85% 55%, ${palette.secondaryGlow}, transparent 70%), radial-gradient(circle at 15% 85%, ${palette.primaryGlow}, transparent 70%)`,
+          }}
+        />
+
+        {/* Unified luxury dark base overlay */}
+        <div className="absolute inset-0 bg-[#07090e]/70" />
       </div>
 
       {/* 2. Expansive Hero Section with High-Visibility Background Video Trailer */}
