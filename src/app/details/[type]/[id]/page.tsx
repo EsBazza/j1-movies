@@ -198,34 +198,40 @@ export default function MediaDetailsPage() {
           </div>
         )}
 
-        {/* Dynamic Primary Color Aura (Top Hero Bloom) */}
+        {/* Dynamic Primary Color Aura (Top Center Hero Bloom) */}
         <div
           className="absolute -top-[10%] left-1/2 -translate-x-1/2 w-[120vw] h-[900px] rounded-full filter blur-[140px] opacity-75 transition-all duration-1000"
           style={{ backgroundColor: palette.primaryGlow }}
         />
 
-        {/* Dynamic Secondary Color Aura (Mid Screen - Cast & Episodes) */}
+        {/* Dynamic Primary Color Aura (Left Side Bloom - Hero & Body) */}
         <div
-          className="absolute top-[35%] -right-[15%] w-[90vw] h-[900px] rounded-full filter blur-[160px] opacity-65 transition-all duration-1000"
-          style={{ backgroundColor: palette.secondaryGlow }}
-        />
-
-        {/* Dynamic Primary Color Aura (Lower Screen - Trailers & Recommendations & Footer) */}
-        <div
-          className="absolute -bottom-[10%] -left-[15%] w-[95vw] h-[950px] rounded-full filter blur-[160px] opacity-65 transition-all duration-1000"
+          className="absolute top-[25%] -left-[20%] w-[90vw] h-[950px] rounded-full filter blur-[150px] opacity-75 transition-all duration-1000"
           style={{ backgroundColor: palette.primaryGlow }}
         />
 
-        {/* Dynamic Radial Mesh Lighting */}
+        {/* Dynamic Secondary Color Aura (Right Side Bloom - Stats & Grid) */}
         <div
-          className="absolute inset-0 opacity-40 transition-all duration-1000"
+          className="absolute top-[35%] -right-[20%] w-[90vw] h-[950px] rounded-full filter blur-[150px] opacity-65 transition-all duration-1000"
+          style={{ backgroundColor: palette.secondaryGlow }}
+        />
+
+        {/* Dynamic Ambient Color Aura (Lower Body & Footer) */}
+        <div
+          className="absolute -bottom-[10%] left-1/2 -translate-x-1/2 w-[100vw] h-[950px] rounded-full filter blur-[160px] opacity-65 transition-all duration-1000"
+          style={{ backgroundColor: palette.secondaryGlow }}
+        />
+
+        {/* Dynamic Symmetrical Radial Mesh Lighting */}
+        <div
+          className="absolute inset-0 opacity-45 transition-all duration-1000"
           style={{
-            background: `radial-gradient(circle at 50% 15%, ${palette.primaryGlow}, transparent 70%), radial-gradient(circle at 85% 55%, ${palette.secondaryGlow}, transparent 70%), radial-gradient(circle at 15% 85%, ${palette.primaryGlow}, transparent 70%)`,
+            background: `radial-gradient(ellipse 90% 70% at 10% 30%, ${palette.primaryGlow}, transparent 70%), radial-gradient(ellipse 90% 70% at 90% 40%, ${palette.secondaryGlow}, transparent 70%), radial-gradient(ellipse 100% 70% at 50% 85%, ${palette.primaryGlow}, transparent 70%)`,
           }}
         />
 
         {/* Unified luxury dark base overlay */}
-        <div className="absolute inset-0 bg-[#07090e]/70" />
+        <div className="absolute inset-0 bg-[#07090e]/65" />
       </div>
 
       {/* 2. Expansive Hero Section with Smooth Ambient Blend into Body */}
@@ -268,9 +274,9 @@ export default function MediaDetailsPage() {
           </div>
         )}
 
-        {/* Soft Vignette Gradients for Title Legibility without Hard Lines */}
-        <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-transparent to-transparent pointer-events-none z-10" />
-        <div className="absolute inset-x-0 top-0 h-36 bg-gradient-to-b from-black/50 to-transparent pointer-events-none z-10" />
+        {/* Soft Vignette Gradients for Title Legibility without Left Black Occlusion */}
+        <div className="absolute inset-0 bg-gradient-to-r from-black/25 via-transparent to-transparent pointer-events-none z-10" />
+        <div className="absolute inset-x-0 top-0 h-36 bg-gradient-to-b from-black/40 to-transparent pointer-events-none z-10" />
 
         {/* Hero Content Overlay (Left Info + Right Stats) */}
         <div className="relative max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 pt-36 pb-16 z-20 flex flex-col lg:flex-row items-end justify-between gap-10">
