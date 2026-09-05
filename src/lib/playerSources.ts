@@ -29,8 +29,15 @@ export const STREAMING_SERVERS: StreamingSource[] = [
     getTvUrl: (id, s, e) => `https://player.videasy.net/tv/${id}/${s}/${e}?color=e50914&autoplay=1&nextEpisode=1`,
   },
   {
+    id: '2embed',
+    name: 'Server 4 (2Embed HD)',
+    badge: 'Full-HD Cinema',
+    getMovieUrl: (id) => `https://www.2embed.cc/embed/${id}`,
+    getTvUrl: (id, s, e) => `https://www.2embed.cc/embedtv/${id}&s=${s}&e=${e}`,
+  },
+  {
     id: 'smashystream',
-    name: 'Server 4 (SmashyStream CDN)',
+    name: 'Server 5 (SmashyStream CDN)',
     badge: 'Backup Fast',
     getMovieUrl: (id) => `https://embed.smashystream.com/playere.php?tmdb=${id}`,
     getTvUrl: (id, s, e) => `https://embed.smashystream.com/playere.php?tmdb=${id}&season=${s}&episode=${e}`,

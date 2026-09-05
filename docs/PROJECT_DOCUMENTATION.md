@@ -123,7 +123,8 @@ flowchart TD
 | **Server 1** | **VidLink Fast HD** | **~350ms** | ✅ **Full Suite (10+ Languages)** | Default server. Auto-subtitles, crimson `#e50914` theme, autoplay. |
 | **Server 2** | **SuperEmbed VIP** | **~450ms** | ⚠️ Custom URL parameter | Custom J1 Movies theme, dark `#07090e` background, multi-quality HLS. |
 | **Server 3** | **Videasy HD** | **~600ms** | ✅ Multi-Language | Clean, reliable cinema fallback with native controls. |
-| **Server 4** | **SmashyStream CDN** | **~640ms** | ⚠️ English on select hosts | Backup CDN server. |
+| **Server 4** | **2Embed HD** | **~700ms** | ✅ Multi-Language | Full-HD movie & TV series catalog powered by 2Embed.cc. |
+| **Server 5** | **SmashyStream CDN** | **~640ms** | ⚠️ English on select hosts | Backup CDN server. |
 
 ### 4.2 Custom ArtPlayer.js Engine ([`src/components/player/ArtPlayerCinema.tsx`](file:///C:/Users/admin/Desktop/j1%20movies/src/components/player/ArtPlayerCinema.tsx))
 - **HLS.js Buffer Tuning:** `maxBufferLength: 30`, `maxMaxBufferLength: 600`, worker enabled for smooth playback without drops.
