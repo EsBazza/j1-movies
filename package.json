@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@consumet/extensions": "^1.8.8",
     "artplayer": "^5.4.0",
     "clsx": "^2.1.1",
     "hls.js": "^1.7.2",
