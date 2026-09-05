@@ -189,8 +189,8 @@ export default function MediaDetailsPage() {
           <div
             className="absolute inset-0 pointer-events-none"
             style={{
-              filter: 'blur(75px) saturate(280%) contrast(115%)',
-              opacity: 0.65,
+              filter: 'blur(60px) saturate(300%) contrast(120%)',
+              opacity: 0.75,
             }}
           >
             <Image
@@ -206,42 +206,48 @@ export default function MediaDetailsPage() {
 
         {/* Spot 1: Vibrant Primary Color Bloom (Top Left - Behind Title) */}
         <div
-          className="absolute -top-[10%] -left-[15%] w-[85vw] h-[900px] rounded-full filter blur-[120px] opacity-80 transition-all duration-1000"
+          className="absolute -top-[10%] -left-[15%] w-[85vw] h-[900px] rounded-full filter blur-[100px] opacity-85 transition-all duration-1000"
           style={{ backgroundColor: palette.primaryGlow }}
         />
 
         {/* Spot 2: Vibrant Secondary Color Bloom (Top Right - Behind Hero Stats) */}
         <div
-          className="absolute top-[5%] -right-[15%] w-[85vw] h-[900px] rounded-full filter blur-[130px] opacity-75 transition-all duration-1000"
+          className="absolute top-[5%] -right-[15%] w-[85vw] h-[900px] rounded-full filter blur-[110px] opacity-80 transition-all duration-1000"
           style={{ backgroundColor: palette.secondaryGlow }}
         />
 
         {/* Spot 3: Chromatic Tertiary Color Bloom (Mid Body - Behind Cast & Episodes) */}
         <div
-          className="absolute top-[35%] -left-[20%] w-[90vw] h-[950px] rounded-full filter blur-[140px] opacity-75 transition-all duration-1000"
+          className="absolute top-[35%] -left-[20%] w-[90vw] h-[950px] rounded-full filter blur-[120px] opacity-80 transition-all duration-1000"
           style={{ backgroundColor: palette.tertiaryGlow }}
         />
 
         {/* Spot 4: Atmospheric Quaternary Color Bloom (Lower Body & Footer) */}
         <div
-          className="absolute top-[60%] -right-[20%] w-[95vw] h-[1000px] rounded-full filter blur-[140px] opacity-70 transition-all duration-1000"
+          className="absolute top-[60%] -right-[20%] w-[95vw] h-[1000px] rounded-full filter blur-[120px] opacity-75 transition-all duration-1000"
           style={{ backgroundColor: palette.quaternaryGlow }}
         />
 
         {/* Multi-Point Chromatic Radial Mesh Lighting */}
         <div
-          className="absolute inset-0 opacity-55 transition-all duration-1000"
+          className="absolute inset-0 opacity-65 transition-all duration-1000"
           style={{
             background: `radial-gradient(ellipse 90% 70% at 15% 20%, ${palette.primaryGlow}, transparent 60%), radial-gradient(ellipse 90% 70% at 85% 30%, ${palette.secondaryGlow}, transparent 60%), radial-gradient(ellipse 90% 70% at 20% 65%, ${palette.tertiaryGlow}, transparent 60%), radial-gradient(ellipse 100% 70% at 80% 85%, ${palette.quaternaryGlow}, transparent 60%)`,
           }}
         />
 
         {/* Unified luxury dark base overlay */}
-        <div className="absolute inset-0 bg-[#07090e]/50" />
+        <div className="absolute inset-0 bg-[#07090e]/40" />
       </div>
 
       {/* 2. Expansive Hero Section with 4-Way Smooth Feathered Video Dissolve */}
       <div className="relative w-full min-h-[740px] sm:min-h-[840px] lg:min-h-[940px] xl:min-h-[980px] overflow-hidden flex flex-col justify-end z-10">
+        {/* Ambient Video Ambilight Glow */}
+        <div
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80vw] h-[65vh] rounded-full filter blur-[100px] opacity-60 pointer-events-none -z-0 transition-all duration-1000"
+          style={{ backgroundColor: palette.primaryGlow }}
+        />
+
         {/* Background Video Trailer Layer with 4-Edge Radial Feathering */}
         {mainTrailer ? (
           <div
@@ -258,7 +264,7 @@ export default function MediaDetailsPage() {
               }&loop=1&playlist=${mainTrailer.key}&controls=0&showinfo=0&rel=0&iv_load_policy=3&modestbranding=1&playsinline=1&enablejsapi=1`}
               title="Ambient trailer background"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[130vw] h-[130vh] min-w-full min-h-full object-cover scale-110 opacity-90 md:opacity-95 filter brightness-90 md:brightness-95 contrast-[1.02] border-0 outline-none"
+              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[130vw] h-[130vh] min-w-full min-h-full object-cover scale-110 opacity-80 md:opacity-85 filter brightness-95 contrast-[1.02] border-0 outline-none"
             />
           </div>
         ) : (
@@ -427,33 +433,33 @@ export default function MediaDetailsPage() {
             )}
           </div>
 
-          {/* Right Column: Cinema Stats Card (CineJoy Style - Expanded & Prominent) */}
-          <div className="w-full lg:w-84 xl:w-96 rounded-3xl bg-black/50 backdrop-blur-2xl border border-white/15 p-6 flex flex-col gap-3.5 shadow-2xl">
+          {/* Right Column: Cinema Stats Card (Translucent Minimal Glass) */}
+          <div className="w-full lg:w-84 xl:w-96 rounded-3xl bg-black/20 hover:bg-black/30 backdrop-blur-md border border-white/10 p-6 flex flex-col gap-3.5 shadow-2xl transition-all duration-300">
             {runtime ? (
-              <div className="flex items-center justify-between text-xs sm:text-sm pb-2.5 border-b border-white/[0.08]">
+              <div className="flex items-center justify-between text-xs sm:text-sm pb-2.5 border-b border-white/[0.06]">
                 <span className="text-zinc-400 font-medium">Runtime</span>
                 <span className="text-zinc-100 font-semibold text-right">{formatEndTime(runtime)}</span>
               </div>
             ) : null}
 
-            <div className="flex items-center justify-between text-xs sm:text-sm pb-2.5 border-b border-white/[0.08]">
+            <div className="flex items-center justify-between text-xs sm:text-sm pb-2.5 border-b border-white/[0.06]">
               <span className="text-zinc-400 font-medium">Language</span>
               <span className="text-zinc-100 font-bold uppercase">{details.original_language || 'EN'}</span>
             </div>
 
-            <div className="flex items-center justify-between text-xs sm:text-sm pb-2.5 border-b border-white/[0.08]">
+            <div className="flex items-center justify-between text-xs sm:text-sm pb-2.5 border-b border-white/[0.06]">
               <span className="text-zinc-400 font-medium">Release Date</span>
               <span className="text-zinc-100 font-semibold">{formatDateFull(releaseDate)}</span>
             </div>
 
             {type === 'movie' && (
               <>
-                <div className="flex items-center justify-between text-xs sm:text-sm pb-2.5 border-b border-white/[0.08]">
+                <div className="flex items-center justify-between text-xs sm:text-sm pb-2.5 border-b border-white/[0.06]">
                   <span className="text-zinc-400 font-medium">Budget</span>
                   <span className="text-zinc-100 font-semibold">{formatCurrency(budget)}</span>
                 </div>
 
-                <div className="flex items-center justify-between text-xs sm:text-sm pb-2.5 border-b border-white/[0.08]">
+                <div className="flex items-center justify-between text-xs sm:text-sm pb-2.5 border-b border-white/[0.06]">
                   <span className="text-zinc-400 font-medium">Revenue</span>
                   <span className="text-zinc-100 font-semibold">{formatCurrency(revenue)}</span>
                 </div>
@@ -606,13 +612,14 @@ export default function MediaDetailsPage() {
           </div>
         )}
 
-        {/* 5. "You Might Also Like" Recommendation Carousel */}
+        {/* 5. "You Might Also Like" Recommendation Carousel (Aligned with Trailers & Clips) */}
         {recommendations.length > 0 && (
           <div className="pt-2">
             <MediaCarousel
               title="You Might Also Like"
               icon={Sparkles}
               items={recommendations}
+              fullWidth={true}
             />
           </div>
         )}

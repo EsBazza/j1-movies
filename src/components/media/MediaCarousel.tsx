@@ -13,6 +13,7 @@ interface MediaCarouselProps {
   icon?: LucideIcon;
   seeAllHref?: string;
   isLoading?: boolean;
+  fullWidth?: boolean;
 }
 
 export function MediaCarousel({
@@ -21,6 +22,7 @@ export function MediaCarousel({
   icon: Icon,
   seeAllHref,
   isLoading = false,
+  fullWidth = false,
 }: MediaCarouselProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
@@ -38,13 +40,17 @@ export function MediaCarousel({
 
   if (!isLoading && items.length === 0) return null;
 
+  const containerClass = fullWidth
+    ? 'w-full'
+    : 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8';
+
   return (
     <section className="relative w-full py-4 group/carousel">
       {/* Header */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between mb-4">
+      <div className={`${containerClass} flex items-center justify-between mb-4`}>
         <div className="flex items-center gap-2.5">
-          {Icon && <Icon className="w-5 h-5 text-red-500" />}
-          <h2 className="text-xl md:text-2xl font-bold tracking-tight text-white">{title}</h2>
+          {Icon && <Icon className="w-6 h-6 text-red-500" />}
+          <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-white">{title}</h2>
         </div>
 
         {seeAllHref && (
@@ -58,7 +64,7 @@ export function MediaCarousel({
       </div>
 
       {/* Carousel Container */}
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className={`relative ${containerClass}`}>
         {/* Left Arrow Button */}
         <button
           onClick={() => handleScroll('left')}
