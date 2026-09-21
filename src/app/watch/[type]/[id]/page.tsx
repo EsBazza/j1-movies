@@ -14,6 +14,9 @@ import {
   ChevronDown,
   Play,
   X,
+  Server,
+  Check,
+  AlertCircle,
 } from 'lucide-react';
 import {
   getMovieDetails,
@@ -23,7 +26,7 @@ import {
   getBackdropUrl,
 } from '@/lib/tmdb';
 import { TMDBMovieDetails, TMDBTVDetails, TMDBSeason, TMDBEpisode, MediaType } from '@/types/tmdb';
-import { getVideasyPlayerUrl } from '@/lib/videasy';
+import { STREAMING_SERVERS, getPlayerUrlForServer } from '@/lib/playerSources';
 import { extractPaletteFromImage, getPaletteForGenre, DEFAULT_PALETTE, ExtractedPalette } from '@/lib/colorExtractor';
 import { useUserStore } from '@/lib/store';
 import { formatSeconds, cn } from '@/lib/utils';
@@ -57,14 +60,19 @@ function WatchContent() {
   const [isPlayerLoading, setIsPlayerLoading] = useState(true);
   const [showControls, setShowControls] = useState(true);
   const [isEpisodeDrawerOpen, setIsEpisodeDrawerOpen] = useState(false);
+  const [isServerModalOpen, setIsServerModalOpen] = useState(false);
   const [selectedSeasonNum, setSelectedSeasonNum] = useState<number>(season);
   const [seasonData, setSeasonData] = useState<TMDBSeason | null>(null);
   const [isSeasonLoading, setIsSeasonLoading] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const { saveProgress } = useUserStore();
+  const { preferredServerId, setPreferredServerId, saveProgress } = useUserStore();
+  const [activeServer, setActiveServer] = useState<string>(
+    preferredServerId && preferredServerId !== 'videasy' ? preferredServerId : 'vidlink'
+  );
 
   // Load Media Details & Extract Palette
   useEffect(() => {
@@ -246,12 +254,23 @@ function WatchContent() {
     };
   }, [toggleFullscreen, isEpisodeDrawerOpen, details, type, season, episode, saveProgress]);
 
-  const playerUrl = getVideasyPlayerUrl(type, id, season, episode, {
-    color: rgbStringToHex(palette.primary),
-    autoplay: true,
-    nextEpisode: true,
-    episodeList: true,
-  });
+  const playerUrl = getPlayerUrlForServer(activeServer, type, id, season, episode);
+
+  const handleServerChange = (serverId: string) => {
+    setActiveServer(serverId);
+    setPreferredServerId(serverId);
+    setIsPlayerLoading(true);
+    setIsServerModalOpen(false);
+    setReloadKey((k) => k + 1);
+  };
+
+  const handleNextServer = () => {
+    const currentIndex = STREAMING_SERVERS.findIndex((s) => s.id === activeServer);
+    const nextIndex = (currentIndex + 1) % STREAMING_SERVERS.length;
+    handleServerChange(STREAMING_SERVERS[nextIndex].id);
+  };
+
+  const currentServer = STREAMING_SERVERS.find((s) => s.id === activeServer) || STREAMING_SERVERS[0];
 
   if (isLoading) {
     return (
@@ -266,7 +285,7 @@ function WatchContent() {
           </div>
         </div>
         <p className="text-lg font-black text-white tracking-tight">Starting Cinema Stream...</p>
-        <p className="text-xs text-zinc-500 mt-1">Connecting to Videasy cluster</p>
+        <p className="text-xs text-zinc-500 mt-1">Connecting to {currentServer.name}</p>
       </div>
     );
   }
@@ -299,9 +318,9 @@ function WatchContent() {
       onMouseMove={handleMouseMove}
       className="fixed inset-0 w-screen h-screen bg-black z-50 overflow-hidden flex flex-col items-center justify-center select-none"
     >
-      {/* 1. Fullscreen Videasy Player Iframe */}
+      {/* 1. Fullscreen Multi-Server Player Iframe */}
       <iframe
-        key={playerUrl}
+        key={`${playerUrl}-${reloadKey}`}
         src={playerUrl}
         title={`Cinema player - ${title}`}
         onLoad={() => setIsPlayerLoading(false)}
@@ -310,7 +329,7 @@ function WatchContent() {
         className="w-full h-full border-0 absolute inset-0 z-0 bg-black"
       />
 
-      {/* Loading Overlay */}
+      {/* Loading Overlay with Server Switcher Button */}
       {isPlayerLoading && (
         <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black/90 backdrop-blur-md gap-4 pointer-events-none">
           <div className="relative">
@@ -322,11 +341,31 @@ function WatchContent() {
               <Sparkles className="w-5 h-5 animate-pulse" style={{ color: palette.primary }} />
             </div>
           </div>
-          <div className="flex flex-col items-center gap-1">
+          <div className="flex flex-col items-center gap-1 text-center px-4">
             <p className="text-sm font-bold text-white tracking-wide">Buffering Cinema Stream</p>
             <p className="text-xs text-zinc-400">
               {title} • {type === 'tv' ? `Season ${season}, Episode ${episode}` : 'Full Movie'}
             </p>
+            <p className="text-[11px] text-zinc-500 mt-0.5">
+              Active: <span className="text-zinc-300 font-semibold">{currentServer.name}</span>
+            </p>
+          </div>
+
+          {/* Quick Server Switcher fallback */}
+          <div className="flex items-center gap-2 pt-2 pointer-events-auto">
+            <button
+              onClick={handleNextServer}
+              className="px-4 py-2 rounded-full bg-red-600 hover:bg-red-700 text-white text-xs font-bold transition-all shadow-lg hover:scale-105 active:scale-95 cursor-pointer flex items-center gap-1.5"
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+              <span>Switch Server</span>
+            </button>
+            <button
+              onClick={() => setIsServerModalOpen(true)}
+              className="px-4 py-2 rounded-full bg-zinc-800/90 hover:bg-zinc-700 text-zinc-300 text-xs font-semibold border border-white/10 transition-colors cursor-pointer"
+            >
+              All Servers ({STREAMING_SERVERS.length})
+            </button>
           </div>
         </div>
       )}
@@ -335,7 +374,7 @@ function WatchContent() {
       <div
         className={cn(
           'absolute top-0 inset-x-0 z-30 p-4 sm:p-6 flex items-center justify-between gap-4 pointer-events-none transition-opacity duration-300 bg-gradient-to-b from-black/80 via-black/40 to-transparent',
-          showControls || isEpisodeDrawerOpen ? 'opacity-100' : 'opacity-0'
+          showControls || isEpisodeDrawerOpen || isServerModalOpen ? 'opacity-100' : 'opacity-0'
         )}
       >
         {/* Top Left: Back Button & Title Badge */}
@@ -350,7 +389,7 @@ function WatchContent() {
           </Link>
 
           <div className="flex items-center gap-2.5 px-4 py-2 rounded-full bg-black/50 backdrop-blur-xl border border-white/10 shadow-xl">
-            <span className="text-xs sm:text-sm font-black text-white line-clamp-1 max-w-[200px] sm:max-w-[400px]">
+            <span className="text-xs sm:text-sm font-black text-white line-clamp-1 max-w-[180px] sm:max-w-[360px]">
               {title}
             </span>
             {type === 'tv' && (
@@ -364,12 +403,27 @@ function WatchContent() {
           </div>
         </div>
 
-        {/* Top Right: TV Episodes Selector (if TV Show) */}
+        {/* Top Right: Server Switcher & TV Episodes Selector */}
         <div className="flex items-center gap-2.5 pointer-events-auto">
+          {/* Server Switcher Pill */}
+          <button
+            onClick={() => setIsServerModalOpen(true)}
+            className="flex items-center gap-2 px-3.5 py-2 rounded-full bg-black/60 hover:bg-black/80 text-white backdrop-blur-xl border border-white/15 text-xs font-bold shadow-2xl transition-all hover:scale-105 cursor-pointer"
+            style={{ borderColor: palette.primaryGlow }}
+            title="Switch streaming server"
+          >
+            <Server className="w-3.5 h-3.5" style={{ color: palette.primary }} />
+            <span className="hidden md:inline text-zinc-400">Server:</span>
+            <span className="text-zinc-200">
+              {currentServer.name.replace(/Server \d+ \((.*)\)/, '$1')}
+            </span>
+            <ChevronDown className="w-3.5 h-3.5 text-zinc-400" />
+          </button>
+
           {type === 'tv' && seasons.length > 0 && (
             <button
               onClick={() => setIsEpisodeDrawerOpen(true)}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-black/60 hover:bg-black/80 text-white backdrop-blur-xl border border-white/15 text-xs font-bold shadow-2xl transition-all hover:scale-105 cursor-pointer"
+              className="flex items-center gap-2 px-4 py-2 rounded-full bg-black/60 hover:bg-black/80 text-white backdrop-blur-xl border border-white/15 text-xs font-bold shadow-2xl transition-all hover:scale-105 cursor-pointer"
               style={{ borderColor: palette.primaryGlow }}
             >
               <Layers className="w-4 h-4" style={{ color: palette.primary }} />
@@ -496,6 +550,76 @@ function WatchContent() {
                   No episodes found for this season.
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 4. Streaming Server Switcher Modal */}
+      {isServerModalOpen && (
+        <div className="absolute inset-0 z-50 bg-black/80 backdrop-blur-xl flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-200">
+          <div className="relative w-full max-w-lg rounded-3xl bg-[#090d16] border border-white/15 p-6 shadow-2xl flex flex-col gap-4">
+            <div className="flex items-center justify-between pb-3 border-b border-white/10">
+              <div className="flex items-center gap-2.5">
+                <div
+                  className="w-9 h-9 rounded-xl flex items-center justify-center border"
+                  style={{
+                    backgroundColor: palette.primaryGlow,
+                    borderColor: palette.primary,
+                  }}
+                >
+                  <Server className="w-4 h-4 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-white">Select Streaming Server</h3>
+                  <p className="text-xs text-zinc-400">If a server buffers, shows 502, or fails, switch instantly</p>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setIsServerModalOpen(false)}
+                className="w-8 h-8 rounded-full bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="flex flex-col gap-2 max-h-[60vh] overflow-y-auto pr-1 custom-scrollbar">
+              {STREAMING_SERVERS.map((server, index) => {
+                const isSelected = activeServer === server.id;
+                return (
+                  <button
+                    key={server.id}
+                    onClick={() => handleServerChange(server.id)}
+                    className={cn(
+                      'flex items-center justify-between p-3.5 rounded-2xl border text-left transition-all cursor-pointer',
+                      isSelected
+                        ? 'bg-red-600/20 border-red-500 text-white shadow-lg'
+                        : 'bg-zinc-900/80 hover:bg-zinc-800/90 border-zinc-800 text-zinc-300'
+                    )}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div
+                        className={cn(
+                          'w-8 h-8 rounded-xl flex items-center justify-center text-xs font-bold',
+                          isSelected ? 'bg-red-600 text-white' : 'bg-zinc-800 text-zinc-400'
+                        )}
+                      >
+                        {index + 1}
+                      </div>
+                      <div>
+                        <div className="text-xs sm:text-sm font-bold text-white flex items-center gap-2">
+                          <span>{server.name}</span>
+                          {isSelected && <span className="text-[10px] text-red-400 font-semibold">• Active</span>}
+                        </div>
+                        <div className="text-[11px] text-zinc-400 mt-0.5">{server.badge}</div>
+                      </div>
+                    </div>
+
+                    {isSelected && <Check className="w-4 h-4 text-red-500" />}
+                  </button>
+                );
+              })}
             </div>
           </div>
         </div>
