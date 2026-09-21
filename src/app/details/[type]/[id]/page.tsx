@@ -224,7 +224,12 @@ export default function MediaDetailsPage() {
     );
   }
 
-  const title = details.title || details.name || details.original_title || 'Untitled';
+  const title =
+    details.title ||
+    details.name ||
+    details.original_title ||
+    (details as TMDBTVDetails).original_name ||
+    'Untitled';
   const releaseDate = details.release_date || details.first_air_date || '';
   const runtime = (details as TMDBMovieDetails).runtime;
   const seasons = (details as TMDBTVDetails).seasons?.filter((s) => s.season_number > 0) || [];
