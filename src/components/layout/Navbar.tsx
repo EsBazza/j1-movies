@@ -8,6 +8,8 @@ import {
   Film,
   Tv,
   Bookmark,
+  Sparkles,
+  Heart,
   Search,
 } from 'lucide-react';
 import { SearchBar } from '@/components/common/SearchBar';
@@ -31,7 +33,9 @@ export function Navbar() {
   const navLinks = [
     { label: 'Home', href: '/' },
     { label: 'Movies', href: '/movies', icon: Film },
-    { label: 'Shows', href: '/tv', icon: Tv },
+    { label: 'Series', href: '/tv', icon: Tv },
+    { label: 'Anime', href: '/anime', icon: Sparkles },
+    { label: 'K-Drama', href: '/kdrama', icon: Heart },
     {
       label: 'My List',
       href: '/watchlist',

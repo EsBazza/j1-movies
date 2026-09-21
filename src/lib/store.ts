@@ -16,7 +16,7 @@ const defaultData: UserStoreData = {
   watchlist: [],
   history: [],
   collections: [],
-  preferredServerId: 'vidlink',
+  preferredServerId: '111movies',
 };
 
 function getStoredData(): UserStoreData {
@@ -27,11 +27,12 @@ function getStoredData(): UserStoreData {
     const parsed = JSON.parse(raw);
     const state = parsed.state || parsed;
     const currentServer = state.preferredServerId;
+    const validServer = currentServer === 'filmu' ? 'filmu' : '111movies';
     return {
       watchlist: Array.isArray(state.watchlist) ? state.watchlist : [],
       history: Array.isArray(state.history) ? state.history : [],
       collections: Array.isArray(state.collections) ? state.collections : [],
-      preferredServerId: !currentServer || currentServer === 'videasy' ? 'vidlink' : currentServer,
+      preferredServerId: validServer,
     };
   } catch (e) {
     console.error('Error reading localStorage:', e);

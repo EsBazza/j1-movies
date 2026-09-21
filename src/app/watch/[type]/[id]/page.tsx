@@ -11,10 +11,10 @@ import {
   Minimize,
   Layers,
   Sparkles,
-  ChevronDown,
   Play,
   X,
-  Server,
+  Activity,
+  Zap,
   Check,
   AlertCircle,
 } from 'lucide-react';
@@ -26,26 +26,17 @@ import {
   getBackdropUrl,
 } from '@/lib/tmdb';
 import { TMDBMovieDetails, TMDBTVDetails, TMDBSeason, TMDBEpisode, MediaType } from '@/types/tmdb';
-import { STREAMING_SERVERS, getPlayerUrlForServer } from '@/lib/playerSources';
+import { STREAMING_SERVERS, getPlayerUrlForServer, StreamingSource } from '@/lib/playerSources';
 import { extractPaletteFromImage, getPaletteForGenre, DEFAULT_PALETTE, ExtractedPalette } from '@/lib/colorExtractor';
 import { useUserStore } from '@/lib/store';
 import { formatSeconds, cn } from '@/lib/utils';
-
-function rgbStringToHex(rgbStr: string): string {
-  const match = rgbStr.match(/\d+/g);
-  if (!match || match.length < 3) return 'e50914';
-  const r = parseInt(match[0], 10).toString(16).padStart(2, '0');
-  const g = parseInt(match[1], 10).toString(16).padStart(2, '0');
-  const b = parseInt(match[2], 10).toString(16).padStart(2, '0');
-  return `${r}${g}${b}`;
-}
 
 function WatchContent() {
   const router = useRouter();
   const routeParams = useParams();
   const searchParams = useSearchParams();
 
-  const type = ((routeParams?.type as string) || 'movie') as MediaType;
+  const type = ((routeParams?.type as string) || 'movie') as MediaType | 'anime';
   const id = (routeParams?.id as string) || '';
 
   const seasonParam = searchParams.get('season');
@@ -60,7 +51,6 @@ function WatchContent() {
   const [isPlayerLoading, setIsPlayerLoading] = useState(true);
   const [showControls, setShowControls] = useState(true);
   const [isEpisodeDrawerOpen, setIsEpisodeDrawerOpen] = useState(false);
-  const [isServerModalOpen, setIsServerModalOpen] = useState(false);
   const [selectedSeasonNum, setSelectedSeasonNum] = useState<number>(season);
   const [seasonData, setSeasonData] = useState<TMDBSeason | null>(null);
   const [isSeasonLoading, setIsSeasonLoading] = useState(false);
@@ -70,11 +60,67 @@ function WatchContent() {
   const containerRef = useRef<HTMLDivElement>(null);
   const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { preferredServerId, setPreferredServerId, saveProgress } = useUserStore();
-  const [activeServer, setActiveServer] = useState<string>(
-    preferredServerId && preferredServerId !== 'videasy' ? preferredServerId : 'vidlink'
-  );
 
-  // Load Media Details & Extract Palette
+  const [activeServer, setActiveServer] = useState<'111movies' | 'filmu'>(
+    preferredServerId === 'filmu' ? 'filmu' : '111movies'
+  );
+  const [serverLatencies, setServerLatencies] = useState<{ '111movies'?: number; filmu?: number }>({});
+  const [hasProbed, setHasProbed] = useState(false);
+
+  // 1. Run Pre-Flight Speed Probe between 111movies and Filmu on mount
+  useEffect(() => {
+    if (!id || hasProbed) return;
+
+    let isMounted = true;
+    const probeServer = async (server: StreamingSource): Promise<{ id: '111movies' | 'filmu'; latency: number; ok: boolean }> => {
+      const t0 = performance.now();
+      const testUrl = server.id === 'filmu'
+        ? `https://embed.filmu.in/movie/${id}`
+        : `https://111movies.com/movie/${id}`;
+
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 1500);
+        await fetch(testUrl, {
+          mode: 'no-cors',
+          signal: controller.signal,
+          headers: { 'Cache-Control': 'no-cache' },
+        });
+        clearTimeout(timeoutId);
+        const latency = Math.round(performance.now() - t0);
+        return { id: server.id, latency, ok: true };
+      } catch {
+        return { id: server.id, latency: 9999, ok: false };
+      }
+    };
+
+    Promise.all([
+      probeServer(STREAMING_SERVERS[0]), // 111movies
+      probeServer(STREAMING_SERVERS[1]), // filmu
+    ]).then(([res111, resFilmu]) => {
+      if (!isMounted) return;
+      setHasProbed(true);
+      setServerLatencies({
+        '111movies': res111.ok ? res111.latency : undefined,
+        filmu: resFilmu.ok ? resFilmu.latency : undefined,
+      });
+
+      // If user hasn't explicitly set a preference, pick the faster responding server
+      if (resFilmu.ok && resFilmu.latency < res111.latency) {
+        setActiveServer('filmu');
+        setPreferredServerId('filmu');
+      } else if (res111.ok) {
+        setActiveServer('111movies');
+        setPreferredServerId('111movies');
+      }
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [id, hasProbed, setPreferredServerId]);
+
+  // 2. Load Media Details & Extract Palette
   useEffect(() => {
     if (!id) return;
 
@@ -98,11 +144,12 @@ function WatchContent() {
             backdrop_path: res.backdrop_path,
             vote_average: res.vote_average,
             release_date: res.release_date,
+            progressSeconds: 0,
+            timestampFormatted: '0:00',
           });
         } else {
           const res = await getTVDetails(id);
           setDetails(res);
-          setSelectedSeasonNum(season);
           const genreId = res.genres?.[0]?.id;
           if (genreId) setPalette(getPaletteForGenre(genreId));
           if (res.backdrop_path || res.poster_path) {
@@ -112,17 +159,19 @@ function WatchContent() {
           saveProgress({
             id: res.id,
             type: 'tv',
-            title: res.name || 'Untitled TV Series',
+            title: res.name || 'Untitled Series',
             poster_path: res.poster_path,
             backdrop_path: res.backdrop_path,
             vote_average: res.vote_average,
             release_date: res.first_air_date,
             season,
             episode,
+            progressSeconds: 0,
+            timestampFormatted: '0:00',
           });
         }
       } catch (err) {
-        console.error('Failed to load media for stream:', err);
+        console.error('Failed to load media details:', err);
       } finally {
         setIsLoading(false);
       }
@@ -131,9 +180,9 @@ function WatchContent() {
     loadData();
   }, [type, id, season, episode, saveProgress]);
 
-  // Load Season Data for TV episode switcher
+  // 3. Load Season Data for TV episode switcher
   useEffect(() => {
-    if (type !== 'tv' || !id) return;
+    if (type === 'movie' || !id) return;
 
     async function loadSeason() {
       setIsSeasonLoading(true);
@@ -185,7 +234,7 @@ function WatchContent() {
     }
   }, []);
 
-  // Listen for keyboard shortcuts and player postMessage events
+  // Listen for keyboard shortcuts
   useEffect(() => {
     const handleFullscreenChange = () => {
       setIsFullscreen(Boolean(document.fullscreenElement));
@@ -203,104 +252,66 @@ function WatchContent() {
       }
     };
 
-    // Listen for player postMessage events (e.g. timeupdate, progress)
-    const handleMessage = (e: MessageEvent) => {
-      try {
-        let payload = e.data;
-        if (typeof payload === 'string') {
-          payload = JSON.parse(payload);
-        }
-        if (!payload) return;
-
-        const currentTime = payload.currentTime || payload.data?.currentTime || payload.time || payload.data?.time;
-        const duration = payload.duration || payload.data?.duration;
-
-        if (typeof currentTime === 'number' && currentTime > 0) {
-          const progressPercent = duration && duration > 0 ? Math.round((currentTime / duration) * 100) : undefined;
-          const formatted = formatSeconds(currentTime);
-
-          if (details) {
-            saveProgress({
-              id: details.id,
-              type,
-              title: (details as any).title || (details as any).name || 'Untitled',
-              poster_path: details.poster_path,
-              backdrop_path: details.backdrop_path,
-              vote_average: details.vote_average,
-              release_date: (details as any).release_date || (details as any).first_air_date,
-              season: type === 'tv' ? season : undefined,
-              episode: type === 'tv' ? episode : undefined,
-              progressSeconds: Math.floor(currentTime),
-              durationSeconds: duration ? Math.floor(duration) : undefined,
-              progressPercent,
-              timestampFormatted: formatted,
-            });
-          }
-        }
-      } catch {
-        // Non-JSON or unrelated postMessage
-      }
-    };
-
-    window.addEventListener('message', handleMessage);
     document.addEventListener('fullscreenchange', handleFullscreenChange);
     window.addEventListener('keydown', handleKeyDown);
 
     return () => {
-      window.removeEventListener('message', handleMessage);
       document.removeEventListener('fullscreenchange', handleFullscreenChange);
       window.removeEventListener('keydown', handleKeyDown);
       if (controlsTimeoutRef.current) clearTimeout(controlsTimeoutRef.current);
     };
-  }, [toggleFullscreen, isEpisodeDrawerOpen, details, type, season, episode, saveProgress]);
+  }, [toggleFullscreen, isEpisodeDrawerOpen]);
 
-  const playerUrl = getPlayerUrlForServer(activeServer, type, id, season, episode);
+  const playerUrl = getPlayerUrlForServer(
+    activeServer,
+    type === 'anime' ? 'anime' : type,
+    id,
+    season,
+    episode
+  );
 
-  const handleServerChange = (serverId: string) => {
+  const handleServerChange = (serverId: '111movies' | 'filmu') => {
     setActiveServer(serverId);
     setPreferredServerId(serverId);
     setIsPlayerLoading(true);
-    setIsServerModalOpen(false);
     setReloadKey((k) => k + 1);
   };
 
-  const handleNextServer = () => {
-    const currentIndex = STREAMING_SERVERS.findIndex((s) => s.id === activeServer);
-    const nextIndex = (currentIndex + 1) % STREAMING_SERVERS.length;
-    handleServerChange(STREAMING_SERVERS[nextIndex].id);
+  const handleToggleOtherServer = () => {
+    const nextServer = activeServer === '111movies' ? 'filmu' : '111movies';
+    handleServerChange(nextServer);
   };
 
   const currentServer = STREAMING_SERVERS.find((s) => s.id === activeServer) || STREAMING_SERVERS[0];
 
   if (isLoading) {
     return (
-      <div className="fixed inset-0 w-screen h-screen bg-black z-50 flex flex-col items-center justify-center text-center px-4 select-none">
+      <div className="fixed inset-0 w-screen h-screen bg-[#0f1014] z-50 flex flex-col items-center justify-center text-center px-4 select-none">
         <div className="relative mb-4">
           <div
-            className="w-16 h-16 rounded-full border-4 border-white/10 animate-spin"
-            style={{ borderTopColor: palette.primary }}
+            className="w-14 h-14 rounded-full border-4 border-white/10 animate-spin"
+            style={{ borderTopColor: '#e50914' }}
           />
           <div className="absolute inset-0 flex items-center justify-center">
-            <Sparkles className="w-6 h-6 animate-pulse" style={{ color: palette.primary }} />
+            <Sparkles className="w-5 h-5 text-red-500 animate-pulse" />
           </div>
         </div>
-        <p className="text-lg font-black text-white tracking-tight">Starting Cinema Stream...</p>
-        <p className="text-xs text-zinc-500 mt-1">Connecting to {currentServer.name}</p>
+        <p className="text-sm font-semibold text-white tracking-wide">Benchmarking Player Servers...</p>
+        <p className="text-xs text-zinc-500 mt-1">Testing 111movies and Filmu</p>
       </div>
     );
   }
 
   if (!details) {
     return (
-      <div className="fixed inset-0 w-screen h-screen bg-black z-50 flex flex-col items-center justify-center text-center px-4 select-none">
+      <div className="fixed inset-0 w-screen h-screen bg-[#0f1014] z-50 flex flex-col items-center justify-center text-center px-4 select-none">
         <h2 className="text-2xl font-bold text-white mb-2">Stream Not Found</h2>
         <p className="text-zinc-400 text-sm mb-6">
           Could not find stream metadata for this title.
         </p>
         <Link
           href="/"
-          className="px-6 py-2.5 rounded-full text-white text-sm font-semibold transition-all hover:scale-105"
-          style={{ backgroundColor: palette.primary, boxShadow: `0 4px 18px ${palette.primaryGlow}` }}
+          className="px-6 py-2.5 rounded-full bg-red-600 hover:bg-red-700 text-white text-sm font-semibold transition-all hover:scale-105"
         >
           Return to Home
         </Link>
@@ -316,9 +327,9 @@ function WatchContent() {
     <div
       ref={containerRef}
       onMouseMove={handleMouseMove}
-      className="fixed inset-0 w-screen h-screen bg-black z-50 overflow-hidden flex flex-col items-center justify-center select-none"
+      className="fixed inset-0 w-screen h-screen bg-[#0f1014] z-50 overflow-hidden flex flex-col items-center justify-center select-none"
     >
-      {/* 1. Fullscreen Multi-Server Player Iframe */}
+      {/* 1. Fullscreen Player Iframe (Clean, standard attributes without restrictive sandbox) */}
       <iframe
         key={`${playerUrl}-${reloadKey}`}
         src={playerUrl}
@@ -329,42 +340,33 @@ function WatchContent() {
         className="w-full h-full border-0 absolute inset-0 z-0 bg-black"
       />
 
-      {/* Loading Overlay with Server Switcher Button */}
+      {/* Loading & Buffering Overlay */}
       {isPlayerLoading && (
-        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black/90 backdrop-blur-md gap-4 pointer-events-none">
+        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-[#0f1014]/90 backdrop-blur-md gap-4 pointer-events-none">
           <div className="relative">
             <div
-              className="w-14 h-14 rounded-full border-4 border-white/10 animate-spin"
-              style={{ borderTopColor: palette.primary }}
+              className="w-12 h-12 rounded-full border-4 border-white/10 animate-spin"
+              style={{ borderTopColor: '#e50914' }}
             />
             <div className="absolute inset-0 flex items-center justify-center">
-              <Sparkles className="w-5 h-5 animate-pulse" style={{ color: palette.primary }} />
+              <Sparkles className="w-4 h-4 text-red-500 animate-pulse" />
             </div>
           </div>
           <div className="flex flex-col items-center gap-1 text-center px-4">
-            <p className="text-sm font-bold text-white tracking-wide">Buffering Cinema Stream</p>
+            <p className="text-sm font-bold text-white tracking-wide">Connecting to {currentServer.name}</p>
             <p className="text-xs text-zinc-400">
-              {title} • {type === 'tv' ? `Season ${season}, Episode ${episode}` : 'Full Movie'}
-            </p>
-            <p className="text-[11px] text-zinc-500 mt-0.5">
-              Active: <span className="text-zinc-300 font-semibold">{currentServer.name}</span>
+              {title} {type === 'tv' ? `(Season ${season}, Episode ${episode})` : ''}
             </p>
           </div>
 
-          {/* Quick Server Switcher fallback */}
+          {/* Quick Fallback Switcher */}
           <div className="flex items-center gap-2 pt-2 pointer-events-auto">
             <button
-              onClick={handleNextServer}
-              className="px-4 py-2 rounded-full bg-red-600 hover:bg-red-700 text-white text-xs font-bold transition-all shadow-lg hover:scale-105 active:scale-95 cursor-pointer flex items-center gap-1.5"
+              onClick={handleToggleOtherServer}
+              className="px-4 py-2 rounded-full bg-red-600 hover:bg-red-700 text-white text-xs font-semibold transition-all shadow-lg hover:scale-105 active:scale-95 cursor-pointer flex items-center gap-1.5"
             >
               <RefreshCw className="w-3.5 h-3.5" />
-              <span>Switch Server</span>
-            </button>
-            <button
-              onClick={() => setIsServerModalOpen(true)}
-              className="px-4 py-2 rounded-full bg-zinc-800/90 hover:bg-zinc-700 text-zinc-300 text-xs font-semibold border border-white/10 transition-colors cursor-pointer"
-            >
-              All Servers ({STREAMING_SERVERS.length})
+              <span>Switch to {activeServer === '111movies' ? 'Filmu' : '111movies'}</span>
             </button>
           </div>
         </div>
@@ -374,253 +376,195 @@ function WatchContent() {
       <div
         className={cn(
           'absolute top-0 inset-x-0 z-30 p-4 sm:p-6 flex items-center justify-between gap-4 pointer-events-none transition-opacity duration-300 bg-gradient-to-b from-black/80 via-black/40 to-transparent',
-          showControls || isEpisodeDrawerOpen || isServerModalOpen ? 'opacity-100' : 'opacity-0'
+          showControls || isEpisodeDrawerOpen ? 'opacity-100' : 'opacity-0'
         )}
       >
         {/* Top Left: Back Button & Title Badge */}
         <div className="flex items-center gap-3 pointer-events-auto">
           <Link
-            href={`/details/${type}/${id}`}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-black/60 hover:bg-black/80 text-zinc-200 hover:text-white backdrop-blur-xl border border-white/15 text-xs font-bold shadow-2xl transition-all hover:scale-105 cursor-pointer"
-            style={{ borderColor: palette.primaryGlow }}
+            href={`/details/${type === 'anime' ? 'tv' : type}/${id}`}
+            className="flex items-center gap-2 px-4 py-2 rounded-full bg-black/60 hover:bg-black/80 text-zinc-200 hover:text-white backdrop-blur-xl border border-white/10 text-xs font-semibold shadow-2xl transition-all hover:scale-105 cursor-pointer"
           >
-            <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" style={{ color: palette.primary }} />
+            <ArrowLeft className="w-4 h-4 text-red-500" />
             <span className="hidden sm:inline">Details</span>
           </Link>
 
           <div className="flex items-center gap-2.5 px-4 py-2 rounded-full bg-black/50 backdrop-blur-xl border border-white/10 shadow-xl">
-            <span className="text-xs sm:text-sm font-black text-white line-clamp-1 max-w-[180px] sm:max-w-[360px]">
+            <span className="text-xs sm:text-sm font-semibold text-white line-clamp-1 max-w-[180px] sm:max-w-[320px]">
               {title}
             </span>
-            {type === 'tv' && (
-              <span
-                className="px-2 py-0.5 rounded-md text-white text-[10px] font-extrabold uppercase"
-                style={{ backgroundColor: palette.primary, boxShadow: `0 2px 10px ${palette.primaryGlow}` }}
-              >
+            {type !== 'movie' && (
+              <span className="px-2 py-0.5 rounded text-white text-[10px] font-bold bg-red-600 tracking-wider">
                 S{season} E{episode}
               </span>
             )}
           </div>
         </div>
 
-        {/* Top Right: Server Switcher & TV Episodes Selector */}
+        {/* Top Right: Dual Player Toggle & TV Episodes Selector */}
         <div className="flex items-center gap-2.5 pointer-events-auto">
-          {/* Server Switcher Pill */}
-          <button
-            onClick={() => setIsServerModalOpen(true)}
-            className="flex items-center gap-2 px-3.5 py-2 rounded-full bg-black/60 hover:bg-black/80 text-white backdrop-blur-xl border border-white/15 text-xs font-bold shadow-2xl transition-all hover:scale-105 cursor-pointer"
-            style={{ borderColor: palette.primaryGlow }}
-            title="Switch streaming server"
-          >
-            <Server className="w-3.5 h-3.5" style={{ color: palette.primary }} />
-            <span className="hidden md:inline text-zinc-400">Server:</span>
-            <span className="text-zinc-200">
-              {currentServer.name.replace(/Server \d+ \((.*)\)/, '$1')}
-            </span>
-            <ChevronDown className="w-3.5 h-3.5 text-zinc-400" />
-          </button>
+          {/* Dual Server Switcher Pill */}
+          <div className="flex items-center p-1 rounded-full bg-black/70 backdrop-blur-xl border border-white/10 shadow-2xl">
+            <button
+              onClick={() => handleServerChange('111movies')}
+              className={cn(
+                'px-3 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5',
+                activeServer === '111movies'
+                  ? 'bg-red-600 text-white shadow-md'
+                  : 'text-zinc-400 hover:text-white'
+              )}
+              title="Switch to 111movies (Clean HD)"
+            >
+              <Activity className="w-3 h-3" />
+              <span>111movies</span>
+              {serverLatencies['111movies'] && (
+                <span className="text-[10px] opacity-75">{serverLatencies['111movies']}ms</span>
+              )}
+            </button>
 
-          {type === 'tv' && seasons.length > 0 && (
+            <button
+              onClick={() => handleServerChange('filmu')}
+              className={cn(
+                'px-3 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5',
+                activeServer === 'filmu'
+                  ? 'bg-red-600 text-white shadow-md'
+                  : 'text-zinc-400 hover:text-white'
+              )}
+              title="Switch to Filmu (Ultra-Fast / Anime)"
+            >
+              <Zap className="w-3 h-3" />
+              <span>Filmu</span>
+              {serverLatencies['filmu'] && (
+                <span className="text-[10px] opacity-75">{serverLatencies['filmu']}ms</span>
+              )}
+            </button>
+          </div>
+
+          {type !== 'movie' && seasons.length > 0 && (
             <button
               onClick={() => setIsEpisodeDrawerOpen(true)}
-              className="flex items-center gap-2 px-4 py-2 rounded-full bg-black/60 hover:bg-black/80 text-white backdrop-blur-xl border border-white/15 text-xs font-bold shadow-2xl transition-all hover:scale-105 cursor-pointer"
-              style={{ borderColor: palette.primaryGlow }}
+              className="flex items-center gap-2 px-3.5 py-2 rounded-full bg-black/60 hover:bg-black/80 text-white backdrop-blur-xl border border-white/10 text-xs font-semibold shadow-2xl transition-all hover:scale-105 cursor-pointer"
             >
-              <Layers className="w-4 h-4" style={{ color: palette.primary }} />
-              <span>Episodes</span>
+              <Layers className="w-4 h-4 text-red-500" />
+              <span className="hidden sm:inline">Episodes</span>
             </button>
           )}
+
+          <button
+            onClick={toggleFullscreen}
+            className="p-2 rounded-full bg-black/60 hover:bg-black/80 text-white backdrop-blur-xl border border-white/10 transition-all hover:scale-105 cursor-pointer"
+            title="Toggle fullscreen (F)"
+          >
+            {isFullscreen ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
+          </button>
         </div>
       </div>
 
-      {/* 3. TV Episode Selector Drawer / Overlay Modal */}
-      {isEpisodeDrawerOpen && type === 'tv' && (
-        <div className="absolute inset-0 z-40 bg-black/80 backdrop-blur-xl flex flex-col justify-end sm:justify-center items-center p-4 sm:p-8 animate-in fade-in duration-200">
-          <div className="w-full max-w-4xl max-h-[85vh] bg-zinc-900/95 border border-white/15 rounded-3xl p-6 flex flex-col gap-5 shadow-2xl overflow-hidden">
-            {/* Drawer Header */}
-            <div className="flex items-center justify-between gap-4 pb-3 border-b border-white/10">
-              <div className="flex items-center gap-3">
-                <div
-                  className="w-9 h-9 rounded-xl border flex items-center justify-center"
-                  style={{
-                    backgroundColor: palette.primaryGlow,
-                    borderColor: palette.primary,
-                    color: palette.primary,
-                  }}
-                >
-                  <Layers className="w-5 h-5 text-white" />
-                </div>
-                <div>
-                  <h3 className="text-base sm:text-lg font-black text-white">Select Episode</h3>
-                  <p className="text-xs text-zinc-400">{title}</p>
-                </div>
-              </div>
-
-              {/* Season Selector & Close */}
-              <div className="flex items-center gap-3">
-                <div className="relative inline-block">
-                  <select
-                    value={selectedSeasonNum}
-                    onChange={(e) => setSelectedSeasonNum(Number(e.target.value))}
-                    className="appearance-none bg-zinc-800 border border-white/15 text-white text-xs font-semibold rounded-xl px-4 py-2 pr-8 focus:outline-none cursor-pointer"
-                  >
-                    {seasons.map((s) => (
-                      <option key={s.id} value={s.season_number}>
-                        Season {s.season_number} ({s.episode_count} Ep)
-                      </option>
-                    ))}
-                  </select>
-                  <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-400 pointer-events-none" />
-                </div>
-
-                <button
-                  onClick={() => setIsEpisodeDrawerOpen(false)}
-                  className="w-9 h-9 rounded-full bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
+      {/* 3. TV Show Episodes Drawer */}
+      {isEpisodeDrawerOpen && (
+        <div className="absolute inset-y-0 right-0 z-40 w-full max-w-md bg-[#14151b]/95 backdrop-blur-2xl border-l border-white/10 shadow-2xl flex flex-col p-6 animate-in slide-in-from-right duration-300">
+          <div className="flex items-center justify-between pb-4 border-b border-white/10">
+            <div>
+              <h3 className="text-base font-bold text-white tracking-wide">Episodes</h3>
+              <p className="text-xs text-zinc-400">{title}</p>
             </div>
-
-            {/* Episodes List / Grid */}
-            <div className="overflow-y-auto flex-1 pr-1 custom-scrollbar">
-              {isSeasonLoading ? (
-                <div className="py-16 text-center text-zinc-400 text-sm">
-                  Loading Season {selectedSeasonNum} episodes...
-                </div>
-              ) : seasonData?.episodes && seasonData.episodes.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5">
-                  {seasonData.episodes.map((ep: TMDBEpisode) => {
-                    const isCurrent = season === selectedSeasonNum && episode === ep.episode_number;
-                    return (
-                      <button
-                        key={ep.id}
-                        onClick={() => {
-                          setIsEpisodeDrawerOpen(false);
-                          setIsPlayerLoading(true);
-                          router.push(`/watch/tv/${id}?season=${selectedSeasonNum}&episode=${ep.episode_number}`);
-                        }}
-                        className={cn(
-                          'group flex gap-3 p-2.5 rounded-2xl border text-left transition-all cursor-pointer',
-                          !isCurrent && 'bg-zinc-800/40 hover:bg-zinc-800/90 border-white/5 hover:border-white/20'
-                        )}
-                        style={
-                          isCurrent
-                            ? {
-                                borderColor: palette.primary,
-                                backgroundColor: palette.primaryGlow,
-                                boxShadow: `0 4px 18px ${palette.primaryGlow}`,
-                              }
-                            : undefined
-                        }
-                      >
-                        <div className="relative aspect-video w-24 rounded-xl overflow-hidden bg-black shrink-0">
-                          <Image
-                            src={getImageUrl(ep.still_path || details.backdrop_path, 'w500')}
-                            alt={ep.name}
-                            fill
-                            sizes="120px"
-                            className="object-cover group-hover:scale-105 transition-transform duration-300"
-                          />
-                          <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                            <Play className="w-4 h-4 fill-white text-white" />
-                          </div>
-                          <div className="absolute bottom-1 left-1 px-1.5 py-0.2 rounded bg-black/80 text-[9px] font-black text-white">
-                            EP {ep.episode_number}
-                          </div>
-                        </div>
-
-                        <div className="flex flex-col justify-center gap-0.5 overflow-hidden">
-                          <span
-                            className="font-bold text-xs line-clamp-1 transition-colors"
-                            style={isCurrent ? { color: '#ffffff', fontWeight: 800 } : undefined}
-                          >
-                            {ep.episode_number}. {ep.name}
-                          </span>
-                          <span className="text-[11px] text-zinc-400 line-clamp-2 leading-relaxed">
-                            {ep.overview || 'No episode description.'}
-                          </span>
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              ) : (
-                <div className="py-12 text-center text-zinc-500 text-sm">
-                  No episodes found for this season.
-                </div>
-              )}
-            </div>
+            <button
+              onClick={() => setIsEpisodeDrawerOpen(false)}
+              className="p-1.5 rounded-full hover:bg-white/10 text-zinc-400 hover:text-white transition-colors cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
           </div>
-        </div>
-      )}
 
-      {/* 4. Streaming Server Switcher Modal */}
-      {isServerModalOpen && (
-        <div className="absolute inset-0 z-50 bg-black/80 backdrop-blur-xl flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-200">
-          <div className="relative w-full max-w-lg rounded-3xl bg-[#090d16] border border-white/15 p-6 shadow-2xl flex flex-col gap-4">
-            <div className="flex items-center justify-between pb-3 border-b border-white/10">
-              <div className="flex items-center gap-2.5">
-                <div
-                  className="w-9 h-9 rounded-xl flex items-center justify-center border"
-                  style={{
-                    backgroundColor: palette.primaryGlow,
-                    borderColor: palette.primary,
-                  }}
+          {/* Season Selector Tabs */}
+          {seasons.length > 1 && (
+            <div className="flex gap-2 overflow-x-auto py-3 no-scrollbar">
+              {seasons.map((s) => (
+                <button
+                  key={s.id}
+                  onClick={() => setSelectedSeasonNum(s.season_number)}
+                  className={cn(
+                    'px-3.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer',
+                    selectedSeasonNum === s.season_number
+                      ? 'bg-red-600 text-white shadow-md'
+                      : 'bg-white/5 text-zinc-400 hover:text-white hover:bg-white/10'
+                  )}
                 >
-                  <Server className="w-4 h-4 text-white" />
-                </div>
-                <div>
-                  <h3 className="text-base font-bold text-white">Select Streaming Server</h3>
-                  <p className="text-xs text-zinc-400">If a server buffers, shows 502, or fails, switch instantly</p>
-                </div>
-              </div>
-
-              <button
-                onClick={() => setIsServerModalOpen(false)}
-                className="w-8 h-8 rounded-full bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
-              >
-                <X className="w-4 h-4" />
-              </button>
+                  Season {s.season_number}
+                </button>
+              ))}
             </div>
+          )}
 
-            <div className="flex flex-col gap-2 max-h-[60vh] overflow-y-auto pr-1 custom-scrollbar">
-              {STREAMING_SERVERS.map((server, index) => {
-                const isSelected = activeServer === server.id;
+          {/* Episode List */}
+          <div className="flex-1 overflow-y-auto mt-2 pr-1 space-y-2.5">
+            {isSeasonLoading ? (
+              <div className="flex flex-col items-center justify-center h-48 text-zinc-500 text-xs gap-2">
+                <div className="w-6 h-6 rounded-full border-2 border-red-600 border-t-transparent animate-spin" />
+                <span>Loading episodes...</span>
+              </div>
+            ) : seasonData?.episodes && seasonData.episodes.length > 0 ? (
+              seasonData.episodes.map((ep: TMDBEpisode) => {
+                const isCurrent = season === selectedSeasonNum && episode === ep.episode_number;
                 return (
                   <button
-                    key={server.id}
-                    onClick={() => handleServerChange(server.id)}
+                    key={ep.id}
+                    onClick={() => {
+                      router.push(`/watch/${type}/${id}?season=${selectedSeasonNum}&episode=${ep.episode_number}`);
+                      setIsEpisodeDrawerOpen(false);
+                      setIsPlayerLoading(true);
+                      setReloadKey((k) => k + 1);
+                    }}
                     className={cn(
-                      'flex items-center justify-between p-3.5 rounded-2xl border text-left transition-all cursor-pointer',
-                      isSelected
-                        ? 'bg-red-600/20 border-red-500 text-white shadow-lg'
-                        : 'bg-zinc-900/80 hover:bg-zinc-800/90 border-zinc-800 text-zinc-300'
+                      'w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition-all group cursor-pointer border',
+                      isCurrent
+                        ? 'bg-red-600/15 border-red-600/50'
+                        : 'bg-white/[0.03] border-white/5 hover:bg-white/[0.08] hover:border-white/15'
                     )}
                   >
-                    <div className="flex items-center gap-3">
-                      <div
-                        className={cn(
-                          'w-8 h-8 rounded-xl flex items-center justify-center text-xs font-bold',
-                          isSelected ? 'bg-red-600 text-white' : 'bg-zinc-800 text-zinc-400'
-                        )}
-                      >
-                        {index + 1}
-                      </div>
-                      <div>
-                        <div className="text-xs sm:text-sm font-bold text-white flex items-center gap-2">
-                          <span>{server.name}</span>
-                          {isSelected && <span className="text-[10px] text-red-400 font-semibold">• Active</span>}
+                    {/* Thumbnail */}
+                    <div className="relative w-20 aspect-video rounded-lg overflow-hidden bg-black/40 flex-shrink-0">
+                      {ep.still_path ? (
+                        <Image
+                          src={getImageUrl(ep.still_path, 'w300')}
+                          alt={ep.name}
+                          fill
+                          className="object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-zinc-600 text-xs">
+                          EP {ep.episode_number}
                         </div>
-                        <div className="text-[11px] text-zinc-400 mt-0.5">{server.badge}</div>
-                      </div>
+                      )}
+                      {isCurrent && (
+                        <div className="absolute inset-0 bg-red-600/30 flex items-center justify-center">
+                          <Play className="w-4 h-4 text-white fill-white" />
+                        </div>
+                      )}
                     </div>
 
-                    {isSelected && <Check className="w-4 h-4 text-red-500" />}
+                    {/* Metadata */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold text-white truncate">
+                          {ep.episode_number}. {ep.name}
+                        </span>
+                      </div>
+                      {ep.runtime && (
+                        <p className="text-[11px] text-zinc-400 mt-0.5">{ep.runtime}m</p>
+                      )}
+                      <p className="text-[11px] text-zinc-500 line-clamp-1 mt-0.5">
+                        {ep.overview || 'No description available.'}
+                      </p>
+                    </div>
                   </button>
                 );
-              })}
-            </div>
+              })
+            ) : (
+              <div className="text-center py-12 text-zinc-500 text-xs">
+                No episodes found for this season.
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -632,8 +576,8 @@ export default function WatchPage() {
   return (
     <Suspense
       fallback={
-        <div className="fixed inset-0 w-screen h-screen bg-black z-50 flex items-center justify-center text-zinc-400 text-sm">
-          Loading Cinema Stream...
+        <div className="fixed inset-0 w-screen h-screen bg-[#0f1014] z-50 flex items-center justify-center text-white text-xs">
+          Loading player...
         </div>
       }
     >

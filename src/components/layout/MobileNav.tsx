@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Film, Tv, Bookmark, Search } from 'lucide-react';
+import { Home, Film, Tv, Bookmark, Search, Sparkles, Heart } from 'lucide-react';
 import { useUserStore } from '@/lib/store';
 import { cn } from '@/lib/utils';
 
@@ -14,8 +14,9 @@ export function MobileNav() {
   const items = [
     { label: 'Home', href: '/', icon: Home },
     { label: 'Movies', href: '/movies', icon: Film },
-    { label: 'TV', href: '/tv', icon: Tv },
-    { label: 'Search', href: '/search', icon: Search },
+    { label: 'Series', href: '/tv', icon: Tv },
+    { label: 'Anime', href: '/anime', icon: Sparkles },
+    { label: 'K-Drama', href: '/kdrama', icon: Heart },
     {
       label: 'My List',
       href: '/watchlist',

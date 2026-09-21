@@ -2,7 +2,7 @@
 
 @layer base {
   :root {
-    --background: #07090e;
+    --background: #0f1014;
     --foreground: #f4f4f5;
   }
 
@@ -15,6 +15,12 @@
   }
 }
 
+.font-display {
+  font-family: var(--font-display), sans-serif;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
 /* Custom Luxury Cinema Scrollbar */
 ::-webkit-scrollbar {
   width: 7px;
@@ -22,13 +28,13 @@
 }
 
 ::-webkit-scrollbar-track {
-  background: #07090e;
+  background: #0f1014;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #1e2430;
+  background: #1e222d;
   border-radius: 9999px;
-  border: 2px solid #07090e;
+  border: 2px solid #0f1014;
 }
 
 ::-webkit-scrollbar-thumb:hover {
@@ -46,24 +52,24 @@
 
 /* Glassmorphic Elements */
 .glass-header {
-  background: rgba(7, 9, 14, 0.82);
+  background: rgba(15, 16, 20, 0.85);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .glass-card {
-  background: rgba(18, 24, 38, 0.55);
+  background: rgba(20, 21, 27, 0.7);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .glass-pill {
   background: rgba(255, 255, 255, 0.06);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 /* Premium Animations */

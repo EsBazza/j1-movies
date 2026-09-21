@@ -2,13 +2,15 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import Image from 'next/image';
-import { Flame, Star, Film, Tv, Sparkles, Swords } from 'lucide-react';
+import { Flame, Star, Film, Tv, Sparkles, Swords, Heart } from 'lucide-react';
 import {
   getTrending,
   getPopularMovies,
   getTopRatedMovies,
   getPopularTV,
   getMoviesByGenre,
+  getTrendingAnime,
+  getPopularKDrama,
   normalizeMediaItem,
   getBackdropUrl,
 } from '@/lib/tmdb';
@@ -29,6 +31,8 @@ export default function HomePage() {
   const [popularTV, setPopularTV] = useState<NormalizedMedia[]>([]);
   const [actionMovies, setActionMovies] = useState<NormalizedMedia[]>([]);
   const [sciFiMovies, setSciFiMovies] = useState<NormalizedMedia[]>([]);
+  const [animeList, setAnimeList] = useState<NormalizedMedia[]>([]);
+  const [kdramaList, setKdramaList] = useState<NormalizedMedia[]>([]);
   
   const [isLoading, setIsLoading] = useState(true);
   const [apiError, setApiError] = useState(false);
@@ -57,6 +61,8 @@ export default function HomePage() {
           popTvRes,
           actionRes,
           sciFiRes,
+          animeRes,
+          kdramaRes,
         ] = await Promise.all([
           getTrending('all', 'day').catch(() => null),
           getPopularMovies(1).catch(() => null),
@@ -64,6 +70,8 @@ export default function HomePage() {
           getPopularTV(1).catch(() => null),
           getMoviesByGenre(28, 1).catch(() => null), // 28: Action
           getMoviesByGenre(878, 1).catch(() => null), // 878: Sci-Fi
+          getTrendingAnime(1).catch(() => null),
+          getPopularKDrama(1).catch(() => null),
         ]);
 
         if (!trendingRes && !popMoviesRes) {
@@ -90,6 +98,12 @@ export default function HomePage() {
         const normalizedSciFi = (sciFiRes?.results || []).map((i) =>
           normalizeMediaItem(i, 'movie')
         );
+        const normalizedAnime = (animeRes?.results || []).map((i) =>
+          normalizeMediaItem(i, 'tv')
+        );
+        const normalizedKDrama = (kdramaRes?.results || []).map((i) =>
+          normalizeMediaItem(i, 'tv')
+        );
 
         setTrending(normalizedTrending);
         setPopularMovies(normalizedPopMovies);
@@ -97,6 +111,8 @@ export default function HomePage() {
         setPopularTV(normalizedPopTV);
         setActionMovies(normalizedAction);
         setSciFiMovies(normalizedSciFi);
+        setAnimeList(normalizedAnime);
+        setKdramaList(normalizedKDrama);
 
         // Initial featured item
         const featured = normalizedTrending.length > 0 ? normalizedTrending[0] : normalizedPopMovies[0];
@@ -245,6 +261,26 @@ export default function HomePage() {
           title="Critically Acclaimed"
           icon={Star}
           items={topRatedMovies}
+          isLoading={isLoading}
+          fullWidth={true}
+        />
+
+        {/* Trending Anime Hub */}
+        <MediaCarousel
+          title="Trending Anime"
+          icon={Sparkles}
+          items={animeList}
+          seeAllHref="/anime"
+          isLoading={isLoading}
+          fullWidth={true}
+        />
+
+        {/* Popular K-Dramas Hub */}
+        <MediaCarousel
+          title="Popular K-Dramas"
+          icon={Heart}
+          items={kdramaList}
+          seeAllHref="/kdrama"
           isLoading={isLoading}
           fullWidth={true}
         />

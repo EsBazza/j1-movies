@@ -331,3 +331,77 @@ export async function discoverMedia(filters: DiscoverFilters): Promise<TMDBPagin
 
   return fetchFromTMDB<TMDBPaginatedResponse<TMDBMediaItem>>(`discover/${filters.mediaType}`, params);
 }
+
+// ── Anime Discovery Endpoints ──────────────────────────────
+export async function getTrendingAnime(page: number = 1): Promise<TMDBPaginatedResponse<TMDBMediaItem>> {
+  return fetchFromTMDB<TMDBPaginatedResponse<TMDBMediaItem>>('discover/tv', {
+    with_genres: 16,
+    with_original_language: 'ja',
+    sort_by: 'popularity.desc',
+    page,
+  });
+}
+
+export async function getPopularAnime(page: number = 1): Promise<TMDBPaginatedResponse<TMDBMediaItem>> {
+  return fetchFromTMDB<TMDBPaginatedResponse<TMDBMediaItem>>('discover/tv', {
+    with_genres: 16,
+    with_original_language: 'ja',
+    sort_by: 'vote_count.desc',
+    'vote_count.gte': 50,
+    page,
+  });
+}
+
+export async function getTopRatedAnime(page: number = 1): Promise<TMDBPaginatedResponse<TMDBMediaItem>> {
+  return fetchFromTMDB<TMDBPaginatedResponse<TMDBMediaItem>>('discover/tv', {
+    with_genres: 16,
+    with_original_language: 'ja',
+    sort_by: 'vote_average.desc',
+    'vote_count.gte': 200,
+    page,
+  });
+}
+
+export async function getAnimeMovies(page: number = 1): Promise<TMDBPaginatedResponse<TMDBMediaItem>> {
+  return fetchFromTMDB<TMDBPaginatedResponse<TMDBMediaItem>>('discover/movie', {
+    with_genres: 16,
+    with_original_language: 'ja',
+    sort_by: 'popularity.desc',
+    page,
+  });
+}
+
+// ── K-Drama Discovery Endpoints ────────────────────────────
+export async function getTrendingKDrama(page: number = 1): Promise<TMDBPaginatedResponse<TMDBMediaItem>> {
+  return fetchFromTMDB<TMDBPaginatedResponse<TMDBMediaItem>>('discover/tv', {
+    with_original_language: 'ko',
+    sort_by: 'popularity.desc',
+    page,
+  });
+}
+
+export async function getTopRatedKDrama(page: number = 1): Promise<TMDBPaginatedResponse<TMDBMediaItem>> {
+  return fetchFromTMDB<TMDBPaginatedResponse<TMDBMediaItem>>('discover/tv', {
+    with_original_language: 'ko',
+    sort_by: 'vote_average.desc',
+    'vote_count.gte': 100,
+    page,
+  });
+}
+
+export async function getPopularKDrama(page: number = 1): Promise<TMDBPaginatedResponse<TMDBMediaItem>> {
+  return fetchFromTMDB<TMDBPaginatedResponse<TMDBMediaItem>>('discover/tv', {
+    with_original_language: 'ko',
+    sort_by: 'vote_count.desc',
+    'vote_count.gte': 40,
+    page,
+  });
+}
+
+export async function getKDramaMovies(page: number = 1): Promise<TMDBPaginatedResponse<TMDBMediaItem>> {
+  return fetchFromTMDB<TMDBPaginatedResponse<TMDBMediaItem>>('discover/movie', {
+    with_original_language: 'ko',
+    sort_by: 'popularity.desc',
+    page,
+  });
+}

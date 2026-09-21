@@ -104,7 +104,7 @@ export function MediaCard({ item, priority = false }: MediaCardProps) {
       className="relative w-full"
     >
       {/* 1. Base Poster Card */}
-      <div className="group/card relative flex flex-col w-full rounded-2xl overflow-hidden bg-black/30 hover:bg-black/55 backdrop-blur-md border border-white/10 hover:border-white/30 transition-all duration-300 hover:shadow-2xl hover:shadow-black/60 hover:-translate-y-1.5 opacity-80 hover:opacity-100">
+      <div className="group/card relative flex flex-col w-full rounded-2xl overflow-hidden bg-[#13151b]/80 hover:bg-[#181a22] backdrop-blur-xl border border-white/[0.07] hover:border-red-600/40 transition-all duration-300 hover:shadow-2xl hover:shadow-black/70 hover:-translate-y-1.5 opacity-90 hover:opacity-100">
         {/* Poster Container */}
         <div className="relative aspect-[2/3] w-full overflow-hidden bg-zinc-950 shine-overlay">
           <Image
