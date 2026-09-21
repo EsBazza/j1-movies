@@ -227,29 +227,28 @@ export default function HomePage() {
         {/* Continue Watching (Local Storage) */}
         <ContinueWatchingRow />
 
-        {/* Trending Today */}
+        {/* Trending Right Now with Big Ranked Numbers (as in screenshot) */}
         <MediaCarousel
-          title="Trending Today"
-          icon={Flame}
+          title="Trending Right Now"
           items={trending}
+          showRank={true}
+          seeAllHref="/movies"
           isLoading={isLoading}
           fullWidth={true}
         />
 
-        {/* Popular Movies */}
+        {/* New Movies (as in screenshot) */}
         <MediaCarousel
-          title="Popular Movies"
-          icon={Film}
+          title="New Movies"
           items={popularMovies}
           seeAllHref="/movies"
           isLoading={isLoading}
           fullWidth={true}
         />
 
-        {/* Popular TV Shows */}
+        {/* Popular TV Shows (as in screenshot) */}
         <MediaCarousel
-          title="Binge-worthy TV Series"
-          icon={Tv}
+          title="Popular TV Shows"
           items={popularTV}
           seeAllHref="/tv"
           isLoading={isLoading}

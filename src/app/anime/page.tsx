@@ -22,6 +22,7 @@ import {
 } from '@/lib/tmdb';
 import { NormalizedMedia } from '@/types/tmdb';
 import { MediaCard } from '@/components/media/MediaCard';
+import { MediaCarousel } from '@/components/media/MediaCarousel';
 import { SkeletonCard } from '@/components/ui/SkeletonCard';
 
 export default function AnimeHubPage() {
@@ -174,7 +175,7 @@ export default function AnimeHubPage() {
       </div>
 
       {/* 3. Media Shelves */}
-      <div className="max-w-7xl mx-auto px-6 sm:px-10 space-y-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
         {isLoading ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 sm:gap-6">
             {Array.from({ length: 15 }).map((_, i) => (
@@ -183,84 +184,45 @@ export default function AnimeHubPage() {
           </div>
         ) : (
           <>
-            {/* Shelf 1: Trending Anime */}
+            {/* Shelf 1: Trending Anime with Ranked Numbers */}
             {(activeTab === 'all' || activeTab === 'series') && (
-              <section>
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-2">
-                    <TrendingUp className="w-5 h-5 text-red-500" />
-                    <h2 className="font-display text-2xl sm:text-3xl font-bold tracking-wide text-white">
-                      Trending Anime
-                    </h2>
-                  </div>
-                  <span className="text-xs text-zinc-500">Sub & Dub Ready</span>
-                </div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 sm:gap-6">
-                  {trending.slice(0, 10).map((anime) => (
-                    <MediaCard key={`trending-${anime.id}`} item={anime} />
-                  ))}
-                </div>
-              </section>
+              <MediaCarousel
+                title="Trending Anime"
+                items={trending}
+                showRank={true}
+                isLoading={isLoading}
+                fullWidth={true}
+              />
             )}
 
             {/* Shelf 2: Top Rated Classics */}
             {(activeTab === 'all' || activeTab === 'series') && (
-              <section>
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-2">
-                    <Star className="w-5 h-5 text-amber-400" />
-                    <h2 className="font-display text-2xl sm:text-3xl font-bold tracking-wide text-white">
-                      Top Rated Masterpieces
-                    </h2>
-                  </div>
-                  <span className="text-xs text-zinc-500">Highest Rated</span>
-                </div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 sm:gap-6">
-                  {topRated.slice(0, 10).map((anime) => (
-                    <MediaCard key={`top-${anime.id}`} item={anime} />
-                  ))}
-                </div>
-              </section>
+              <MediaCarousel
+                title="Top Rated Masterpieces"
+                items={topRated}
+                isLoading={isLoading}
+                fullWidth={true}
+              />
             )}
 
             {/* Shelf 3: Anime Feature Films */}
             {(activeTab === 'all' || activeTab === 'movies') && (
-              <section>
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-2">
-                    <Film className="w-5 h-5 text-red-500" />
-                    <h2 className="font-display text-2xl sm:text-3xl font-bold tracking-wide text-white">
-                      Anime Movies & Cinema
-                    </h2>
-                  </div>
-                  <span className="text-xs text-zinc-500">Full-Length Films</span>
-                </div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 sm:gap-6">
-                  {movies.slice(0, 10).map((anime) => (
-                    <MediaCard key={`movie-${anime.id}`} item={anime} />
-                  ))}
-                </div>
-              </section>
+              <MediaCarousel
+                title="Anime Feature Films"
+                items={movies}
+                isLoading={isLoading}
+                fullWidth={true}
+              />
             )}
 
-            {/* Shelf 4: Popular Releases */}
+            {/* Shelf 4: Fan Favorites */}
             {(activeTab === 'all' || activeTab === 'series') && (
-              <section>
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-2">
-                    <Sparkles className="w-5 h-5 text-red-500" />
-                    <h2 className="font-display text-2xl sm:text-3xl font-bold tracking-wide text-white">
-                      Fan Favorites
-                    </h2>
-                  </div>
-                  <span className="text-xs text-zinc-500">Most Watched</span>
-                </div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 sm:gap-6">
-                  {popular.slice(0, 10).map((anime) => (
-                    <MediaCard key={`pop-${anime.id}`} item={anime} />
-                  ))}
-                </div>
-              </section>
+              <MediaCarousel
+                title="Fan Favorites"
+                items={popular}
+                isLoading={isLoading}
+                fullWidth={true}
+              />
             )}
           </>
         )}

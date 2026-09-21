@@ -141,10 +141,10 @@ export default function MoviesPage() {
               onChange={(e) => setFilters({ ...filters, sortBy: e.target.value })}
               className="appearance-none bg-zinc-900 border border-zinc-700 hover:border-zinc-500 text-white text-xs font-semibold rounded-xl pl-9 pr-9 py-2.5 focus:outline-none focus:border-red-500 cursor-pointer shadow-lg transition-colors"
             >
-              <option value="popularity.desc">🔥 Most Popular</option>
-              <option value="vote_average.desc">⭐ Highest Rated</option>
-              <option value="primary_release_date.desc">📅 Newest Releases</option>
-              <option value="original_title.asc">🔤 Title (A - Z)</option>
+              <option value="popularity.desc">Most Popular</option>
+              <option value="vote_average.desc">Highest Rated</option>
+              <option value="primary_release_date.desc">Newest Releases</option>
+              <option value="original_title.asc">Title (A - Z)</option>
             </select>
           </div>
         </div>
@@ -174,19 +174,19 @@ export default function MoviesPage() {
       {hasError ? (
         <ApiKeyWarning />
       ) : isLoading ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 sm:gap-6 mt-8">
-          {Array.from({ length: 15 }).map((_, i) => (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 sm:gap-5 mt-8">
+          {Array.from({ length: 18 }).map((_, i) => (
             <SkeletonCard key={i} />
           ))}
         </div>
       ) : movies.length > 0 ? (
         <>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 sm:gap-6 mt-8">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 sm:gap-5 mt-8">
             {movies.map((movie, index) => (
               <MediaCard
                 key={`${movie.id}-${index}`}
                 item={movie}
-                priority={index < 5}
+                priority={index < 6}
               />
             ))}
           </div>
