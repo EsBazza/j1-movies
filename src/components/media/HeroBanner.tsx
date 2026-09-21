@@ -14,6 +14,7 @@ import {
 import { NormalizedMedia } from '@/types/tmdb';
 import {
   getBackdropUrl,
+  getPosterUrl,
   getLogoUrl,
   getMovieDetails,
   getTVDetails,
@@ -53,6 +54,8 @@ export function HeroBanner({
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const lastEmittedIdRef = useRef<number | null>(null);
   const [logoPath, setLogoPath] = useState<string | null>(null);
+  const [logoFailed, setLogoFailed] = useState(false);
+  const [backdropError, setBackdropError] = useState(false);
   const [trailerKey, setTrailerKey] = useState<string | null>(null);
   const [isTrailerLoaded, setIsTrailerLoaded] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
@@ -191,6 +194,8 @@ export function HeroBanner({
     let isMounted = true;
     setIsTrailerLoaded(false);
     setIsPlaying(true);
+    setLogoFailed(false);
+    setBackdropError(false);
 
     async function loadHeroMedia() {
       if (!currentItem) return;
@@ -205,20 +210,24 @@ export function HeroBanner({
         if (!isMounted) return;
 
         // Extract official logo
+        const logos = details.images?.logos || [];
         const logo =
-          details.images?.logos?.find((l) => l.iso_639_1 === 'en' && l.file_path?.endsWith('.png')) ||
-          details.images?.logos?.find((l) => l.iso_639_1 === 'en') ||
-          details.images?.logos?.find((l) => l.file_path?.endsWith('.png')) ||
-          details.images?.logos?.[0];
+          logos.find((l) => l.iso_639_1 === 'en' && l.file_path?.endsWith('.png')) ||
+          logos.find((l) => l.iso_639_1 === 'en') ||
+          logos.find((l) => l.file_path?.endsWith('.png')) ||
+          logos[0];
 
         setLogoPath(logo?.file_path || null);
 
-        // Extract official trailer
-        const videos = (videoRes?.results || []).filter((v) => v.site === 'YouTube');
+        // Extract official trailer from videoRes or details.videos
+        const videoList = videoRes?.results?.length
+          ? videoRes.results
+          : details.videos?.results || [];
+        const videos = videoList.filter((v: { site?: string }) => v.site === 'YouTube');
         const trailer =
-          videos.find((v) => v.type === 'Trailer') ||
-          videos.find((v) => v.type === 'Teaser') ||
-          videos.find((v) => v.type === 'Clip') ||
+          videos.find((v: { type?: string }) => v.type === 'Trailer') ||
+          videos.find((v: { type?: string }) => v.type === 'Teaser') ||
+          videos.find((v: { type?: string }) => v.type === 'Clip') ||
           videos[0];
 
         setTrailerKey(trailer?.key || null);
@@ -281,14 +290,19 @@ export function HeroBanner({
           </div>
         ) : null}
 
-        {/* Fallback Static Backdrop Image */}
+        {/* Fallback Static Backdrop Image / Movie Poster */}
         <Image
-          key={`hero-backdrop-${currentItem.id}`}
-          src={getBackdropUrl(currentItem.backdropPath || currentItem.posterPath, 'original')}
+          key={`hero-backdrop-${currentItem.id}-${backdropError ? 'poster' : 'backdrop'}`}
+          src={
+            backdropError
+              ? getPosterUrl(currentItem.posterPath, 'w780')
+              : getBackdropUrl(currentItem.backdropPath || currentItem.posterPath, 'original')
+          }
           alt={currentItem.title}
           fill
           priority
           sizes="100vw"
+          onError={() => setBackdropError(true)}
           className={cn(
             'object-cover object-top filter brightness-95 contrast-105 scale-105 transition-opacity duration-1000',
             isTrailerLoaded && trailerKey ? 'opacity-0' : 'opacity-100'
@@ -336,7 +350,7 @@ export function HeroBanner({
             </div>
 
             {/* Title: Official TMDB Graphic Logo with Text Fallback */}
-            {logoPath ? (
+            {logoPath && !logoFailed ? (
               <div className="relative w-full max-w-[320px] sm:max-w-[420px] md:max-w-[540px] h-20 sm:h-28 md:h-36 my-1">
                 <Image
                   key={`hero-logo-${currentItem.id}`}
@@ -344,6 +358,7 @@ export function HeroBanner({
                   alt={currentItem.title}
                   fill
                   priority
+                  onError={() => setLogoFailed(true)}
                   className="object-contain object-left filter drop-shadow-[0_8px_24px_rgba(0,0,0,0.95)]"
                 />
               </div>

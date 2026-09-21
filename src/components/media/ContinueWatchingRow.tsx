@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { Play, History, Trash2, Clock, ChevronLeft, ChevronRight, Info, Eye } from 'lucide-react';
 import { useUserStore } from '@/lib/store';
 import { WatchHistoryItem } from '@/types/tmdb';
-import { getBackdropUrl, getTrailerKey } from '@/lib/tmdb';
+import { getBackdropUrl, getPosterUrl, getTrailerKey } from '@/lib/tmdb';
 import { formatRelativeTime, formatSeconds, formatRuntime, cn } from '@/lib/utils';
 import { BookmarkButton } from '@/components/common/BookmarkButton';
 
@@ -19,6 +19,7 @@ function ContinueWatchingCard({ item, onRemove }: ContinueWatchingCardProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [trailerKey, setTrailerKey] = useState<string | null>(null);
   const [isTrailerReady, setIsTrailerReady] = useState(false);
+  const [backdropError, setBackdropError] = useState(false);
   const hoverTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const detailsUrl = `/details/${item.type}/${item.id}`;
@@ -103,10 +104,15 @@ function ContinueWatchingCard({ item, onRemove }: ContinueWatchingCardProps) {
 
         {/* Backdrop Fallback & Buffer Cover */}
         <Image
-          src={getBackdropUrl(item.backdrop_path || item.poster_path, 'w780')}
+          src={
+            backdropError
+              ? getPosterUrl(item.poster_path, 'w500')
+              : getBackdropUrl(item.backdrop_path || item.poster_path, 'w780')
+          }
           alt={item.title}
           fill
           sizes="(max-width: 640px) 280px, 350px"
+          onError={() => setBackdropError(true)}
           className={cn(
             'object-cover group-hover/item:scale-105 transition-all duration-500 brightness-90',
             isTrailerReady && trailerKey ? 'opacity-0' : 'opacity-100'

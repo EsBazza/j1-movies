@@ -24,6 +24,8 @@ export function MediaCard({ item, priority = false }: MediaCardProps) {
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [trailerKey, setTrailerKey] = useState<string | null>(null);
+  const [posterError, setPosterError] = useState(false);
+  const [popoverPosterError, setPopoverPosterError] = useState(false);
   const [popoverCoords, setPopoverCoords] = useState<{ top: number; left: number; width: number } | null>(null);
 
   const hoverTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -106,11 +108,16 @@ export function MediaCard({ item, priority = false }: MediaCardProps) {
         {/* Poster Container */}
         <div className="relative aspect-[2/3] w-full overflow-hidden bg-zinc-950 shine-overlay">
           <Image
-            src={getPosterUrl(item.posterPath, 'w500')}
+            src={
+              posterError
+                ? getBackdropUrl(item.backdropPath, 'w780')
+                : getPosterUrl(item.posterPath, 'w500')
+            }
             alt={item.title}
             fill
             sizes="(max-width: 640px) 45vw, (max-width: 1024px) 25vw, 220px"
             priority={priority}
+            onError={() => setPosterError(true)}
             className="object-cover transition-transform duration-700 group-hover/card:scale-108"
           />
 
@@ -248,10 +255,15 @@ export function MediaCard({ item, priority = false }: MediaCardProps) {
                 </div>
               ) : (
                 <Image
-                  src={getBackdropUrl(item.backdropPath || item.posterPath, 'w780')}
+                  src={
+                    popoverPosterError
+                      ? getPosterUrl(item.posterPath, 'w500')
+                      : getBackdropUrl(item.backdropPath || item.posterPath, 'w780')
+                  }
                   alt={item.title}
                   fill
                   sizes="380px"
+                  onError={() => setPopoverPosterError(true)}
                   className="object-cover brightness-90"
                 />
               )}

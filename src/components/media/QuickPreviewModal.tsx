@@ -20,11 +20,13 @@ export function QuickPreviewModal({ item, isOpen, onClose }: QuickPreviewModalPr
   const [trailerKey, setTrailerKey] = useState<string | null>(null);
   const [isPlayingTrailer, setIsPlayingTrailer] = useState(false);
   const [isLoadingDetails, setIsLoadingDetails] = useState(false);
+  const [previewImgError, setPreviewImgError] = useState(false);
 
   useEffect(() => {
     if (!item || !isOpen) {
       setTrailerKey(null);
       setIsPlayingTrailer(false);
+      setPreviewImgError(false);
       return;
     }
 
@@ -84,11 +86,16 @@ export function QuickPreviewModal({ item, isOpen, onClose }: QuickPreviewModalPr
           ) : (
             <>
               <Image
-                src={getBackdropUrl(item.backdropPath || item.posterPath, 'w1280')}
+                src={
+                  previewImgError
+                    ? getPosterUrl(item.posterPath, 'w780')
+                    : getBackdropUrl(item.backdropPath || item.posterPath, 'w1280')
+                }
                 alt={item.title}
                 fill
                 priority
                 sizes="(max-width: 768px) 100vw, 700px"
+                onError={() => setPreviewImgError(true)}
                 className="object-cover brightness-60"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-[#090d16] via-transparent to-black/30" />

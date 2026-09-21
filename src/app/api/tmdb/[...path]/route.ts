@@ -2,6 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
 
+// Fallback defaults in case environment variables are missing on Vercel
+const DEFAULT_TMDB_API_KEY = 'f185fd26e0b5d4a99193d29f47c04ce9';
+const DEFAULT_TMDB_READ_ACCESS_TOKEN =
+  'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJmMTg1ZmQyNmUwYjVkNGE5OTE5M2QyOWY0N2MwNGNlOSIsIm5iZiI6MTc2NDA0MDc1Mi4zMzcsInN1YiI6IjY5MjUyMDMwMWRkMzc4OTY2YmQ5YzMxZiIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.q7UWt1vbgSe54DC_HfnGvq2NrvSRZSNPgz2j42uGxVE';
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ path: string[] }> }
@@ -14,24 +19,15 @@ export async function GET(
     process.env.TMDB_API_KEY ||
     process.env.NEXT_PUBLIC_TMDB_API_KEY ||
     process.env.TMDB_KEY ||
-    process.env.API_KEY;
+    process.env.API_KEY ||
+    DEFAULT_TMDB_API_KEY;
 
   const readAccessToken =
     process.env.TMDB_READ_ACCESS_TOKEN ||
     process.env.NEXT_PUBLIC_TMDB_READ_ACCESS_TOKEN ||
     process.env.TMDB_TOKEN ||
-    process.env.TMDB_ACCESS_TOKEN;
-
-  if (!apiKey && !readAccessToken) {
-    return NextResponse.json(
-      {
-        error: 'TMDB API Key missing',
-        message:
-          'Please ensure your TMDB API key or Read Access Token is defined in your environment variables (e.g. TMDB_API_KEY or TMDB_READ_ACCESS_TOKEN).',
-      },
-      { status: 401 }
-    );
-  }
+    process.env.TMDB_ACCESS_TOKEN ||
+    DEFAULT_TMDB_READ_ACCESS_TOKEN;
 
   // Construct target URL
   const targetUrl = new URL(`${TMDB_BASE_URL}/${endpoint}`);

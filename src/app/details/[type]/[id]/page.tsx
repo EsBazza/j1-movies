@@ -70,6 +70,8 @@ export default function MediaDetailsPage() {
   const [volume, setVolume] = useState<number>(80);
   const [isVolumeOpen, setIsVolumeOpen] = useState(false);
   const [isTrailerLoaded, setIsTrailerLoaded] = useState(false);
+  const [logoFailed, setLogoFailed] = useState(false);
+  const [backdropFailed, setBackdropFailed] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   // Seamless unmute without reloading or restarting YouTube trailer
@@ -324,7 +326,30 @@ export default function MediaDetailsPage() {
           style={{ backgroundColor: palette.primaryGlow }}
         />
 
-        {/* Background Video Trailer Layer or Fallback Backdrop with Smooth Linear Fade (No Curved Elliptical Arcs) */}
+        {/* Base Movie Poster / Backdrop Image Layer (Always present as rock-solid fallback) */}
+        <div
+          className="absolute inset-0 w-full h-full pointer-events-none -z-0"
+          style={{
+            maskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.85) 50%, rgba(0,0,0,0) 90%)',
+            WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.85) 50%, rgba(0,0,0,0) 90%)',
+          }}
+        >
+          <Image
+            src={
+              backdropFailed
+                ? getPosterUrl(details.poster_path, 'w780')
+                : getBackdropUrl(details.backdrop_path || details.poster_path, 'original')
+            }
+            alt={title}
+            fill
+            priority
+            sizes="100vw"
+            onError={() => setBackdropFailed(true)}
+            className="object-cover object-top filter brightness-85"
+          />
+        </div>
+
+        {/* Ambient Video Trailer Layer (Fades in over poster/backdrop when loaded) */}
         {mainTrailer ? (
           <div
             className={cn(
@@ -348,24 +373,7 @@ export default function MediaDetailsPage() {
               className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[380vw] h-[215vw] sm:w-[220vw] sm:h-[125vw] md:w-[150vw] md:h-[150vh] max-w-none max-h-none object-cover filter brightness-100 contrast-[1.02] border-0 outline-none pointer-events-none"
             />
           </div>
-        ) : (
-          <div
-            className="absolute inset-0 w-full h-full pointer-events-none -z-0"
-            style={{
-              maskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.85) 50%, rgba(0,0,0,0) 90%)',
-              WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.85) 50%, rgba(0,0,0,0) 90%)',
-            }}
-          >
-            <Image
-              src={getBackdropUrl(details.backdrop_path || details.poster_path, 'original')}
-              alt={title}
-              fill
-              priority
-              sizes="100vw"
-              className="object-cover object-top filter brightness-85"
-            />
-          </div>
-        )}
+        ) : null}
 
         {/* Soft top gradient only for navbar separation */}
         <div className="absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-black/25 to-transparent pointer-events-none z-10" />
@@ -376,13 +384,14 @@ export default function MediaDetailsPage() {
           <div className="flex-1 flex flex-col gap-4 sm:gap-5 max-w-4xl w-full">
             {/* Title: Official TMDB Graphic Logo with Text Fallback */}
             {(() => {
+              const logos = details.images?.logos || [];
               const logo =
-                details.images?.logos?.find((l) => l.iso_639_1 === 'en' && l.file_path?.endsWith('.png')) ||
-                details.images?.logos?.find((l) => l.iso_639_1 === 'en') ||
-                details.images?.logos?.find((l) => l.file_path?.endsWith('.png')) ||
-                details.images?.logos?.[0];
+                logos.find((l) => l.iso_639_1 === 'en' && l.file_path?.endsWith('.png')) ||
+                logos.find((l) => l.iso_639_1 === 'en') ||
+                logos.find((l) => l.file_path?.endsWith('.png')) ||
+                logos[0];
 
-              if (logo?.file_path) {
+              if (logo?.file_path && !logoFailed) {
                 return (
                   <div className="relative w-full max-w-[280px] sm:max-w-[460px] md:max-w-[640px] lg:max-w-[780px] h-20 sm:h-32 md:h-44 lg:h-56 my-1 sm:my-2">
                     <Image
@@ -390,6 +399,7 @@ export default function MediaDetailsPage() {
                       alt={title}
                       fill
                       priority
+                      onError={() => setLogoFailed(true)}
                       className="object-contain object-left filter drop-shadow-[0_12px_28px_rgba(0,0,0,0.95)]"
                     />
                   </div>
@@ -818,23 +828,40 @@ export default function MediaDetailsPage() {
               ))}
             </div>
           ) : (
-            <div className="w-full rounded-3xl bg-black/20 hover:bg-black/40 backdrop-blur-md border border-white/10 p-8 sm:p-12 flex flex-col items-center justify-center text-center gap-4 shadow-xl opacity-80 hover:opacity-100 transition-all duration-300">
-              <div className="w-14 h-14 rounded-2xl bg-zinc-800/80 border border-white/10 flex items-center justify-center text-zinc-400">
-                <Film className="w-7 h-7" />
+            <div className="w-full rounded-3xl bg-black/25 hover:bg-black/45 backdrop-blur-md border border-white/10 p-6 sm:p-8 flex flex-col md:flex-row items-center gap-6 shadow-xl opacity-90 hover:opacity-100 transition-all duration-300">
+              {/* Fallback Movie Poster Card */}
+              <div className="relative w-36 sm:w-44 aspect-[2/3] rounded-2xl overflow-hidden shadow-2xl border border-white/20 flex-shrink-0 bg-zinc-950">
+                <Image
+                  src={getPosterUrl(details.poster_path || details.backdrop_path, 'w500')}
+                  alt={title}
+                  fill
+                  sizes="(max-width: 640px) 150px, 180px"
+                  className="object-cover"
+                />
+                <div className="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-black/80 backdrop-blur-md text-[10px] font-bold text-amber-400 border border-amber-400/30">
+                  Movie Poster
+                </div>
               </div>
-              <div className="flex flex-col gap-1 max-w-md">
-                <h4 className="text-base sm:text-lg font-bold text-white">No official video clips available</h4>
-                <p className="text-xs text-zinc-400 leading-relaxed">
-                  Studio trailers for this title are currently unavailable on TMDB. You can start streaming the full movie or series directly in HD above.
+
+              <div className="flex flex-col gap-2 text-center md:text-left max-w-xl">
+                <div className="flex items-center justify-center md:justify-start gap-2 text-xs text-amber-400 font-bold uppercase tracking-wider">
+                  <Film className="w-4 h-4" />
+                  <span>Trailer Unavailable • Poster Preview</span>
+                </div>
+                <h4 className="text-lg sm:text-xl font-black text-white">{title}</h4>
+                <p className="text-xs sm:text-sm text-zinc-300 leading-relaxed">
+                  Studio video trailers for this title are currently unavailable on TMDB. The official movie poster is shown above, and you can stream the complete title in full HD cinema quality directly.
                 </p>
+                <div className="pt-2">
+                  <Link
+                    href={resumeHref}
+                    className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-white hover:bg-zinc-200 text-black font-extrabold text-xs shadow-xl transition-all hover:scale-105 active:scale-95"
+                  >
+                    <Play className="w-3.5 h-3.5 fill-black" />
+                    <span>Start Watching Now</span>
+                  </Link>
+                </div>
               </div>
-              <Link
-                href={resumeHref}
-                className="mt-1 inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-white hover:bg-zinc-200 text-black font-extrabold text-xs shadow-xl transition-all hover:scale-105"
-              >
-                <Play className="w-3.5 h-3.5 fill-black" />
-                <span>Start Watching Now</span>
-              </Link>
             </div>
           )}
         </div>

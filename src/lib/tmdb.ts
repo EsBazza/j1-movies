@@ -11,29 +11,41 @@ import {
 
 const TMDB_IMAGE_BASE = 'https://image.tmdb.org/t/p';
 
+// Fallback credentials in case environment variables are missing on Vercel
+const DEFAULT_TMDB_API_KEY = 'f185fd26e0b5d4a99193d29f47c04ce9';
+const DEFAULT_TMDB_READ_ACCESS_TOKEN =
+  'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJmMTg1ZmQyNmUwYjVkNGE5OTE5M2QyOWY0N2MwNGNlOSIsIm5iZiI6MTc2NDA0MDc1Mi4zMzcsInN1YiI6IjY5MjUyMDMwMWRkMzc4OTY2YmQ5YzMxZiIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.q7UWt1vbgSe54DC_HfnGvq2NrvSRZSNPgz2j42uGxVE';
+
 /**
- * Build TMDB image URL with resolution sizing
+ * Build TMDB image URL with resolution sizing and safe fallback
  */
 export function getImageUrl(
   path: string | null | undefined,
   size: 'w185' | 'w300' | 'w342' | 'w500' | 'w780' | 'w1280' | 'original' = 'w500'
 ): string {
   if (!path) return '/placeholder-poster.svg';
-  return `${TMDB_IMAGE_BASE}/${size}${path}`;
+  if (path.startsWith('http://') || path.startsWith('https://')) return path;
+  const cleanPath = path.startsWith('/') ? path : `/${path}`;
+  return `${TMDB_IMAGE_BASE}/${size}${cleanPath}`;
 }
 
 export function getPosterUrl(path: string | null | undefined, size: 'w185' | 'w342' | 'w500' | 'w780' = 'w500'): string {
+  if (!path) return '/placeholder-poster.svg';
   return getImageUrl(path, size);
 }
 
 export function getBackdropUrl(path: string | null | undefined, size: 'w780' | 'w1280' | 'original' = 'original'): string {
   if (!path) return '/placeholder-backdrop.svg';
-  return `${TMDB_IMAGE_BASE}/${size}${path}`;
+  if (path.startsWith('http://') || path.startsWith('https://')) return path;
+  const cleanPath = path.startsWith('/') ? path : `/${path}`;
+  return `${TMDB_IMAGE_BASE}/${size}${cleanPath}`;
 }
 
 export function getLogoUrl(path: string | null | undefined, size: 'w300' | 'w500' | 'original' = 'w500'): string {
   if (!path) return '';
-  return `${TMDB_IMAGE_BASE}/${size}${path}`;
+  if (path.startsWith('http://') || path.startsWith('https://')) return path;
+  const cleanPath = path.startsWith('/') ? path : `/${path}`;
+  return `${TMDB_IMAGE_BASE}/${size}${cleanPath}`;
 }
 
 /**
@@ -58,7 +70,7 @@ export function normalizeMediaItem(item: TMDBMediaItem, fallbackType: MediaType 
 }
 
 /**
- * Helper to fetch from internal /api/tmdb proxy (client) or direct TMDB API (server)
+ * Helper to fetch from internal /api/tmdb proxy (client) or direct TMDB API (server/client fallback)
  */
 async function fetchFromTMDB<T>(path: string, params: Record<string, string | number> = {}): Promise<T> {
   const isClient = typeof window !== 'undefined';
@@ -74,16 +86,40 @@ async function fetchFromTMDB<T>(path: string, params: Record<string, string | nu
     const queryStr = searchParams.toString();
     const url = `/api/tmdb/${path}${queryStr ? `?${queryStr}` : ''}`;
 
-    const res = await fetch(url, {
-      headers: { 'Content-Type': 'application/json' },
-    });
+    try {
+      const res = await fetch(url, {
+        headers: { 'Content-Type': 'application/json' },
+      });
 
-    if (!res.ok) {
-      const errorData = await res.json().catch(() => ({}));
-      throw new Error(errorData.message || errorData.error || `TMDB API Request Failed: ${res.status}`);
+      if (res.ok) {
+        return await res.json();
+      }
+    } catch {
+      // Internal proxy failed, fall back to direct TMDB API below
     }
 
-    return res.json();
+    // Direct TMDB client fallback if local proxy fails on Vercel
+    const directUrl = new URL(`https://api.themoviedb.org/3/${path}`);
+    Object.entries(params).forEach(([key, val]) => {
+      if (val !== undefined && val !== null) {
+        directUrl.searchParams.set(key, String(val));
+      }
+    });
+    directUrl.searchParams.set('api_key', DEFAULT_TMDB_API_KEY);
+
+    const directRes = await fetch(directUrl.toString(), {
+      headers: {
+        Accept: 'application/json',
+        Authorization: `Bearer ${DEFAULT_TMDB_READ_ACCESS_TOKEN}`,
+      },
+    });
+
+    if (!directRes.ok) {
+      const errorData = await directRes.json().catch(() => ({}));
+      throw new Error(errorData.message || errorData.status_message || `TMDB API Request Failed: ${directRes.status}`);
+    }
+
+    return directRes.json();
   }
 
   // Server-side (SSR / Static Generation / Build time)
@@ -91,13 +127,15 @@ async function fetchFromTMDB<T>(path: string, params: Record<string, string | nu
     process.env.TMDB_API_KEY ||
     process.env.NEXT_PUBLIC_TMDB_API_KEY ||
     process.env.TMDB_KEY ||
-    process.env.API_KEY;
+    process.env.API_KEY ||
+    DEFAULT_TMDB_API_KEY;
 
   const readAccessToken =
     process.env.TMDB_READ_ACCESS_TOKEN ||
     process.env.NEXT_PUBLIC_TMDB_READ_ACCESS_TOKEN ||
     process.env.TMDB_TOKEN ||
-    process.env.TMDB_ACCESS_TOKEN;
+    process.env.TMDB_ACCESS_TOKEN ||
+    DEFAULT_TMDB_READ_ACCESS_TOKEN;
 
   const targetUrl = new URL(`https://api.themoviedb.org/3/${path}`);
   Object.entries(params).forEach(([key, val]) => {
@@ -189,14 +227,14 @@ export async function getTVByGenre(
 export async function getMovieDetails(id: number | string): Promise<TMDBMovieDetails> {
   return fetchFromTMDB<TMDBMovieDetails>(`movie/${id}`, {
     append_to_response: 'credits,videos,recommendations,similar,images',
-    include_image_language: 'en,null',
+    include_image_language: 'en,null,ja,ko,fr,es,de,it',
   });
 }
 
 export async function getTVDetails(id: number | string): Promise<TMDBTVDetails> {
   return fetchFromTMDB<TMDBTVDetails>(`tv/${id}`, {
     append_to_response: 'credits,videos,recommendations,similar,images',
-    include_image_language: 'en,null',
+    include_image_language: 'en,null,ja,ko,fr,es,de,it',
   });
 }
 
