@@ -35,20 +35,20 @@ const YEAR_OPTIONS = [
 
 const RATING_OPTIONS = [
   { label: 'Any Score', value: 0 },
-  { label: '⭐ 5.0+', value: 5 },
-  { label: '⭐ 6.0+', value: 6 },
-  { label: '⭐ 7.0+ (Great)', value: 7 },
-  { label: '⭐ 8.0+ (Masterpiece)', value: 8 },
+  { label: '5.0+', value: 5 },
+  { label: '6.0+', value: 6 },
+  { label: '7.0+ (Great)', value: 7 },
+  { label: '8.0+ (Masterpiece)', value: 8 },
 ];
 
 const LANGUAGE_OPTIONS = [
   { label: 'All Languages', value: '' },
-  { label: '🇺🇸 English', value: 'en' },
-  { label: '🇯🇵 Japanese (Anime)', value: 'ja' },
-  { label: '🇰🇷 Korean (K-Drama)', value: 'ko' },
-  { label: '🇪🇸 Spanish', value: 'es' },
-  { label: '🇫🇷 French', value: 'fr' },
-  { label: '🇮🇳 Hindi', value: 'hi' },
+  { label: 'English', value: 'en' },
+  { label: 'Japanese (Anime)', value: 'ja' },
+  { label: 'Korean (K-Drama)', value: 'ko' },
+  { label: 'Spanish', value: 'es' },
+  { label: 'French', value: 'fr' },
+  { label: 'Hindi', value: 'hi' },
 ];
 
 export function AdvancedFilterDrawer({

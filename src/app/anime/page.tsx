@@ -1,229 +1,387 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import Image from 'next/image';
-import Link from 'next/link';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Sparkles,
-  TrendingUp,
+  Flame,
   Star,
   Film,
-  Play,
-  Loader2,
   Tv,
+  Loader2,
+  Swords,
+  Heart,
 } from 'lucide-react';
 import {
   getTrendingAnime,
   getPopularAnime,
   getTopRatedAnime,
   getAnimeMovies,
+  getTVByGenre,
+  discoverMedia,
   normalizeMediaItem,
   getBackdropUrl,
 } from '@/lib/tmdb';
 import { NormalizedMedia } from '@/types/tmdb';
 import { MediaCard } from '@/components/media/MediaCard';
 import { MediaCarousel } from '@/components/media/MediaCarousel';
+import { ExploreConsole, FilterState } from '@/components/media/ExploreConsole';
+import { HUB_CONFIGS } from '@/lib/hubExploreConfigs';
 import { SkeletonCard } from '@/components/ui/SkeletonCard';
+import { SkeletonBanner } from '@/components/ui/SkeletonBanner';
+import { ApiKeyWarning } from '@/components/common/ApiKeyWarning';
+import { AmbientBackground } from '@/components/media/AmbientBackground';
+import { HeroBanner } from '@/components/media/HeroBanner';
+import {
+  extractPaletteFromImage,
+  getPaletteForGenre,
+  DEFAULT_PALETTE,
+  ExtractedPalette,
+} from '@/lib/colorExtractor';
 
 export default function AnimeHubPage() {
-  const [featured, setFeatured] = useState<NormalizedMedia | null>(null);
+  const [heroItem, setHeroItem] = useState<NormalizedMedia | null>(null);
+  const [palette, setPalette] = useState<ExtractedPalette>(DEFAULT_PALETTE);
+
   const [trending, setTrending] = useState<NormalizedMedia[]>([]);
   const [popular, setPopular] = useState<NormalizedMedia[]>([]);
   const [topRated, setTopRated] = useState<NormalizedMedia[]>([]);
   const [movies, setMovies] = useState<NormalizedMedia[]>([]);
-  const [activeTab, setActiveTab] = useState<'all' | 'series' | 'movies'>('all');
+  const [actionAnime, setActionAnime] = useState<NormalizedMedia[]>([]);
+  const [fantasyAnime, setFantasyAnime] = useState<NormalizedMedia[]>([]);
+
+  // Filter Catalog State
+  const [activeSubGenreId, setActiveSubGenreId] = useState<string>('all');
+  const [filters, setFilters] = useState<FilterState>({
+    year: '',
+    minRating: 0,
+    language: '',
+    sortBy: 'popularity.desc',
+    format: 'all',
+  });
+
+  const [catalogAnime, setCatalogAnime] = useState<NormalizedMedia[]>([]);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingCatalog, setIsLoadingCatalog] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [hasError, setHasError] = useState(false);
+
+  // Dynamic Color Extraction
+  const handleActiveHeroChange = useCallback((activeItem: NormalizedMedia) => {
+    setHeroItem(activeItem);
+    const genreId = activeItem.genres?.[0]?.id;
+    if (activeItem.backdropPath || activeItem.posterPath) {
+      const sampleUrl = getBackdropUrl(activeItem.backdropPath || activeItem.posterPath, 'w780');
+      extractPaletteFromImage(sampleUrl, genreId || 16).then(setPalette);
+    } else {
+      setPalette(getPaletteForGenre(genreId || 16));
+    }
+  }, []);
 
   useEffect(() => {
     async function loadAnimeData() {
       setIsLoading(true);
+      setHasError(false);
+
       try {
-        const [trendingRes, popularRes, topRatedRes, moviesRes] = await Promise.all([
+        const [
+          trendingRes,
+          popularRes,
+          topRatedRes,
+          moviesRes,
+          actionRes,
+          fantasyRes,
+        ] = await Promise.all([
           getTrendingAnime(1),
           getPopularAnime(1),
           getTopRatedAnime(1),
           getAnimeMovies(1),
+          getTVByGenre(10759, 1).catch(() => null), // Action & Adventure TV
+          getTVByGenre(10765, 1).catch(() => null), // Sci-Fi & Fantasy TV
         ]);
 
         const normTrending = (trendingRes.results || []).map((i) => normalizeMediaItem(i, 'tv'));
         const normPopular = (popularRes.results || []).map((i) => normalizeMediaItem(i, 'tv'));
         const normTopRated = (topRatedRes.results || []).map((i) => normalizeMediaItem(i, 'tv'));
         const normMovies = (moviesRes.results || []).map((i) => normalizeMediaItem(i, 'movie'));
+        const normAction = (actionRes?.results || []).map((i) => normalizeMediaItem(i, 'tv'));
+        const normFantasy = (fantasyRes?.results || []).map((i) => normalizeMediaItem(i, 'tv'));
 
         setTrending(normTrending);
         setPopular(normPopular);
         setTopRated(normTopRated);
         setMovies(normMovies);
+        setActionAnime(normAction);
+        setFantasyAnime(normFantasy);
 
-        if (normTrending.length > 0) {
-          setFeatured(normTrending[0]);
+        const featured = normTrending.length > 0 ? normTrending : normPopular;
+        if (featured.length > 0) {
+          setHeroItem(featured[0]);
+          handleActiveHeroChange(featured[0]);
         }
       } catch (err) {
         console.error('Failed to load anime hub data:', err);
+        setHasError(true);
       } finally {
         setIsLoading(false);
       }
     }
 
     loadAnimeData();
-  }, []);
+  }, [handleActiveHeroChange]);
+
+  const activeSubGenreObj = HUB_CONFIGS.anime.subGenres.find((s) => s.id === activeSubGenreId);
+
+  // When filters are engaged, fetch targeted catalog
+  const isFiltering = Boolean(
+    activeSubGenreId !== 'all' ||
+    filters.year ||
+    filters.minRating > 0 ||
+    filters.sortBy !== 'popularity.desc' ||
+    (filters.format && filters.format !== 'all')
+  );
+
+  useEffect(() => {
+    if (!isFiltering) return;
+
+    async function loadFiltered() {
+      setIsLoadingCatalog(true);
+      setPage(1);
+
+      try {
+        const targetMediaType = filters.format && filters.format !== 'all' ? filters.format : 'tv';
+        // Combine Animation (16) with subgenre if applicable
+        const genreParam = activeSubGenreObj?.genreId
+          ? `16,${activeSubGenreObj.genreId}`
+          : '16';
+
+        const res = await discoverMedia({
+          mediaType: targetMediaType,
+          genreId: genreParam,
+          withKeywords: activeSubGenreObj?.keywordId ? String(activeSubGenreObj.keywordId) : undefined,
+          sortBy: filters.sortBy,
+          minRating: filters.minRating,
+          year: filters.year,
+          language: 'ja',
+          withOriginalLanguage: 'ja',
+          withOriginCountry: 'JP',
+          page: 1,
+        });
+
+        const items = (res.results || []).map((item) => normalizeMediaItem(item, targetMediaType));
+        setCatalogAnime(items);
+        setTotalPages(res.total_pages || 1);
+      } catch (err) {
+        console.error('Failed to load filtered anime:', err);
+      } finally {
+        setIsLoadingCatalog(false);
+      }
+    }
+
+    loadFiltered();
+  }, [isFiltering, activeSubGenreId, activeSubGenreObj, filters]);
+
+  const handleLoadMore = async () => {
+    if (page >= totalPages || isLoadingMore) return;
+    setIsLoadingMore(true);
+
+    try {
+      const nextPage = page + 1;
+      const targetMediaType = filters.format && filters.format !== 'all' ? filters.format : 'tv';
+      const genreParam = activeSubGenreObj?.genreId
+        ? `16,${activeSubGenreObj.genreId}`
+        : '16';
+
+      const res = await discoverMedia({
+        mediaType: targetMediaType,
+        genreId: genreParam,
+        withKeywords: activeSubGenreObj?.keywordId ? String(activeSubGenreObj.keywordId) : undefined,
+        sortBy: filters.sortBy,
+        minRating: filters.minRating,
+        year: filters.year,
+        language: 'ja',
+        withOriginalLanguage: 'ja',
+        withOriginCountry: 'JP',
+        page: nextPage,
+      });
+
+      const newItems = (res.results || []).map((item) => normalizeMediaItem(item, targetMediaType));
+      setCatalogAnime((prev) => [...prev, ...newItems]);
+      setPage(nextPage);
+    } catch (err) {
+      console.error('Error loading more anime:', err);
+    } finally {
+      setIsLoadingMore(false);
+    }
+  };
+
+  const handleResetFilters = () => {
+    setFilters({
+      year: '',
+      minRating: 0,
+      language: '',
+      sortBy: 'popularity.desc',
+      format: 'all',
+    });
+    setActiveSubGenreId('all');
+  };
+
+  if (hasError) {
+    return (
+      <div className="min-h-[80vh] flex flex-col items-center justify-center pt-16">
+        <ApiKeyWarning />
+      </div>
+    );
+  }
+
+  const featuredItems = trending.length > 0 ? trending.slice(0, 8) : popular.slice(0, 8);
+  const activeHero = heroItem || featuredItems[0];
 
   return (
-    <div className="min-h-screen bg-[#0f1014] text-white pt-20 pb-28">
-      {/* 1. Cinematic Hero Spotlight */}
-      {featured && (
-        <section className="relative w-full h-[65vh] min-h-[480px] max-h-[640px] overflow-hidden mb-12">
-          {featured.backdropPath && (
-            <div className="absolute inset-0">
-              <Image
-                src={getBackdropUrl(featured.backdropPath, 'original')}
-                alt={featured.title}
-                fill
-                priority
-                className="object-cover object-top opacity-50 filter brightness-90"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#0f1014] via-[#0f1014]/60 to-transparent" />
-              <div className="absolute inset-0 bg-gradient-to-r from-[#0f1014] via-[#0f1014]/40 to-transparent" />
-            </div>
-          )}
+    <div className="flex flex-col w-full pb-32 relative bg-transparent min-h-screen">
+      {/* 1. Dynamic Multi-Color Ambient Lighting Canvas (Identical to Home Page) */}
+      <AmbientBackground
+        backdropPath={activeHero?.backdropPath}
+        posterPath={activeHero?.posterPath}
+        palette={palette}
+      />
 
-          <div className="relative z-10 max-w-7xl mx-auto h-full flex flex-col justify-end px-6 sm:px-10 pb-10">
-            <div className="flex items-center gap-2 mb-3">
-              <span className="px-2.5 py-1 rounded bg-red-600/90 text-white text-[11px] font-bold tracking-wider uppercase">
-                Anime Spotlight
-              </span>
-              <span className="px-2.5 py-1 rounded bg-blue-600/80 text-white text-[11px] font-bold tracking-wider uppercase">
-                Sub / Dub
-              </span>
-              {featured.rating > 0 && (
-                <span className="flex items-center gap-1 px-2.5 py-1 rounded bg-black/60 backdrop-blur-md border border-white/10 text-[11px] font-bold text-amber-400">
-                  <Star className="w-3 h-3 fill-amber-400" />
-                  {featured.rating.toFixed(1)}
-                </span>
-              )}
-            </div>
-
-            <h1 className="font-display text-4xl sm:text-6xl md:text-7xl font-bold tracking-wide text-white leading-tight max-w-3xl drop-shadow-2xl">
-              {featured.title}
-            </h1>
-
-            {featured.overview && (
-              <p className="text-zinc-300 text-sm sm:text-base line-clamp-2 max-w-2xl mt-3 font-normal leading-relaxed">
-                {featured.overview}
-              </p>
-            )}
-
-            <div className="flex items-center gap-3 mt-6">
-              <Link
-                href={`/watch/${featured.type}/${featured.id}`}
-                className="flex items-center gap-2.5 px-7 py-3 rounded-full bg-red-600 hover:bg-red-700 text-white text-sm font-bold tracking-wide transition-all shadow-[0_4px_24px_rgba(229,9,20,0.45)] hover:scale-105 active:scale-95"
-              >
-                <Play className="w-4 h-4 fill-white" />
-                <span>Watch Now</span>
-              </Link>
-              <Link
-                href={`/details/${featured.type}/${featured.id}`}
-                className="px-6 py-3 rounded-full bg-white/10 hover:bg-white/20 text-white text-sm font-semibold backdrop-blur-xl border border-white/15 transition-all hover:scale-105 active:scale-95"
-              >
-                More Info
-              </Link>
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* 2. Sub-Navigation Filter Tabs */}
-      <div className="max-w-7xl mx-auto px-6 sm:px-10 mb-8">
-        <div className="flex items-center justify-between border-b border-white/10 pb-4">
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setActiveTab('all')}
-              className={`px-4 py-1.5 rounded-full text-xs font-bold tracking-wide transition-all cursor-pointer ${
-                activeTab === 'all'
-                  ? 'bg-red-600 text-white shadow-md'
-                  : 'bg-white/5 text-zinc-400 hover:text-white hover:bg-white/10'
-              }`}
-            >
-              All Anime
-            </button>
-            <button
-              onClick={() => setActiveTab('series')}
-              className={`px-4 py-1.5 rounded-full text-xs font-bold tracking-wide transition-all cursor-pointer ${
-                activeTab === 'series'
-                  ? 'bg-red-600 text-white shadow-md'
-                  : 'bg-white/5 text-zinc-400 hover:text-white hover:bg-white/10'
-              }`}
-            >
-              TV Series
-            </button>
-            <button
-              onClick={() => setActiveTab('movies')}
-              className={`px-4 py-1.5 rounded-full text-xs font-bold tracking-wide transition-all cursor-pointer ${
-                activeTab === 'movies'
-                  ? 'bg-red-600 text-white shadow-md'
-                  : 'bg-white/5 text-zinc-400 hover:text-white hover:bg-white/10'
-              }`}
-            >
-              Feature Films
-            </button>
-          </div>
-
-          <span className="text-xs text-zinc-500 font-medium hidden sm:inline">
-            Powered by 111movies and Filmu
-          </span>
-        </div>
+      {/* 2. Hero Spotlight Carousel Section (Identical to Home Page) */}
+      <div className="relative z-10">
+        {isLoading ? (
+          <SkeletonBanner />
+        ) : (
+          <HeroBanner
+            items={featuredItems}
+            item={heroItem || featuredItems[0]}
+            palette={palette}
+            onActiveItemChange={handleActiveHeroChange}
+          />
+        )}
       </div>
 
-      {/* 3. Media Shelves */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
-        {isLoading ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 sm:gap-6">
-            {Array.from({ length: 15 }).map((_, i) => (
-              <SkeletonCard key={i} />
-            ))}
+      {/* 3. Spacious Content Rows */}
+      <div className="relative pt-6 sm:pt-10 md:pt-14 z-20 flex flex-col gap-12 sm:gap-16 md:gap-20 max-w-[1750px] mx-auto w-full px-6 sm:px-10 lg:px-16 xl:px-20">
+        {/* Interactive Explore Console for Anime */}
+        <ExploreConsole
+          title="Explore Anime"
+          icon={Sparkles}
+          subGenres={HUB_CONFIGS.anime.subGenres}
+          activeSubGenreId={activeSubGenreId}
+          onSelectSubGenre={setActiveSubGenreId}
+          filters={filters}
+          onFilterChange={setFilters}
+          onResetFilters={handleResetFilters}
+          isFiltering={isFiltering}
+          totalResultsCount={catalogAnime.length}
+          allowFormatSwitch={true}
+        />
+
+        {/* Dynamic Display: If user filtered, show instant 6-column widescreen grid. Otherwise, show cinema shelves */}
+        {isFiltering ? (
+          <div className="flex flex-col gap-6">
+            <h3 className="text-xl font-bold text-white">
+              Filtered Anime ({activeSubGenreObj?.name || 'Custom'})
+            </h3>
+            {isLoadingCatalog ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 sm:gap-5">
+                {Array.from({ length: 18 }).map((_, i) => (
+                  <SkeletonCard key={i} />
+                ))}
+              </div>
+            ) : catalogAnime.length > 0 ? (
+              <>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 sm:gap-5">
+                  {catalogAnime.map((anime, index) => (
+                    <MediaCard
+                      key={`${anime.id}-${index}`}
+                      item={anime}
+                      priority={index < 6}
+                    />
+                  ))}
+                </div>
+
+                {page < totalPages && (
+                  <div className="flex justify-center mt-12">
+                    <button
+                      onClick={handleLoadMore}
+                      disabled={isLoadingMore}
+                      className="flex items-center gap-2 px-8 py-3.5 rounded-xl bg-zinc-900/90 hover:bg-zinc-800 border border-zinc-700 text-white font-semibold text-sm transition-all hover:scale-105 cursor-pointer shadow-lg"
+                    >
+                      {isLoadingMore ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin text-red-500" />
+                          <span>Loading Anime...</span>
+                        </>
+                      ) : (
+                        <span>Load More Anime</span>
+                      )}
+                    </button>
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="py-20 text-center text-zinc-400">
+                No anime found matching these filter criteria.
+              </div>
+            )}
           </div>
         ) : (
           <>
-            {/* Shelf 1: Trending Anime with Ranked Numbers */}
-            {(activeTab === 'all' || activeTab === 'series') && (
-              <MediaCarousel
-                title="Trending Anime"
-                items={trending}
-                showRank={true}
-                isLoading={isLoading}
-                fullWidth={true}
-              />
-            )}
+            {/* Trending Anime with Big Bold Ranked Numbers */}
+            <MediaCarousel
+              title="Trending Anime"
+              items={trending}
+              showRank={true}
+              isLoading={isLoading}
+              fullWidth={true}
+            />
 
-            {/* Shelf 2: Top Rated Classics */}
-            {(activeTab === 'all' || activeTab === 'series') && (
-              <MediaCarousel
-                title="Top Rated Masterpieces"
-                items={topRated}
-                isLoading={isLoading}
-                fullWidth={true}
-              />
-            )}
+            {/* Top Rated Masterpieces */}
+            <MediaCarousel
+              title="Top Rated Masterpieces"
+              icon={Star}
+              items={topRated}
+              isLoading={isLoading}
+              fullWidth={true}
+            />
 
-            {/* Shelf 3: Anime Feature Films */}
-            {(activeTab === 'all' || activeTab === 'movies') && (
-              <MediaCarousel
-                title="Anime Feature Films"
-                items={movies}
-                isLoading={isLoading}
-                fullWidth={true}
-              />
-            )}
+            {/* Anime Cinema & Feature Films */}
+            <MediaCarousel
+              title="Anime Feature Films"
+              icon={Film}
+              items={movies}
+              isLoading={isLoading}
+              fullWidth={true}
+            />
 
-            {/* Shelf 4: Fan Favorites */}
-            {(activeTab === 'all' || activeTab === 'series') && (
-              <MediaCarousel
-                title="Fan Favorites"
-                items={popular}
-                isLoading={isLoading}
-                fullWidth={true}
-              />
-            )}
+            {/* Fan Favorites */}
+            <MediaCarousel
+              title="Fan Favorites"
+              icon={Sparkles}
+              items={popular}
+              isLoading={isLoading}
+              fullWidth={true}
+            />
+
+            {/* Action & Shonen Hits */}
+            <MediaCarousel
+              title="Action & Shonen Hits"
+              icon={Swords}
+              items={actionAnime}
+              isLoading={isLoading}
+              fullWidth={true}
+            />
+
+            {/* Fantasy & Otherworldly Adventures */}
+            <MediaCarousel
+              title="Fantasy & Other Worlds"
+              icon={Sparkles}
+              items={fantasyAnime}
+              isLoading={isLoading}
+              fullWidth={true}
+            />
           </>
         )}
       </div>

@@ -331,9 +331,12 @@ export default function MediaDetailsPage() {
           style={{ backgroundColor: palette.primaryGlow }}
         />
 
-        {/* Base Movie Poster / Backdrop Image Layer (Always present as rock-solid fallback) */}
+        {/* Base Movie Poster / Backdrop Image Layer (Fades out when trailer starts playing) */}
         <div
-          className="absolute inset-0 w-full h-full pointer-events-none -z-0"
+          className={cn(
+            "absolute inset-0 w-full h-full pointer-events-none -z-0 transition-opacity duration-1000",
+            isTrailerLoaded && mainTrailer ? "opacity-0" : "opacity-100"
+          )}
           style={{
             maskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.85) 50%, rgba(0,0,0,0) 90%)',
             WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.85) 50%, rgba(0,0,0,0) 90%)',
@@ -354,12 +357,12 @@ export default function MediaDetailsPage() {
           />
         </div>
 
-        {/* Ambient Video Trailer Layer (Fades in over poster/backdrop when loaded) */}
+        {/* Ambient Video Trailer Layer (Plays fully visible when loaded with zero poster bleed-through) */}
         {mainTrailer ? (
           <div
             className={cn(
               "absolute inset-0 w-full h-full pointer-events-none overflow-hidden select-none -z-0 transition-opacity duration-1000",
-              isTrailerLoaded ? "opacity-75 md:opacity-85" : "opacity-0"
+              isTrailerLoaded ? "opacity-100" : "opacity-0"
             )}
             style={{
               maskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.85) 50%, rgba(0,0,0,0) 90%)',

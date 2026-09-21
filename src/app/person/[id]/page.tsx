@@ -285,9 +285,9 @@ function PersonContent() {
               onChange={(e) => setSortBy(e.target.value)}
               className="appearance-none bg-zinc-900 border border-zinc-700 hover:border-zinc-500 text-white text-xs font-semibold rounded-xl pl-9 pr-9 py-2.5 focus:outline-none focus:border-red-500 cursor-pointer shadow-lg transition-colors"
             >
-              <option value="popularity.desc">🔥 Most Popular</option>
-              <option value="vote_average.desc">⭐ Highest Rated</option>
-              <option value="release_date.desc">📅 Release Date</option>
+              <option value="popularity.desc">Most Popular</option>
+              <option value="vote_average.desc">Highest Rated</option>
+              <option value="release_date.desc">Release Date</option>
             </select>
           </div>
         </div>

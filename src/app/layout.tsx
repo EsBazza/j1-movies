@@ -24,7 +24,12 @@ export const metadata: Metadata = {
   description:
     'Stream your favorite movies, TV series, anime, and Asian dramas with crystal-clear high definition, instant playback, and personal watchlist.',
   icons: {
-    icon: '/favicon.ico',
+    icon: [
+      { url: '/icon.png', type: 'image/png' },
+      { url: '/favicon.ico' },
+    ],
+    shortcut: '/icon.png',
+    apple: '/icon.png',
   },
 };
 

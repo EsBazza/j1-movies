@@ -83,11 +83,11 @@ export function MediaCarousel({
         {/* Scrollable Track */}
         <div
           ref={scrollContainerRef}
-          className="flex items-stretch gap-4 sm:gap-5 overflow-x-auto no-scrollbar scroll-smooth py-4 px-1"
+          className="flex items-stretch gap-4 sm:gap-6 overflow-x-auto no-scrollbar scroll-smooth py-4 px-2"
         >
           {isLoading
             ? Array.from({ length: 7 }).map((_, i) => (
-                <div key={i} className="w-[160px] sm:w-[185px] md:w-[210px] flex-shrink-0">
+                <div key={i} className="w-[150px] sm:w-[175px] md:w-[200px] flex-shrink-0">
                   <SkeletonCard />
                 </div>
               ))
@@ -97,14 +97,14 @@ export function MediaCarousel({
                   return (
                     <div
                       key={`${item.type}-${item.id}`}
-                      className="relative flex items-center flex-shrink-0 group/rank pl-1 pr-3"
+                      className="relative flex items-end flex-shrink-0 group/rank pl-6 sm:pl-10 pr-2 pt-2"
                     >
-                      {/* Big Bold Ranked Number */}
-                      <span className="ranked-number text-[85px] sm:text-[110px] md:text-[140px] leading-none select-none -mr-4 sm:-mr-6 z-0 transition-transform duration-300 group-hover/rank:scale-105">
+                      {/* Big Bold Ranked Number - Giant solid white letter overlapping from behind */}
+                      <span className="ranked-number text-[140px] sm:text-[180px] md:text-[220px] absolute left-0 bottom-2 z-0 pointer-events-none select-none transition-transform duration-300 group-hover/rank:scale-105">
                         {rankNum}
                       </span>
-                      {/* Card positioned slightly over the number */}
-                      <div className="w-[145px] sm:w-[170px] md:w-[195px] relative z-10">
+                      {/* Vertical Poster Card positioned over the right side of the number */}
+                      <div className="w-[150px] sm:w-[175px] md:w-[200px] relative z-10 ml-12 sm:ml-16 md:ml-20">
                         <MediaCard item={item} rank={rankNum} />
                       </div>
                     </div>
@@ -114,7 +114,7 @@ export function MediaCarousel({
                 return (
                   <div
                     key={`${item.type}-${item.id}`}
-                    className="w-[155px] sm:w-[180px] md:w-[205px] flex-shrink-0"
+                    className="w-[150px] sm:w-[175px] md:w-[200px] flex-shrink-0"
                   >
                     <MediaCard item={item} />
                   </div>

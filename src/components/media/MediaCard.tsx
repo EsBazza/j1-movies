@@ -1,16 +1,13 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
-import { createPortal } from 'react-dom';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Play, Star, Film, Tv, Eye, Clock, Info } from 'lucide-react';
+import { Play, Star } from 'lucide-react';
 import { NormalizedMedia } from '@/types/tmdb';
-import { getPosterUrl, getBackdropUrl, getTrailerKey } from '@/lib/tmdb';
-import { formatYear, formatSeconds, formatRelativeTime } from '@/lib/utils';
+import { getPosterUrl, getBackdropUrl } from '@/lib/tmdb';
+import { formatYear } from '@/lib/utils';
 import { BookmarkButton } from '@/components/common/BookmarkButton';
-import { QuickPreviewModal } from '@/components/media/QuickPreviewModal';
-import { Badge } from '@/components/ui/Badge';
 import { useUserStore } from '@/lib/store';
 
 interface MediaCardProps {
@@ -19,361 +16,106 @@ interface MediaCardProps {
   rank?: number;
 }
 
-export function MediaCard({ item, priority = false, rank }: MediaCardProps) {
-  const cardRef = useRef<HTMLDivElement>(null);
-  const [mounted, setMounted] = useState(false);
-  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
-  const [isExpanded, setIsExpanded] = useState(false);
-  const [trailerKey, setTrailerKey] = useState<string | null>(null);
+export function MediaCard({ item, priority = false }: MediaCardProps) {
   const [posterError, setPosterError] = useState(false);
-  const [popoverPosterError, setPopoverPosterError] = useState(false);
-  const [popoverCoords, setPopoverCoords] = useState<{ top: number; left: number; width: number } | null>(null);
-
-  const hoverTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const closeTimerRef = useRef<NodeJS.Timeout | null>(null);
   const { history, hasHydrated } = useUserStore();
 
-  useEffect(() => {
-    setMounted(true);
-    return () => {
-      if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
-      if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
-    };
-  }, []);
+  const detailsUrl = `/details/${item.type}/${item.id}`;
+  const playUrl = `/watch/${item.type}/${item.id}`;
 
   // Check if item is in watch history
   const historyItem = hasHydrated
     ? history.find((h) => h.id === item.id && h.type === item.type)
     : undefined;
 
-  const updatePopoverPosition = () => {
-    if (!cardRef.current) return;
-    const rect = cardRef.current.getBoundingClientRect();
-    const popWidth = Math.min(360, window.innerWidth - 32);
-
-    let left = rect.left + rect.width / 2 - popWidth / 2;
-    if (left < 16) left = 16;
-    if (left + popWidth > window.innerWidth - 16) left = window.innerWidth - popWidth - 16;
-
-    // Center vertically around the card center, clamped inside the viewport
-    let top = rect.top + rect.height / 2 - 200;
-    if (top < 24) top = 24;
-    if (top + 420 > window.innerHeight - 24) top = Math.max(24, window.innerHeight - 444);
-
-    setPopoverCoords({ top, left, width: popWidth });
-  };
-
-  const handleMouseEnter = () => {
-    if (closeTimerRef.current) {
-      clearTimeout(closeTimerRef.current);
-      closeTimerRef.current = null;
-    }
-
-    if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
-    // 300ms debounce before popping out teaser preview
-    hoverTimerRef.current = setTimeout(async () => {
-      updatePopoverPosition();
-      try {
-        const key = await getTrailerKey(item.type, item.id);
-        setTrailerKey(key);
-      } catch {
-        setTrailerKey(null);
-      }
-      setIsExpanded(true);
-    }, 300);
-  };
-
-  const handleMouseLeave = () => {
-    if (hoverTimerRef.current) {
-      clearTimeout(hoverTimerRef.current);
-      hoverTimerRef.current = null;
-    }
-    // Grace period when moving between base card and portal popover
-    closeTimerRef.current = setTimeout(() => {
-      setIsExpanded(false);
-      setTrailerKey(null);
-    }, 200);
-  };
-
-  const detailsHref = `/details/${item.type}/${item.id}`;
+  const imageUrl = posterError
+    ? getBackdropUrl(item.backdropPath, 'w780')
+    : getPosterUrl(item.posterPath, 'w500');
 
   return (
-    <div
-      ref={cardRef}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-      className="relative w-full"
-    >
-      {/* 1. Base Poster Card */}
-      <div className="group/card relative flex flex-col w-full">
-        {/* Poster Container */}
-        <div className="relative aspect-[2/3] w-full rounded-2xl overflow-hidden bg-zinc-950 border border-white/[0.06] hover:border-white/20 transition-all duration-300 hover:shadow-2xl hover:shadow-black/80 hover:-translate-y-1.5 shine-overlay">
-          <Image
-            src={
-              posterError
-                ? getBackdropUrl(item.backdropPath, 'w780')
-                : getPosterUrl(item.posterPath, 'w500')
-            }
-            alt={item.title}
-            fill
-            sizes="(max-width: 640px) 45vw, (max-width: 1024px) 25vw, 220px"
-            priority={priority}
-            onError={() => setPosterError(true)}
-            className="object-cover transition-transform duration-700 group-hover/card:scale-105"
-          />
+    <div className="group/card relative flex flex-col w-full">
+      {/* 2:3 Vertical Poster Container */}
+      <div className="relative aspect-[2/3] w-full rounded-2xl overflow-hidden bg-zinc-950 border border-white/[0.08] hover:border-white/30 transition-all duration-300 shadow-xl hover:shadow-2xl hover:shadow-black/90 hover:-translate-y-1.5 flex flex-col">
+        <Image
+          src={imageUrl}
+          alt={item.title}
+          fill
+          priority={priority}
+          sizes="(max-width: 640px) 180px, (max-width: 1024px) 220px, 260px"
+          onError={() => setPosterError(true)}
+          className="object-cover group-hover/card:scale-105 transition-all duration-500 brightness-95"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity duration-300 pointer-events-none" />
 
-          {/* Top Badges & Actions */}
-          <div className="absolute top-2.5 left-2.5 right-2.5 flex items-center justify-between pointer-events-none z-10">
-            {item.rating > 0 ? (
-              <Badge variant="rating" className="flex items-center gap-1 shadow-lg backdrop-blur-md bg-black/60 border-amber-500/20 font-bold text-[11px]">
-                <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
-                <span>{item.rating.toFixed(1)}</span>
-              </Badge>
-            ) : (
-              <div />
-            )}
-
-            <div className="flex items-center gap-1.5 pointer-events-auto">
-              <button
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setIsPreviewOpen(true);
-                }}
-                title="Quick Preview"
-                className="w-8 h-8 rounded-full bg-black/70 hover:bg-red-600 text-white flex items-center justify-center backdrop-blur-md border border-white/10 transition-all shadow-md hover:scale-105 cursor-pointer opacity-0 group-hover/card:opacity-100"
-              >
-                <Eye className="w-3.5 h-3.5" />
-              </button>
-
-              <BookmarkButton
-                item={{
-                  id: item.id,
-                  type: item.type,
-                  title: item.title,
-                  poster_path: item.posterPath,
-                  backdrop_path: item.backdropPath,
-                  vote_average: item.rating,
-                  release_date: item.releaseDate,
-                }}
-              />
-            </div>
-          </div>
-
-          {/* Watch History Progress Indicator */}
-          {historyItem && (
-            <div className="absolute bottom-0 inset-x-0 z-10">
-              {historyItem.progressPercent ? (
-                <div className="w-full h-1.5 bg-black/70 overflow-hidden">
-                  <div
-                    className="h-full bg-red-600 shadow-[0_0_8px_rgba(229,9,20,0.8)]"
-                    style={{ width: `${Math.min(100, historyItem.progressPercent)}%` }}
-                  />
-                </div>
-              ) : (
-                <div className="w-full h-1 bg-red-600/80 shadow-[0_0_6px_rgba(229,9,20,0.6)]" />
-              )}
-            </div>
+        {/* Top Badges & Bookmark */}
+        <div className="absolute top-2.5 left-2.5 right-2.5 flex items-center justify-between z-20 pointer-events-none">
+          {item.rating > 0 ? (
+            <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-black/70 backdrop-blur-md text-amber-400 text-[10px] font-black border border-amber-500/20 shadow-md">
+              <Star className="w-2.5 h-2.5 fill-amber-400" />
+              <span>{item.rating.toFixed(1)}</span>
+            </span>
+          ) : (
+            <span />
           )}
 
-          {/* Card Click Overlay */}
+          <div className="pointer-events-auto">
+            <BookmarkButton
+              item={{
+                id: item.id,
+                type: item.type,
+                title: item.title,
+                poster_path: item.posterPath,
+                backdrop_path: item.backdropPath,
+                vote_average: item.rating,
+                release_date: item.releaseDate,
+              }}
+              variant="icon"
+            />
+          </div>
+        </div>
+
+        {/* Play Button Overlay on Hover */}
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-0 group-hover/card:opacity-100 transition-opacity duration-300 z-20">
           <Link
-            href={detailsHref}
-            className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity duration-300 flex flex-col items-center justify-center z-10 cursor-pointer"
+            href={playUrl}
+            className="w-12 h-12 rounded-full bg-white hover:bg-zinc-200 text-black flex items-center justify-center shadow-2xl transition-transform hover:scale-110 active:scale-95 pointer-events-auto cursor-pointer"
+            title="Play Now"
           >
-            <div className="w-12 h-12 rounded-full bg-white/95 text-black flex items-center justify-center shadow-2xl shadow-black/80 transform scale-75 group-hover/card:scale-100 transition-transform duration-300 hover:bg-white">
-              <Play className="w-5 h-5 fill-black ml-0.5" />
-            </div>
+            <Play className="w-5 h-5 fill-black ml-0.5" />
           </Link>
         </div>
 
-        {/* Info Details below - matching Bingr minimalism from screenshot */}
-        <Link href={detailsHref} className="pt-2.5 pb-1 flex flex-col gap-0.5">
-          <h3 className="font-semibold text-[13px] sm:text-sm text-white line-clamp-1 group-hover/card:text-red-400 transition-colors">
-            {item.title}
-          </h3>
-          <div className="flex items-center gap-1.5 text-[11px] sm:text-xs text-zinc-400">
-            {item.rating > 0 && (
-              <>
-                <span className="flex items-center gap-0.5 font-medium text-zinc-300">
-                  <Star className="w-3 h-3 fill-amber-400 text-amber-400 inline" />
-                  {item.rating.toFixed(1)}
-                </span>
-                <span className="text-zinc-600">•</span>
-              </>
-            )}
-            {item.releaseDate && (
-              <>
-                <span>{formatYear(item.releaseDate)}</span>
-                <span className="text-zinc-600">•</span>
-              </>
-            )}
-            <span className="capitalize">{item.type === 'movie' ? 'Movie' : 'TV'}</span>
-          </div>
+        {/* Clickable Card Link to Details */}
+        <Link href={detailsUrl} className="absolute inset-0 z-10" />
 
-          {/* If item in history, show timestamp info */}
-          {historyItem && (
-            <div className="flex items-center gap-1 text-[11px] text-red-400/90 font-medium pt-1">
-              <Clock className="w-3 h-3 text-red-500" />
-              {historyItem.timestampFormatted ? (
-                <span>Left off at {historyItem.timestampFormatted}</span>
-              ) : historyItem.progressSeconds ? (
-                <span>Left off at {formatSeconds(historyItem.progressSeconds)}</span>
-              ) : (
-                <span>Watched {formatRelativeTime(historyItem.lastWatchedAt)}</span>
-              )}
-            </div>
-          )}
-        </Link>
+        {/* Bottom Progress Bar Line if watched */}
+        {historyItem && (
+          <div className="absolute bottom-0 inset-x-0 z-20 pointer-events-none">
+            {historyItem.progressPercent ? (
+              <div className="w-full h-1 bg-black/70 overflow-hidden">
+                <div
+                  className="h-full bg-red-600 shadow-[0_0_8px_rgba(229,9,20,0.9)] transition-all duration-300"
+                  style={{ width: `${Math.min(100, Math.max(3, historyItem.progressPercent))}%` }}
+                />
+              </div>
+            ) : (
+              <div className="w-full h-1 bg-red-600/80 shadow-[0_0_6px_rgba(229,9,20,0.7)]" />
+            )}
+          </div>
+        )}
       </div>
 
-      {/* 2. Expanded 16:9 Floating Popover via Portal (NEVER clipped by overflow-x containers) */}
-      {mounted &&
-        isExpanded &&
-        popoverCoords &&
-        createPortal(
-          <div
-            onMouseEnter={() => {
-              if (closeTimerRef.current) {
-                clearTimeout(closeTimerRef.current);
-                closeTimerRef.current = null;
-              }
-              setIsExpanded(true);
-            }}
-            onMouseLeave={handleMouseLeave}
-            style={{
-              position: 'fixed',
-              top: `${popoverCoords.top}px`,
-              left: `${popoverCoords.left}px`,
-              width: `${popoverCoords.width}px`,
-              zIndex: 99999,
-            }}
-            className="rounded-3xl overflow-hidden bg-[#0a0d14]/95 backdrop-blur-2xl border border-white/20 shadow-[0_25px_70px_rgba(0,0,0,0.95)] animate-in fade-in zoom-in-95 duration-200 flex flex-col pointer-events-auto"
-          >
-            {/* Top 16:9 Widescreen Video Player Container */}
-            <div className="relative aspect-video w-full overflow-hidden bg-black">
-              {trailerKey ? (
-                <div className="relative w-full h-full overflow-hidden scale-135 pointer-events-none">
-                  <iframe
-                    src={`https://www.youtube-nocookie.com/embed/${trailerKey}?autoplay=1&mute=1&controls=0&showinfo=0&rel=0&loop=1&playlist=${trailerKey}&playsinline=1&modestbranding=1&enablejsapi=1&iv_load_policy=3&disablekb=1&fs=0`}
-                    title={`${item.title} Trailer`}
-                    allow="autoplay; encrypted-media"
-                    className="w-full h-full object-cover border-0 pointer-events-none"
-                  />
-                </div>
-              ) : (
-                <Image
-                  src={
-                    popoverPosterError
-                      ? getPosterUrl(item.posterPath, 'w500')
-                      : getBackdropUrl(item.backdropPath || item.posterPath, 'w780')
-                  }
-                  alt={item.title}
-                  fill
-                  sizes="380px"
-                  onError={() => setPopoverPosterError(true)}
-                  className="object-cover brightness-90"
-                />
-              )}
-              <div className="absolute inset-0 bg-gradient-to-t from-[#0a0d14] via-transparent to-transparent pointer-events-none" />
-
-              {/* Quick Title overlay inside video top */}
-              <div className="absolute top-3 left-3 right-3 flex items-center justify-between pointer-events-none z-10">
-                <span className="px-2.5 py-0.5 rounded-full bg-red-600/90 backdrop-blur-md text-[10px] font-black uppercase text-white shadow-md">
-                  {trailerKey ? 'Teaser Preview' : 'HD Cinema'}
-                </span>
-                {item.rating > 0 && (
-                  <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-black/80 backdrop-blur-md text-amber-400 text-[10px] font-extrabold border border-amber-500/30">
-                    <Star className="w-3 h-3 fill-amber-400" />
-                    {item.rating}
-                  </span>
-                )}
-              </div>
-            </div>
-
-            {/* Bottom Info & Actions Area */}
-            <div className="p-4 flex flex-col gap-3">
-              <div className="flex items-center gap-2">
-                <Link
-                  href={detailsHref}
-                  className="w-10 h-10 rounded-full bg-white hover:bg-zinc-200 text-black flex items-center justify-center shadow-lg transition-transform hover:scale-105 active:scale-95 cursor-pointer"
-                  title="View Details"
-                >
-                  <Play className="w-4 h-4 fill-black ml-0.5" />
-                </Link>
-
-                <BookmarkButton
-                  item={{
-                    id: item.id,
-                    type: item.type,
-                    title: item.title,
-                    poster_path: item.posterPath,
-                    backdrop_path: item.backdropPath,
-                    vote_average: item.rating,
-                    release_date: item.releaseDate,
-                  }}
-                  variant="icon"
-                />
-              </div>
-
-              {/* Title & Metadata */}
-              <div className="flex flex-col gap-1">
-                <h4 className="font-black text-base text-white line-clamp-1">
-                  {item.title}
-                </h4>
-                <div className="flex items-center gap-2 text-xs text-zinc-400 font-semibold">
-                  <span className="px-1.5 py-0.5 rounded bg-zinc-800 text-[10px] font-bold text-zinc-300">
-                    {item.type === 'movie' ? 'Movie' : 'Series'}
-                  </span>
-                  {item.releaseDate && (
-                    <>
-                      <span>•</span>
-                      <span>{formatYear(item.releaseDate)}</span>
-                    </>
-                  )}
-                  <span>•</span>
-                  <span className="text-[10px] text-red-400 font-bold border border-red-500/30 px-1 rounded">
-                    4K
-                  </span>
-                </div>
-              </div>
-
-              {/* Overview preview snippet */}
-              {item.overview && (
-                <p className="text-xs text-zinc-300 line-clamp-2 leading-relaxed">
-                  {item.overview}
-                </p>
-              )}
-
-              {/* Watch History Progress if available */}
-              {historyItem && (
-                <div className="flex items-center justify-between text-[11px] text-zinc-400 pt-2 border-t border-white/10">
-                  <span className="flex items-center gap-1 text-red-400 font-semibold">
-                    <Clock className="w-3 h-3" />
-                    {historyItem.timestampFormatted
-                      ? `Left off at ${historyItem.timestampFormatted}`
-                      : historyItem.progressSeconds
-                      ? `Left off at ${formatSeconds(historyItem.progressSeconds)}`
-                      : 'In Watch History'}
-                  </span>
-                  {historyItem.progressPercent && (
-                    <span className="font-bold text-white">{historyItem.progressPercent}%</span>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>,
-          document.body
-        )}
-
-      {/* Quick Preview Pop-up */}
-      <QuickPreviewModal
-        item={item}
-        isOpen={isPreviewOpen}
-        onClose={() => setIsPreviewOpen(false)}
-      />
+      {/* Details Title & Metadata below */}
+      <Link href={detailsUrl} className="pt-2.5 pb-1 flex flex-col gap-0.5">
+        <h3 className="font-semibold text-xs sm:text-sm text-zinc-100 truncate group-hover/card:text-red-400 transition-colors">
+          {item.title}
+        </h3>
+        <div className="flex items-center gap-1.5 text-[11px] text-zinc-400">
+          {item.releaseDate && <span>{formatYear(item.releaseDate)}</span>}
+          {item.releaseDate && <span className="text-zinc-600">•</span>}
+          <span className="capitalize">{item.type === 'movie' ? 'Movie' : 'Series'}</span>
+        </div>
+      </Link>
     </div>
   );
 }
-
-

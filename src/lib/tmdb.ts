@@ -295,10 +295,15 @@ export async function getPersonDetails(id: number | string): Promise<import('@/t
 export interface DiscoverFilters {
   mediaType: 'movie' | 'tv';
   genreId?: number | string;
+  withoutGenres?: string;
   sortBy?: string;
   minRating?: number;
   year?: string;
   language?: string;
+  withOriginalLanguage?: string;
+  withOriginCountry?: string;
+  withKeywords?: string;
+  withoutKeywords?: string;
   page?: number;
 }
 
@@ -310,6 +315,10 @@ export async function discoverMedia(filters: DiscoverFilters): Promise<TMDBPagin
 
   if (filters.genreId) {
     params.with_genres = filters.genreId;
+  }
+
+  if (filters.withoutGenres) {
+    params.without_genres = filters.withoutGenres;
   }
 
   if (filters.minRating && filters.minRating > 0) {
@@ -325,8 +334,22 @@ export async function discoverMedia(filters: DiscoverFilters): Promise<TMDBPagin
     }
   }
 
-  if (filters.language) {
+  if (filters.withOriginCountry) {
+    params.with_origin_country = filters.withOriginCountry;
+  }
+
+  if (filters.withOriginalLanguage) {
+    params.with_original_language = filters.withOriginalLanguage;
+  } else if (filters.language) {
     params.with_original_language = filters.language;
+  }
+
+  if (filters.withKeywords) {
+    params.with_keywords = filters.withKeywords;
+  }
+
+  if (filters.withoutKeywords) {
+    params.without_keywords = filters.withoutKeywords;
   }
 
   return fetchFromTMDB<TMDBPaginatedResponse<TMDBMediaItem>>(`discover/${filters.mediaType}`, params);

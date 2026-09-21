@@ -264,10 +264,10 @@ function GenreContent() {
               onChange={(e) => handleSortChange(e.target.value)}
               className="appearance-none bg-zinc-900 border border-zinc-700/80 hover:border-zinc-500 text-white text-xs font-semibold rounded-xl pl-9 pr-9 py-2.5 focus:outline-none focus:border-red-500 cursor-pointer shadow-lg transition-colors"
             >
-              <option value="popularity.desc">🔥 Most Popular</option>
-              <option value="vote_average.desc">⭐ Highest Rated</option>
-              <option value="primary_release_date.desc">📅 Newest Releases</option>
-              <option value="original_title.asc">🔤 Title (A - Z)</option>
+              <option value="popularity.desc">Most Popular</option>
+              <option value="vote_average.desc">Highest Rated</option>
+              <option value="primary_release_date.desc">Newest Releases</option>
+              <option value="original_title.asc">Title (A - Z)</option>
             </select>
           </div>
         </div>
