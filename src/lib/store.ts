@@ -8,6 +8,7 @@ interface UserStoreData {
   history: WatchHistoryItem[];
   collections: CustomCollection[];
   preferredServerId: string;
+  adShieldEnabled: boolean;
 }
 
 const STORAGE_KEY = 'j1-movies-user-store';
@@ -17,6 +18,7 @@ const defaultData: UserStoreData = {
   history: [],
   collections: [],
   preferredServerId: '111movies',
+  adShieldEnabled: true,
 };
 
 function getStoredData(): UserStoreData {
@@ -33,6 +35,7 @@ function getStoredData(): UserStoreData {
       history: Array.isArray(state.history) ? state.history : [],
       collections: Array.isArray(state.collections) ? state.collections : [],
       preferredServerId: validServer,
+      adShieldEnabled: typeof state.adShieldEnabled === 'boolean' ? state.adShieldEnabled : true,
     };
   } catch (e) {
     console.error('Error reading localStorage:', e);
@@ -77,6 +80,11 @@ const storeApi = {
 
   setPreferredServerId: (id: string) => {
     memoryState = { ...memoryState, preferredServerId: id };
+    emitChange();
+  },
+
+  setAdShieldEnabled: (val: boolean) => {
+    memoryState = { ...memoryState, adShieldEnabled: val };
     emitChange();
   },
 
@@ -189,6 +197,7 @@ const storeApi = {
       history: memoryState.history,
       collections: memoryState.collections,
       preferredServerId: memoryState.preferredServerId,
+      adShieldEnabled: memoryState.adShieldEnabled,
     };
     return JSON.stringify(exportObj, null, 2);
   },
@@ -202,6 +211,7 @@ const storeApi = {
           history: Array.isArray(data.history) ? data.history : memoryState.history,
           collections: Array.isArray(data.collections) ? data.collections : memoryState.collections,
           preferredServerId: data.preferredServerId || memoryState.preferredServerId,
+          adShieldEnabled: typeof data.adShieldEnabled === 'boolean' ? data.adShieldEnabled : memoryState.adShieldEnabled,
         };
         emitChange();
         return true;
@@ -226,9 +236,11 @@ export function useUserStore() {
     history: data.history,
     collections: data.collections,
     preferredServerId: data.preferredServerId,
+    adShieldEnabled: data.adShieldEnabled,
     hasHydrated: true,
     setHasHydrated: () => {},
     setPreferredServerId: storeApi.setPreferredServerId,
+    setAdShieldEnabled: storeApi.setAdShieldEnabled,
     addToWatchlist: storeApi.addToWatchlist,
     removeFromWatchlist: storeApi.removeFromWatchlist,
     isInWatchlist: storeApi.isInWatchlist,

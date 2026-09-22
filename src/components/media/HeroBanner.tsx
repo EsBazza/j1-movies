@@ -296,7 +296,7 @@ export function HeroBanner({
           src={
             backdropError
               ? getPosterUrl(currentItem.posterPath, 'w780')
-              : getBackdropUrl(currentItem.backdropPath || currentItem.posterPath, 'original')
+              : getBackdropUrl(currentItem.backdropPath || currentItem.posterPath, 'w1280')
           }
           alt={currentItem.title}
           fill

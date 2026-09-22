@@ -34,7 +34,7 @@ export function getPosterUrl(path: string | null | undefined, size: 'w185' | 'w3
   return getImageUrl(path, size);
 }
 
-export function getBackdropUrl(path: string | null | undefined, size: 'w780' | 'w1280' | 'original' = 'original'): string {
+export function getBackdropUrl(path: string | null | undefined, size: 'w780' | 'w1280' | 'original' = 'w1280'): string {
   if (!path) return '/placeholder-backdrop.svg';
   if (path.startsWith('http://') || path.startsWith('https://')) return path;
   const cleanPath = path.startsWith('/') ? path : `/${path}`;

@@ -17,6 +17,8 @@ import {
   Zap,
   Check,
   AlertCircle,
+  ShieldCheck,
+  ShieldAlert,
 } from 'lucide-react';
 import {
   getMovieDetails,
@@ -59,7 +61,7 @@ function WatchContent() {
 
   const containerRef = useRef<HTMLDivElement>(null);
   const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const { preferredServerId, setPreferredServerId, saveProgress } = useUserStore();
+  const { preferredServerId, setPreferredServerId, saveProgress, adShieldEnabled, setAdShieldEnabled } = useUserStore();
 
   const [activeServer, setActiveServer] = useState<'111movies' | 'filmu'>(
     preferredServerId === 'filmu' ? 'filmu' : '111movies'
@@ -329,12 +331,17 @@ function WatchContent() {
       onMouseMove={handleMouseMove}
       className="fixed inset-0 w-screen h-screen bg-[#0f1014] z-50 overflow-hidden flex flex-col items-center justify-center select-none"
     >
-      {/* 1. Fullscreen Player Iframe (Clean, standard attributes without restrictive sandbox) */}
+      {/* 1. Fullscreen Player Iframe (Protected by Ad-Shield HTML5 Sandbox) */}
       <iframe
-        key={`${playerUrl}-${reloadKey}`}
+        key={`${playerUrl}-${reloadKey}-${adShieldEnabled ? 'shield-on' : 'shield-off'}`}
         src={playerUrl}
         title={`Cinema player - ${title}`}
         onLoad={() => setIsPlayerLoading(false)}
+        sandbox={
+          adShieldEnabled
+            ? 'allow-scripts allow-same-origin allow-forms allow-presentation'
+            : 'allow-scripts allow-same-origin allow-forms allow-presentation allow-popups allow-popups-to-escape-sandbox'
+        }
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen *; display-capture"
         allowFullScreen={true}
         className="w-full h-full border-0 absolute inset-0 z-0 bg-black"
@@ -439,6 +446,29 @@ function WatchContent() {
               )}
             </button>
           </div>
+
+          {/* Ad Shield Toggle Pill */}
+          <button
+            onClick={() => setAdShieldEnabled(!adShieldEnabled)}
+            className={cn(
+              'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold backdrop-blur-xl border transition-all cursor-pointer shadow-xl hover:scale-105 active:scale-95',
+              adShieldEnabled
+                ? 'bg-emerald-950/70 hover:bg-emerald-900/90 text-emerald-300 border-emerald-500/30 shadow-[0_0_12px_rgba(16,185,129,0.25)]'
+                : 'bg-amber-950/70 hover:bg-amber-900/90 text-amber-300 border-amber-500/30'
+            )}
+            title={
+              adShieldEnabled
+                ? 'Ad Shield: Active (Popups and redirects blocked). Click to relax if playback fails.'
+                : 'Ad Shield: Relaxed (Popups allowed). Click to block ads.'
+            }
+          >
+            {adShieldEnabled ? (
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+            ) : (
+              <ShieldAlert className="w-3.5 h-3.5 text-amber-400" />
+            )}
+            <span className="hidden sm:inline">{adShieldEnabled ? 'Shield On' : 'Shield Off'}</span>
+          </button>
 
           {type !== 'movie' && seasons.length > 0 && (
             <button

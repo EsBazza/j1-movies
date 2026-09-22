@@ -346,7 +346,7 @@ export default function MediaDetailsPage() {
             src={
               backdropFailed
                 ? getPosterUrl(details.poster_path, 'w780')
-                : getBackdropUrl(details.backdrop_path || details.poster_path, 'original')
+                : getBackdropUrl(details.backdrop_path || details.poster_path, 'w1280')
             }
             alt={title}
             fill
