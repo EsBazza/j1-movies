@@ -141,6 +141,12 @@ function subscribeAudio(l: () => void) {
 }
 
 const YT_PLAYING = 1;
+// The player must be told repeatedly that we're listening: on a cold first load its
+// script isn't ready when <iframe onLoad> fires, so a single message is lost.
+const HANDSHAKE_INTERVAL_MS = 250;
+const HANDSHAKE_MAX_TRIES = 40;
+// If a muted autoplay trailer never reports in, reveal it anyway after this long
+const REVEAL_FALLBACK_MS = 8000;
 const YT_ENDED = 0;
 const YT_PAUSED = 2;
 
@@ -167,6 +173,10 @@ export function useBackgroundTrailer({ videoKey, enabled = true, loop = true, on
   // Whether the current trailer has already played once (later plays are resumes)
   const [resumed, setResumed] = useState(false);
   const startedKeyRef = useRef<string | null>(null);
+  const playerRespondedRef = useRef(false);
+  const handshakeTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const fallbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const userPausedRef = useRef(false);
   // A new <iframe> element is a fresh YouTube start (full controls), not a resume
   useEffect(() => {
     startedKeyRef.current = null;
@@ -190,12 +200,15 @@ export function useBackgroundTrailer({ videoKey, enabled = true, loop = true, on
   const audibleRef = useRef(audible);
   useEffect(() => {
     audibleRef.current = audible;
+    userPausedRef.current = userPaused;
   });
 
   useEffect(() => {
     if (!active) return;
     const onMessage = (e: MessageEvent) => {
       if (e.origin !== YT_ORIGIN || e.source !== iframe?.contentWindow) return;
+      // Any message means the player is up: stop the handshake retries
+      playerRespondedRef.current = true;
       let data: { event?: string; info?: unknown };
       try {
         data = typeof e.data === 'string' ? JSON.parse(e.data) : e.data;
@@ -259,11 +272,44 @@ export function useBackgroundTrailer({ videoKey, enabled = true, loop = true, on
   }, [isMuted, level, audible, iframe]);
 
   const onLoad = useCallback(() => {
-    // Subscribe to player events, then re-apply the current mute/pause state
-    iframe?.contentWindow?.postMessage(JSON.stringify({ event: 'listening', id: videoKey, channel: 'widget' }), YT_ORIGIN);
-    ytCommand(iframe, 'addEventListener', ['onStateChange']);
-    if (!readMuted() && audibleRef.current) ytSetVolume(iframe, readVolume());
+    if (!iframe) return;
+    playerRespondedRef.current = false;
+    if (handshakeTimerRef.current) clearInterval(handshakeTimerRef.current);
+    if (fallbackTimerRef.current) clearTimeout(fallbackTimerRef.current);
+
+    const subscribe = () => {
+      iframe.contentWindow?.postMessage(JSON.stringify({ event: 'listening', id: videoKey, channel: 'widget' }), YT_ORIGIN);
+      ytCommand(iframe, 'addEventListener', ['onStateChange']);
+      // Re-apply audio and play state each try (commands sent before the player is ready are dropped)
+      ytSetVolume(iframe, !readMuted() && audibleRef.current ? readVolume() : 0);
+      if (!userPausedRef.current) ytCommand(iframe, 'playVideo');
+    };
+
+    // Keep saying "listening" until the player answers (like YouTube's own IFrame API)
+    let tries = 0;
+    subscribe();
+    handshakeTimerRef.current = setInterval(() => {
+      tries += 1;
+      if (playerRespondedRef.current || tries >= HANDSHAKE_MAX_TRIES) {
+        if (handshakeTimerRef.current) clearInterval(handshakeTimerRef.current);
+        return;
+      }
+      subscribe();
+    }, HANDSHAKE_INTERVAL_MS);
+
+    // Safety net: autoplay is muted, so it almost always plays even if no events arrive
+    fallbackTimerRef.current = setTimeout(() => {
+      if (!playerRespondedRef.current && !userPausedRef.current && videoKey) setPlayingKey(videoKey);
+    }, REVEAL_FALLBACK_MS);
   }, [videoKey, iframe]);
+
+  // Stop retries/fallback when the iframe goes away
+  useEffect(() => {
+    return () => {
+      if (handshakeTimerRef.current) clearInterval(handshakeTimerRef.current);
+      if (fallbackTimerRef.current) clearTimeout(fallbackTimerRef.current);
+    };
+  }, [iframe]);
 
   return {
     /** Callback ref for the element whose visibility should pause the trailer */
