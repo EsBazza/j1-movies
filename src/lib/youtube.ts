@@ -4,11 +4,20 @@ import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from '
 
 export const YT_ORIGIN = 'https://www.youtube-nocookie.com';
 
-/** Builds a muted, chrome-less background embed URL that supports postMessage commands. */
-export function getBackgroundTrailerUrl(key: string, loop = true): string {
-  const loopParams = loop ? `&loop=1&playlist=${key}` : '';
-  return `${YT_ORIGIN}/embed/${key}?autoplay=1&mute=1${loopParams}&controls=0&rel=0&iv_load_policy=3&modestbranding=1&playsinline=1&enablejsapi=1&disablekb=1&fs=0`;
+/**
+ * Muted, chrome-less background embed URL that supports postMessage commands.
+ * No `playlist=` loop param: that turns the embed into a playlist and YouTube then
+ * draws previous/next controls over the video. Looping is done by the hook instead.
+ */
+export function getBackgroundTrailerUrl(key: string): string {
+  return `${YT_ORIGIN}/embed/${key}?autoplay=1&mute=1&controls=0&rel=0&iv_load_policy=3&modestbranding=1&playsinline=1&enablejsapi=1&disablekb=1&fs=0`;
 }
+
+/**
+ * YouTube shows its own play/pause overlay for a few seconds whenever playback
+ * starts. We keep the backdrop image on top until that overlay has faded.
+ */
+export const TRAILER_REVEAL_DELAY_MS = 3500;
 
 /** Sends a YouTube IFrame API command (mute, unMute, setVolume, playVideo, pauseVideo…). */
 export function ytCommand(iframe: HTMLIFrameElement | null, func: string, args: unknown[] = []) {
@@ -122,6 +131,7 @@ function subscribeAudio(l: () => void) {
 
 const YT_PLAYING = 1;
 const YT_ENDED = 0;
+const YT_PAUSED = 2;
 
 interface BackgroundTrailerOptions {
   videoKey: string | null;
@@ -172,15 +182,30 @@ export function useBackgroundTrailer({ videoKey, enabled = true, loop = true, on
           : data?.event === 'infoDelivery'
           ? (data.info as { playerState?: number } | undefined)?.playerState
           : undefined;
-      if (state === YT_PLAYING) setPlayingKey(videoKey);
-      else if (state === YT_ENDED) {
+      if (state === YT_PLAYING) {
+        // Reveal only after YouTube's start-of-playback overlay has faded
+        if (revealTimer) clearTimeout(revealTimer);
+        revealTimer = setTimeout(() => setPlayingKey(videoKey), TRAILER_REVEAL_DELAY_MS);
+      } else if (state === YT_PAUSED || state === YT_ENDED) {
+        if (revealTimer) clearTimeout(revealTimer);
         setPlayingKey(null);
-        onEndedRef.current?.();
+        if (state === YT_ENDED) {
+          if (loop) {
+            ytCommand(iframe, 'seekTo', [0, true]);
+            ytCommand(iframe, 'playVideo');
+          } else {
+            onEndedRef.current?.();
+          }
+        }
       }
     };
+    let revealTimer: ReturnType<typeof setTimeout> | null = null;
     window.addEventListener('message', onMessage);
-    return () => window.removeEventListener('message', onMessage);
-  }, [active, videoKey, iframe]);
+    return () => {
+      window.removeEventListener('message', onMessage);
+      if (revealTimer) clearTimeout(revealTimer);
+    };
+  }, [active, videoKey, iframe, loop]);
 
   useEffect(() => {
     if (!container) return;
@@ -218,7 +243,7 @@ export function useBackgroundTrailer({ videoKey, enabled = true, loop = true, on
     iframeProps:
       active && videoKey
         ? {
-            src: getBackgroundTrailerUrl(videoKey, loop),
+            src: getBackgroundTrailerUrl(videoKey),
             onLoad,
             title: 'Background trailer',
             tabIndex: -1,

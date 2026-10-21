@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { Star, ChevronRight } from 'lucide-react';
 import { NormalizedMedia } from '@/types/tmdb';
 import { getBackdropUrl, getTrailerKey } from '@/lib/tmdb';
-import { getBackgroundTrailerUrl } from '@/lib/youtube';
+import { getBackgroundTrailerUrl, TRAILER_REVEAL_DELAY_MS } from '@/lib/youtube';
 import { BookmarkButton } from '@/components/common/BookmarkButton';
 import { formatYear } from '@/lib/utils';
 
@@ -105,7 +105,7 @@ function PreviewCard({ item, rect }: PreviewState) {
             tabIndex={-1}
             aria-hidden="true"
             allow="autoplay; encrypted-media"
-            onLoad={() => setTimeout(() => setTrailerReady(true), 900)}
+            onLoad={() => setTimeout(() => setTrailerReady(true), TRAILER_REVEAL_DELAY_MS)}
             className={`absolute inset-0 w-full h-full scale-[1.35] border-0 pointer-events-none transition-opacity duration-700 ${
               trailerReady ? 'opacity-100' : 'opacity-0'
             }`}
