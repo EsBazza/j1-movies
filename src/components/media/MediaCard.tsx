@@ -87,7 +87,7 @@ export function MediaCard({ item, priority = false, rank }: MediaCardProps) {
         ) : null}
       </Link>
 
-      <div className="pt-2 min-w-0" aria-hidden="true">
+      <div className="pt-3 min-w-0" aria-hidden="true">
         <p className="text-[13px] font-medium text-zinc-200 truncate group-hover/card:text-white transition-colors">
           {item.title}
         </p>

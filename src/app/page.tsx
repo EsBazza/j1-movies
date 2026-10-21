@@ -159,8 +159,8 @@ export default function HomePage() {
       )}
 
       {/* Rows overlap the hero's faded bottom so the page reads as one surface */}
-      <div className="relative z-10 -mt-10 sm:-mt-14 flex flex-col gap-10 sm:gap-14">
-        <div className="max-w-[1800px] w-full mx-auto px-4 sm:px-8 lg:px-12 empty:hidden">
+      <div className="relative z-10 -mt-8 sm:-mt-12 flex flex-col gap-16 sm:gap-20 lg:gap-24">
+        <div className="max-w-[1800px] w-full mx-auto px-5 sm:px-10 lg:px-16 empty:hidden">
           <ContinueWatchingRow />
         </div>
         <MediaCarousel title="Top 10 today" items={trending.slice(0, 10)} showRank isLoading={isLoading} />

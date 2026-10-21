@@ -27,7 +27,7 @@ export function Footer() {
   }
 
   return (
-    <footer className="w-full pt-16 pb-24 md:pb-16 text-zinc-400 text-xs mt-12 relative overflow-hidden">
+    <footer className="w-full pt-16 pb-24 md:pb-16 text-zinc-400 text-xs mt-24 relative overflow-hidden">
       <div className="max-w-4xl mx-auto px-4 text-center flex flex-col items-center gap-4">
         {/* Centered Logo & Branding */}
         <Link href="/" className="flex items-center gap-2 group rounded-lg">

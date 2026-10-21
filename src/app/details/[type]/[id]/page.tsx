@@ -37,7 +37,7 @@ function DetailsSection({ id, title, children }: { id: string; title: string; ch
   const revealRef = useReveal<HTMLElement>();
   return (
     <section ref={revealRef} aria-labelledby={`${id}-heading`} className={`reveal ${PAGE_GUTTER} w-full`}>
-      <SectionHeader id={`${id}-heading`} title={title} className="mb-5 sm:mb-6" />
+      <SectionHeader id={`${id}-heading`} title={title} className="mb-6 sm:mb-8" />
       {children}
     </section>
   );
@@ -179,7 +179,7 @@ export default function MediaDetailsPage() {
       />
 
       {/* One scrolling page: spacious, revealed sections (no tabs) */}
-      <div className="flex flex-col gap-16 sm:gap-24 pt-8 sm:pt-12">
+      <div className="flex flex-col gap-20 sm:gap-28 pt-10 sm:pt-16">
         {tv && derived.seasons.length > 0 && (
           <DetailsSection id="episodes" title="Episodes">
             <EpisodesPanel tvId={tv.id} seasons={derived.seasons} fallbackStill={tv.backdrop_path} historyItem={historyItem} />
@@ -194,9 +194,9 @@ export default function MediaDetailsPage() {
 
         {derived.videos.length > 0 && (
           <DetailsSection id="videos" title="Trailers & clips">
-            <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-5 gap-y-8">
-              {derived.videos.slice(0, 8).map((vid) => (
-                <li key={vid.id}>
+            <ul className="stagger grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-6 gap-y-10">
+              {derived.videos.slice(0, 8).map((vid, i) => (
+                <li key={vid.id} style={{ '--i': i } as React.CSSProperties}>
                   <button type="button" onClick={() => setModalVideo(vid)} className="group block w-full text-left">
                     <span className="relative block aspect-video rounded-card overflow-hidden bg-surface-2">
                       <Image
@@ -222,7 +222,7 @@ export default function MediaDetailsPage() {
         )}
 
         <DetailsSection id="about" title="About">
-          <div className="grid lg:grid-cols-[1fr_320px] gap-10 lg:gap-16">
+          <div className="grid lg:grid-cols-[1fr_320px] gap-12 lg:gap-24">
             <div>
               {details.tagline && <p className="text-lg text-zinc-200 italic mb-4">&ldquo;{details.tagline}&rdquo;</p>}
               <p className="text-sm sm:text-base text-zinc-300 leading-relaxed max-w-3xl">{details.overview}</p>
@@ -240,7 +240,7 @@ export default function MediaDetailsPage() {
                 </div>
               )}
             </div>
-            <dl className="grid grid-cols-2 lg:grid-cols-1 gap-x-6 gap-y-5 content-start">
+            <dl className="grid grid-cols-2 lg:grid-cols-1 gap-x-8 gap-y-6 content-start">
               {info
                 .filter(([, v]) => v !== undefined && v !== null && v !== '' && v !== '—')
                 .map(([label, value]) => (

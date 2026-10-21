@@ -55,6 +55,7 @@
   --animate-slide-in-right: slide-in-right 0.3s var(--ease-out-expo) both;
   --animate-slide-up: slide-up 0.3s var(--ease-out-expo) both;
   --animate-heart-pop: heart-pop 0.7s var(--ease-out-expo) both;
+  --animate-page-in: page-in 0.45s var(--ease-out-expo) both;
 
   @keyframes fade-in {
     from { opacity: 0; }
@@ -71,6 +72,10 @@
   @keyframes slide-up {
     from { opacity: 0; transform: translateY(12px); }
     to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes page-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
   }
   @keyframes heart-pop {
     0% { opacity: 0; transform: scale(0.4); }
@@ -145,19 +150,18 @@
   }
 }
 
-/* Decorative motion off for reduced-motion users. Trailers, hero rotation and the
-   slide progress bar are kept (user preference) and always have a pause control. */
+/* Reduced motion: no movement (slides, zooms, parallax) — but opacity fades stay,
+   since fades don't trigger vestibular discomfort. Every entrance animation below is
+   swapped for a plain fade instead of being switched off. */
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
+  :root {
+    --animate-scale-in: fade-in 0.3s ease both;
+    --animate-slide-in-right: fade-in 0.3s ease both;
+    --animate-slide-up: fade-in 0.3s ease both;
+    --animate-page-in: fade-in 0.35s ease both;
   }
-  .hero-progress {
-    animation-duration: var(--hero-duration, 14s) !important;
+  html {
+    scroll-behavior: auto;
   }
 }
 
@@ -177,21 +181,35 @@
     var(--color-bg);
 }
 
-/* ── Scroll reveal (src/lib/useReveal.ts toggles data-revealed) ── */
+/* ── Scroll reveal (src/lib/useReveal.ts toggles data-revealed) ──
+   Sections fade + rise in; their `.stagger` children follow one after another. */
 .reveal {
   opacity: 0;
-  transform: translateY(16px);
+  transform: translateY(28px);
   transition:
-    opacity var(--dur-slow) var(--ease-out-expo),
-    transform var(--dur-slow) var(--ease-out-expo);
+    opacity 0.7s var(--ease-out-expo),
+    transform 0.7s var(--ease-out-expo);
 }
 .reveal[data-revealed='true'] {
   opacity: 1;
   transform: none;
 }
+.reveal .stagger > * {
+  opacity: 0;
+  transform: translateY(18px);
+  transition:
+    opacity 0.6s var(--ease-out-expo),
+    transform 0.6s var(--ease-out-expo);
+  /* --i is the item index; capped so long rows don't wait */
+  transition-delay: calc(min(var(--i, 0), 10) * 55ms + 120ms);
+}
+.reveal[data-revealed='true'] .stagger > * {
+  opacity: 1;
+  transform: none;
+}
 @media (prefers-reduced-motion: reduce) {
-  .reveal {
-    opacity: 1;
+  .reveal,
+  .reveal .stagger > * {
     transform: none;
   }
 }

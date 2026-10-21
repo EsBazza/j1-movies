@@ -23,7 +23,7 @@ interface MediaCarouselProps {
   showRank?: boolean;
 }
 
-export const PAGE_GUTTER = 'max-w-[1800px] mx-auto px-4 sm:px-8 lg:px-12';
+export const PAGE_GUTTER = 'max-w-[1800px] mx-auto px-5 sm:px-10 lg:px-16';
 const CARD_WIDTH = 'w-[38vw] max-w-[180px] sm:w-[160px] sm:max-w-none lg:w-[185px]';
 
 export function MediaCarousel({
@@ -51,7 +51,7 @@ export function MediaCarousel({
         <SectionHeader title={title} subtitle={subtitle} href={seeAllHref} />
       </div>
 
-      <ScrollRow label={title} className={gutter} trackClassName="gap-3 sm:gap-4 py-2 -my-2 scroll-px-4">
+      <ScrollRow label={title} className={gutter} trackClassName="stagger gap-4 sm:gap-5 lg:gap-6 py-3 -my-3 scroll-px-5">
         {isLoading
           ? Array.from({ length: 8 }).map((_, i) => (
               <div key={i} className={cn(CARD_WIDTH, 'flex-shrink-0')}>
@@ -62,7 +62,7 @@ export function MediaCarousel({
               const rank = index + 1;
               if (showRank && rank <= 10) {
                 return (
-                  <div key={`${item.type}-${item.id}`} className="relative flex items-end flex-shrink-0 snap-start pl-2">
+                  <div key={`${item.type}-${item.id}`} style={{ '--i': index } as React.CSSProperties} className="relative flex items-end flex-shrink-0 snap-start pl-2">
                     <span
                       aria-hidden="true"
                       className="ranked-number text-[110px] sm:text-[150px] lg:text-[170px] -mr-4 sm:-mr-6 mb-12 z-0"
@@ -76,7 +76,7 @@ export function MediaCarousel({
                 );
               }
               return (
-                <div key={`${item.type}-${item.id}`} className={cn(CARD_WIDTH, 'flex-shrink-0 snap-start')}>
+                <div key={`${item.type}-${item.id}`} style={{ '--i': index } as React.CSSProperties} className={cn(CARD_WIDTH, 'flex-shrink-0 snap-start')}>
                   <MediaCard item={item} />
                 </div>
               );

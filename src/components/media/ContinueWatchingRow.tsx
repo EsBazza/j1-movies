@@ -91,9 +91,11 @@ export function ContinueWatchingRow({ className }: { className?: string }) {
   return (
     <section ref={revealRef} className={`reveal ${className ?? ''}`} aria-labelledby="continue-watching-heading">
       <SectionHeader id="continue-watching-heading" title="Continue watching" href="/watchlist?tab=history" linkLabel="History" />
-      <ScrollRow label="Continue watching" trackClassName="gap-3 sm:gap-4 py-2 -my-2">
-        {items.map((item) => (
-          <ContinueCard key={`${item.type}-${item.id}`} item={item} onRemove={handleRemove} />
+      <ScrollRow label="Continue watching" trackClassName="stagger gap-4 sm:gap-5 lg:gap-6 py-3 -my-3">
+        {items.map((item, i) => (
+          <div key={`${item.type}-${item.id}`} style={{ '--i': i } as React.CSSProperties} className="flex-shrink-0">
+            <ContinueCard item={item} onRemove={handleRemove} />
+          </div>
         ))}
       </ScrollRow>
     </section>

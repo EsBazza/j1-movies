@@ -17,7 +17,7 @@ interface SectionHeaderProps {
 /** One heading style for every row/section on the site. */
 export function SectionHeader({ title, id, subtitle, href, linkLabel = 'See all', className, children }: SectionHeaderProps) {
   return (
-    <div className={cn('flex items-end justify-between gap-4 mb-3 sm:mb-4', className)}>
+    <div className={cn('flex items-end justify-between gap-4 mb-4 sm:mb-6', className)}>
       <div className="min-w-0">
         <h2 id={id} className="text-lg sm:text-xl md:text-2xl font-bold text-white truncate">
           {title}

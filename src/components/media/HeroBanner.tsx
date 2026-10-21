@@ -210,7 +210,7 @@ export function HeroBanner({ item, items = [], palette, onActiveItemChange, page
       </div>
 
       {/* Content */}
-      <div className="relative h-full max-w-[1800px] mx-auto px-4 sm:px-8 lg:px-12 flex flex-col justify-end pb-16 sm:pb-20 lg:pb-24">
+      <div className="relative h-full max-w-[1800px] mx-auto px-5 sm:px-10 lg:px-16 flex flex-col justify-end pb-16 sm:pb-20 lg:pb-24">
         <div
           key={current.id}
           role="group"
@@ -283,7 +283,7 @@ export function HeroBanner({ item, items = [], palette, onActiveItemChange, page
 
         {/* Slide controls */}
         {slides.length > 1 && (
-          <div className="mt-8 flex items-end gap-3 lg:absolute lg:right-12 lg:bottom-24 lg:mt-0">
+          <div className="mt-8 flex items-end gap-3 lg:absolute lg:right-16 lg:bottom-24 lg:mt-0">
             {canRotate && (
               <IconButton
                 aria-label={userPaused ? 'Resume slideshow' : 'Pause slideshow'}

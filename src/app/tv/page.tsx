@@ -242,7 +242,7 @@ export default function TVSeriesPage() {
       </div>
 
       {/* 3. Spacious Content Rows */}
-      <div className="relative z-10 -mt-10 sm:-mt-14 flex flex-col gap-10 sm:gap-14 max-w-[1800px] mx-auto w-full px-4 sm:px-8 lg:px-12">
+      <div className="relative z-10 -mt-8 sm:-mt-12 flex flex-col gap-16 sm:gap-20 lg:gap-24 max-w-[1800px] mx-auto w-full px-5 sm:px-10 lg:px-16">
         {/* Interactive Explore Console */}
         <ExploreConsole
           title="Explore TV Series"
@@ -262,14 +262,14 @@ export default function TVSeriesPage() {
           <div className="flex flex-col gap-6">
             <h2 className="text-lg sm:text-xl font-bold text-white">{activeSubGenreObj?.name || 'Results'}</h2>
             {isLoadingCatalog ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 sm:gap-5">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-4 gap-y-8 sm:gap-x-6 sm:gap-y-10">
                 {Array.from({ length: 18 }).map((_, i) => (
                   <SkeletonCard key={i} />
                 ))}
               </div>
             ) : catalogShows.length > 0 ? (
               <>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 sm:gap-5">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-4 gap-y-8 sm:gap-x-6 sm:gap-y-10">
                   {catalogShows.map((show, index) => (
                     <MediaCard
                       key={`${show.type}-${show.id}`}

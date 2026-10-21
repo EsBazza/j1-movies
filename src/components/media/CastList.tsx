@@ -27,11 +27,11 @@ export function CastList({ cast, crew = [] }: CastListProps) {
     .slice(0, 8);
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-12">
       {topCast.length > 0 && (
-        <ul className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 xl:grid-cols-8 gap-x-4 gap-y-6">
-          {topCast.map((person) => (
-            <li key={`${person.id}-${person.character}`}>
+        <ul className="stagger grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 xl:grid-cols-8 gap-x-6 gap-y-10">
+          {topCast.map((person, i) => (
+            <li key={`${person.id}-${person.character}`} style={{ '--i': i } as React.CSSProperties}>
               <Link href={`/person/${person.id}`} className="group flex flex-col items-center text-center">
                 <span className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden bg-surface-2 transition-transform duration-300 ease-out-expo group-hover:scale-105">
                   {person.profile_path ? (
@@ -42,7 +42,7 @@ export function CastList({ cast, crew = [] }: CastListProps) {
                     </span>
                   )}
                 </span>
-                <span className="mt-2 text-sm font-medium text-zinc-100 group-hover:text-white line-clamp-1">{person.name}</span>
+                <span className="mt-3 text-sm font-medium text-zinc-100 group-hover:text-white line-clamp-1">{person.name}</span>
                 {person.character && <span className="text-xs text-subtle line-clamp-1">{person.character}</span>}
               </Link>
             </li>
@@ -51,7 +51,7 @@ export function CastList({ cast, crew = [] }: CastListProps) {
       )}
 
       {keyCrew.length > 0 && (
-        <dl className="grid grid-cols-2 sm:grid-cols-4 gap-x-6 gap-y-4">
+        <dl className="grid grid-cols-2 sm:grid-cols-4 gap-x-8 gap-y-6">
           {keyCrew.map((c) => (
             <div key={`${c.id}-${c.job}`}>
               <dt className="text-xs text-subtle">{c.job}</dt>

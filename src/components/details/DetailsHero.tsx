@@ -135,7 +135,7 @@ export function DetailsHero({
         <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/20 to-transparent" />
       </div>
 
-      <div className="relative max-w-[1800px] w-full mx-auto px-4 sm:px-8 lg:px-12 pt-28 pb-10 sm:pb-14">
+      <div className="relative max-w-[1800px] w-full mx-auto px-5 sm:px-10 lg:px-16 pt-28 pb-10 sm:pb-14">
         <div className="max-w-2xl animate-slide-up">
           {logoPath && !logoFailed ? (
             <>

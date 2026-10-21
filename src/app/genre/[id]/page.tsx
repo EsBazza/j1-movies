@@ -274,14 +274,14 @@ function GenreContent() {
 
       {/* Grid Content */}
       {isLoading ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 sm:gap-6 mt-8">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-4 gap-y-8 sm:gap-x-6 sm:gap-y-10 mt-8">
           {Array.from({ length: 15 }).map((_, i) => (
             <SkeletonCard key={i} />
           ))}
         </div>
       ) : items.length > 0 ? (
         <>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 sm:gap-6 mt-8">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-4 gap-y-8 sm:gap-x-6 sm:gap-y-10 mt-8">
             {items.map((item, index) => (
               <MediaCard
                 key={`${item.type}-${item.id}-${index}`}

@@ -34,7 +34,7 @@ export function EpisodesPanel({ tvId, seasons, fallbackStill, historyItem }: Epi
   const episodes = !isLoading ? data?.value?.episodes ?? [] : [];
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-8">
       {seasons.length > 1 && (
         <div className="flex gap-2 overflow-x-auto no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0" role="group" aria-label="Season">
           {seasons.map((s) => (
@@ -46,7 +46,7 @@ export function EpisodesPanel({ tvId, seasons, fallbackStill, historyItem }: Epi
       )}
 
       {isLoading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-4 gap-y-6" role="status" aria-label="Loading episodes">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-6 gap-y-10" role="status" aria-label="Loading episodes">
           {Array.from({ length: 8 }).map((_, i) => (
             <div key={i} className="animate-pulse">
               <div className="aspect-video rounded-card bg-surface-2" />
@@ -56,12 +56,12 @@ export function EpisodesPanel({ tvId, seasons, fallbackStill, historyItem }: Epi
           ))}
         </div>
       ) : episodes.length > 0 ? (
-        <ol className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-4 gap-y-6">
-          {episodes.map((ep) => {
+        <ol className="stagger grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-6 gap-y-10">
+          {episodes.map((ep, i) => {
             const isLast = historyItem?.season === selected && historyItem.episode === ep.episode_number;
             const progress = isLast && !historyItem?.finished ? historyItem?.progressPercent : undefined;
             return (
-              <li key={ep.id}>
+              <li key={ep.id} style={{ '--i': i } as React.CSSProperties}>
                 <Link href={`/watch/tv/${tvId}?season=${selected}&episode=${ep.episode_number}`} className="group block">
                   <div className="relative aspect-video rounded-card overflow-hidden bg-surface-2">
                     <Image

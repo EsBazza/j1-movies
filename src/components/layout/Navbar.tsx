@@ -68,7 +68,7 @@ export function Navbar() {
         isScrolled ? 'bg-bg/92 backdrop-blur-md' : 'bg-gradient-to-b from-black/70 to-transparent'
       )}
     >
-      <div className="max-w-[1800px] mx-auto h-16 lg:h-[72px] px-4 sm:px-8 lg:px-12 flex items-center gap-6">
+      <div className="max-w-[1800px] mx-auto h-16 lg:h-[72px] px-5 sm:px-10 lg:px-16 flex items-center gap-6">
         <Link href="/" className="flex-shrink-0 rounded-md">
           <Image
             src="/logo.png"
