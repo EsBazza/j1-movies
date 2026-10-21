@@ -93,10 +93,10 @@ export function Navbar() {
           <Image
             src="/logo.png"
             alt="J1 Movies home"
-            width={150}
-            height={40}
+            width={240}
+            height={64}
             priority
-            className="h-7 sm:h-8 w-auto object-contain drop-shadow-[0_2px_10px_rgb(0_0_0/0.6)]"
+            className="h-10 sm:h-12 lg:h-14 w-auto object-contain drop-shadow-[0_2px_10px_rgb(0_0_0/0.6)]"
           />
         </Link>
 
