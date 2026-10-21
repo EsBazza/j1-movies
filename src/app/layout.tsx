@@ -5,6 +5,7 @@ import { Navbar } from '@/components/layout/Navbar';
 import { MobileNav } from '@/components/layout/MobileNav';
 import { Footer } from '@/components/layout/Footer';
 import { Toaster } from '@/components/ui/Toast';
+import { SurpriseMeHost } from '@/components/common/SurpriseMe';
 import { AmbientLayer } from '@/components/media/AmbientBackground';
 
 const inter = Inter({
@@ -59,6 +60,7 @@ export default function RootLayout({
         <Footer />
         <MobileNav />
         <Toaster />
+        <SurpriseMeHost />
       </body>
     </html>
   );

@@ -65,7 +65,7 @@ export function Footer() {
           type="button"
           onClick={scrollToTop}
           aria-label="Scroll to top"
-          className="fixed bottom-24 md:bottom-6 right-4 md:right-6 z-[var(--z-nav)] w-11 h-11 rounded-full bg-zinc-900/85 hover:bg-zinc-800 text-zinc-200 hover:text-white backdrop-blur-xl border border-white/10 flex items-center justify-center shadow-2xl transition-transform hover:scale-110 animate-fade-in"
+          className="fixed bottom-24 lg:bottom-6 right-4 lg:right-6 z-[var(--z-nav)] w-11 h-11 rounded-full bg-zinc-900/85 hover:bg-zinc-800 text-zinc-200 hover:text-white backdrop-blur-xl border border-white/10 flex items-center justify-center shadow-2xl transition-transform hover:scale-110 animate-fade-in"
         >
           <ArrowUp className="w-4 h-4" aria-hidden="true" />
         </button>

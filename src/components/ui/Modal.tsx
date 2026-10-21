@@ -13,8 +13,8 @@ interface ModalProps {
   description?: string;
   children: React.ReactNode;
   className?: string;
-  /** `center` dialog, right-side `drawer`, or full-screen `sheet` */
-  variant?: 'center' | 'drawer' | 'sheet';
+  /** `center` dialog, right-side `drawer`, full-screen `sheet`, or mobile `bottom` sheet */
+  variant?: 'center' | 'drawer' | 'sheet' | 'bottom';
   /** Hide the built-in header (the content must then provide its own close control) */
   hideHeader?: boolean;
 }
@@ -101,7 +101,8 @@ export function Modal({
         'fixed inset-0 z-[var(--z-overlay)] flex',
         variant === 'center' && 'items-center justify-center p-4 sm:p-6 md:p-10',
         variant === 'drawer' && 'justify-end',
-        variant === 'sheet' && 'items-stretch'
+        variant === 'sheet' && 'items-stretch',
+        variant === 'bottom' && 'items-end'
       )}
     >
       <div
@@ -124,6 +125,8 @@ export function Modal({
           variant === 'drawer' &&
             'h-full w-full max-w-md overflow-hidden p-5 sm:p-6 animate-slide-in-right',
           variant === 'sheet' && 'w-full h-full overflow-y-auto p-4 sm:p-6 animate-fade-in',
+          variant === 'bottom' &&
+            'w-full max-h-[85vh] overflow-y-auto rounded-t-2xl p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] animate-slide-up',
           className
         )}
       >

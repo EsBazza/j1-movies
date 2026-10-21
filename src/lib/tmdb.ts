@@ -309,6 +309,8 @@ export interface DiscoverFilters {
   withOriginCountry?: string;
   withKeywords?: string;
   withoutKeywords?: string;
+  /** Minimum vote count (filters out obscure/unrated titles) */
+  minVotes?: number;
   page?: number;
 }
 
@@ -331,6 +333,9 @@ export async function discoverMedia(filters: DiscoverFilters): Promise<TMDBPagin
   if (filters.minRating && filters.minRating > 0) {
     params['vote_average.gte'] = filters.minRating;
     params['vote_count.gte'] = 20;
+  }
+  if (filters.minVotes) {
+    params['vote_count.gte'] = Math.max(Number(params['vote_count.gte'] || 0), filters.minVotes);
   }
   if (sortBy === 'vote_average.desc') {
     params['vote_count.gte'] = Math.max(Number(params['vote_count.gte'] || 0), filters.mediaType === 'movie' ? 200 : 100);
