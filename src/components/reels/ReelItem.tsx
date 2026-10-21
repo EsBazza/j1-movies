@@ -3,7 +3,7 @@
 import React, { useRef, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Heart, Info, Pause, Share2, Star, Volume2, VolumeX } from 'lucide-react';
+import { Heart, Info, Pause, Play, Share2, Star, Volume2, VolumeX } from 'lucide-react';
 import { NormalizedMedia } from '@/types/tmdb';
 import { getBackdropUrl, getPosterUrl } from '@/lib/tmdb';
 import { useBackgroundTrailer } from '@/lib/youtube';
@@ -23,6 +23,8 @@ const DOUBLE_TAP_MS = 280;
 
 export function ReelItem({ item, trailerKey, isActive, index, onEnded }: ReelItemProps) {
   const [hearts, setHearts] = useState<{ id: number; x: number; y: number }[]>([]);
+  // Brief play/pause flash after a tap (fades out on its own)
+  const [bezel, setBezel] = useState<{ id: number; kind: 'play' | 'pause' } | null>(null);
   const lastTapRef = useRef(0);
   const singleTapTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isSaved = useUserStoreSelector((s) => s.watchlist.some((w) => w.id === item.id && w.type === item.type));
@@ -71,7 +73,10 @@ export function ReelItem({ item, trailerKey, isActive, index, onEnded }: ReelIte
       return;
     }
     lastTapRef.current = now;
-    singleTapTimer.current = setTimeout(togglePause, DOUBLE_TAP_MS);
+    singleTapTimer.current = setTimeout(() => {
+      setBezel({ id: Date.now(), kind: isPaused ? 'play' : 'pause' });
+      togglePause();
+    }, DOUBLE_TAP_MS);
   };
 
   const share = async () => {
@@ -140,11 +145,21 @@ export function ReelItem({ item, trailerKey, isActive, index, onEnded }: ReelIte
             style={{ left: h.x, top: h.y }}
           />
         ))}
+        {isActive && bezel && (
+          <span key={bezel.id} className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <span className="w-14 h-14 rounded-full bg-black/40 flex items-center justify-center animate-bezel">
+              {bezel.kind === 'play' ? (
+                <Play className="w-6 h-6 text-white fill-white ml-0.5" />
+              ) : (
+                <Pause className="w-6 h-6 text-white" />
+              )}
+            </span>
+          </span>
+        )}
+        {/* While paused, only a faint play hint stays so the frame remains visible */}
         {isActive && isPaused && (
           <span className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <span className="w-16 h-16 rounded-full bg-black/50 flex items-center justify-center animate-scale-in">
-              <Pause className="w-7 h-7 text-white" />
-            </span>
+            <Play className="w-10 h-10 text-white fill-white opacity-35 drop-shadow-lg" />
           </span>
         )}
       </div>
