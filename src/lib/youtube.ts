@@ -170,6 +170,10 @@ export function useBackgroundTrailer({ videoKey, enabled = true, loop = true, on
   // Whether the current trailer has already played once (later plays are resumes)
   const [resumed, setResumed] = useState(false);
   const startedKeyRef = useRef<string | null>(null);
+  // A new <iframe> element is a fresh YouTube start (full controls), not a resume
+  useEffect(() => {
+    startedKeyRef.current = null;
+  }, [iframe]);
   const [userPaused, setUserPaused] = useState(false);
   const [inView, setInView] = useState(true);
   const [tabHidden, setTabHidden] = useState(false);

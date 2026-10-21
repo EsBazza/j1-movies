@@ -96,7 +96,7 @@ export function ReelItem({ item, trailerKey, isActive, index, onEnded }: ReelIte
       data-reel-index={index}
       aria-roledescription="reel"
       aria-label={item.title}
-      className="relative h-[100svh] w-full snap-start snap-always overflow-hidden bg-black"
+      className="relative h-full w-full snap-start snap-always overflow-hidden bg-black"
     >
       {/* Dimmed artwork behind the 16:9 trailer (fills portrait screens without heavy blur) */}
       <Image
@@ -109,8 +109,9 @@ export function ReelItem({ item, trailerKey, isActive, index, onEnded }: ReelIte
       />
       <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/20 to-black/90" />
 
-      <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 lg:top-0 lg:translate-y-0 lg:inset-y-0 flex items-center justify-center">
-        <div className="relative w-full lg:w-auto lg:h-full aspect-video max-h-full">
+      <div className="absolute inset-0 flex items-center justify-center">
+        {/* 16:9 that always fits: full width on phones, as large as the viewport allows on desktop */}
+        <div className="relative aspect-video w-full lg:w-[min(100%,calc(100dvh*16/9))]">
           <Image
             src={getBackdropUrl(item.backdropPath || item.posterPath, 'w1280')}
             alt=""

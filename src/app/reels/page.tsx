@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowLeft, Loader2 } from 'lucide-react';
+import { ArrowLeft, ChevronDown, ChevronUp, Loader2 } from 'lucide-react';
 import { discoverMedia, getTrailerKey, getTrending, normalizeMediaItem } from '@/lib/tmdb';
 import { NormalizedMedia } from '@/types/tmdb';
 import { ReelItem } from '@/components/reels/ReelItem';
@@ -75,6 +75,9 @@ export default function ReelsPage() {
   const [isLoading, setIsLoading] = useState(false);
   const pageRef = useRef(1);
   const loadingRef = useRef(false);
+  const hasMoreRef = useRef(true);
+  // Incremented on every feed switch; responses from an older feed are discarded
+  const feedTokenRef = useRef(0);
   const scrollerRef = useRef<HTMLDivElement>(null);
   const isMuted = useTrailerMuted();
 
@@ -82,12 +85,21 @@ export default function ReelsPage() {
 
   const loadMore = useCallback(
     async (reset = false) => {
-      if (loadingRef.current) return;
+      if (reset) {
+        feedTokenRef.current += 1;
+        hasMoreRef.current = true;
+      } else if (loadingRef.current || !hasMoreRef.current) {
+        return;
+      }
+      const token = feedTokenRef.current;
       loadingRef.current = true;
       setIsLoading(true);
       const page = reset ? 1 : pageRef.current;
       try {
         const results = await feed.load(page);
+        if (token !== feedTokenRef.current) return;
+        // An empty page means we've reached the end of this feed — stop asking
+        if (results.length === 0) hasMoreRef.current = false;
         const seen = new Set(readSeen());
         const fresh = results.filter((m) => m.backdropPath && m.posterPath);
         // Prefer unseen titles; if everything was seen, show them again rather than nothing
@@ -102,8 +114,10 @@ export default function ReelsPage() {
       } catch {
         // keep current feed; the next scroll retries
       } finally {
-        loadingRef.current = false;
-        setIsLoading(false);
+        if (token === feedTokenRef.current) {
+          loadingRef.current = false;
+          setIsLoading(false);
+        }
       }
     },
     [feed]
@@ -118,7 +132,7 @@ export default function ReelsPage() {
   }, [loadMore]);
 
   // Only titles that actually have a trailer stay in the feed
-  const playable = items.filter((m) => trailers[keyOf(m)] !== null);
+  const playable = useMemo(() => items.filter((m) => trailers[keyOf(m)] !== null), [items, trailers]);
 
   // Resolve trailers for the active reel and the next few
   useEffect(() => {
@@ -156,6 +170,7 @@ export default function ReelsPage() {
   }, [activeIndex, playable]);
 
   const scrollToIndex = useCallback((index: number) => {
+    if (index < 0) return;
     const el = scrollerRef.current?.querySelector(`[data-reel-index="${index}"]`);
     el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }, []);
@@ -201,6 +216,30 @@ export default function ReelsPage() {
         </div>
       </div>
 
+      {/* Up / down for mouse users (touch scrolls natively) */}
+      <div className="hidden [@media(hover:hover)_and_(pointer:fine)]:flex absolute z-30 right-6 top-1/2 -translate-y-1/2 flex-col gap-3">
+        <button
+          type="button"
+          onClick={() => scrollToIndex(activeIndex - 1)}
+          disabled={activeIndex === 0}
+          aria-label="Previous trailer"
+          title="Previous (↑ / K)"
+          className="w-12 h-12 rounded-full bg-white/12 hover:bg-white/25 backdrop-blur-md text-white flex items-center justify-center transition-[background-color,opacity,transform] active:scale-90 disabled:opacity-30 disabled:pointer-events-none"
+        >
+          <ChevronUp className="w-6 h-6" aria-hidden="true" />
+        </button>
+        <button
+          type="button"
+          onClick={() => scrollToIndex(activeIndex + 1)}
+          disabled={activeIndex >= playable.length - 1}
+          aria-label="Next trailer"
+          title="Next (↓ / J)"
+          className="w-12 h-12 rounded-full bg-white/12 hover:bg-white/25 backdrop-blur-md text-white flex items-center justify-center transition-[background-color,opacity,transform] active:scale-90 disabled:opacity-30 disabled:pointer-events-none"
+        >
+          <ChevronDown className="w-6 h-6" aria-hidden="true" />
+        </button>
+      </div>
+
       <div
         ref={scrollerRef}
         className="h-full w-full overflow-y-scroll snap-y snap-mandatory no-scrollbar overscroll-contain"
@@ -217,7 +256,7 @@ export default function ReelsPage() {
           />
         ))}
         {(isLoading || playable.length === 0) && (
-          <div className="h-[100svh] snap-start flex items-center justify-center" role="status">
+          <div className="h-full snap-start flex items-center justify-center" role="status">
             <Loader2 className="w-8 h-8 animate-spin text-white/70" aria-label="Loading trailers" />
           </div>
         )}
