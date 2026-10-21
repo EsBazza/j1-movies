@@ -21,15 +21,18 @@ export function getBackgroundTrailerUrl(key: string): string {
 export const TRAILER_REVEAL_DELAY_MS = 4500;
 
 /** Trailer layer fade: gentle reveal, fast hide (the backdrop underneath stays opaque). */
+// One consistent reveal for first plays and resumes: a 4.5s focus pull (blurred and
+// faint first, sharpening mostly at the end) so YouTube's start controls stay hidden
+const TRAILER_REVEAL = 'opacity-100 blur-[0px] duration-[4500ms] delay-0 ease-[cubic-bezier(0.65,0,0.85,0.35)]';
+
 export const TRAILER_FADE = {
   base: 'transition-[opacity,filter] will-change-[opacity,filter]',
-  // Focus pull: starts blurred and faint, sharpens mostly in the last second or so —
-  // by then YouTube's start-of-playback controls have faded, so they're never readable
-  // Held fully hidden for 2.5s (YouTube's controls are at full strength then), then a 3s pull
-  in: 'opacity-100 blur-[0px] duration-[3000ms] delay-[2500ms] ease-[cubic-bezier(0.65,0,0.85,0.35)]',
-  // Resuming (scrolled back, tab refocused, loop): YouTube only flashes a brief icon,
-  // so a short focus pull is enough
-  resume: 'opacity-100 blur-[0px] duration-[1500ms] delay-[600ms] ease-[cubic-bezier(0.65,0,0.85,0.35)]',
+  // First play: 4.5s focus pull (blurred and faint first, sharpening mostly at the end),
+  // long enough for YouTube's start-of-playback controls to fade on their own
+  in: 'opacity-100 blur-[0px] duration-[4500ms] delay-0 ease-[cubic-bezier(0.65,0,0.85,0.35)]',
+  // After the user's own pause, or a loop restart: YouTube only flashes a play icon
+  // (~1s), so a short pull covers it. Scrolling away never pauses, so it never fades.
+  resume: 'opacity-100 blur-[0px] duration-[1200ms] delay-0 ease-[cubic-bezier(0.65,0,0.85,0.35)]',
   // Hide fast; on a user pause this runs before the player is told to pause
   out: 'opacity-0 blur-[28px] duration-150 delay-0 ease-out',
 };
