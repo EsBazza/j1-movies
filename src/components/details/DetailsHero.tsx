@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { Play, RotateCcw, Share2, Star, Film } from 'lucide-react';
 import { TMDBMovieDetails, TMDBTVDetails, WatchHistoryItem } from '@/types/tmdb';
 import { getBackdropUrl, getPosterUrl, getLogoUrl } from '@/lib/tmdb';
-import { useAutoplayAllowed, useBackgroundTrailer } from '@/lib/youtube';
+import { TRAILER_FADE, useAutoplayAllowed, useBackgroundTrailer } from '@/lib/youtube';
 import { BookmarkButton } from '@/components/common/BookmarkButton';
 import { LinkButton, Button, IconButton } from '@/components/ui/Button';
 import { VolumeControl } from '@/components/ui/VolumeControl';
@@ -108,16 +108,17 @@ export function DetailsHero({
           priority
           sizes="100vw"
           onError={() => setBackdropFailed(true)}
-          className={cn('object-cover object-[center_20%] transition-opacity duration-1000', showTrailer ? 'opacity-0' : 'opacity-100')}
+          className="object-cover object-[center_20%]"
         />
         {iframeProps && (
           <iframe
             ref={attachIframe}
             {...iframeProps}
             className={cn(
-              'absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 border-0 pointer-events-none transition-opacity duration-1000',
+              'absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 border-0 pointer-events-none',
+              TRAILER_FADE.base,
               'w-[max(100%,177.78vh)] h-[max(100%,56.25vw)] scale-[1.18]',
-              showTrailer ? 'opacity-100' : 'opacity-0'
+              showTrailer ? TRAILER_FADE.in : TRAILER_FADE.out
             )}
           />
         )}

@@ -17,7 +17,10 @@ export function getBackgroundTrailerUrl(key: string): string {
  * YouTube shows its own play/pause overlay for a few seconds whenever playback
  * starts. We keep the backdrop image on top until that overlay has faded.
  */
-export const TRAILER_REVEAL_DELAY_MS = 3500;
+export const TRAILER_REVEAL_DELAY_MS = 4500;
+
+/** Trailer layer fade: gentle reveal, fast hide (the backdrop underneath stays opaque). */
+export const TRAILER_FADE = { base: 'transition-opacity ease-in-out', in: 'opacity-100 duration-[1200ms]', out: 'opacity-0 duration-300' };
 
 /** Sends a YouTube IFrame API command (mute, unMute, setVolume, playVideo, pauseVideo…). */
 export function ytCommand(iframe: HTMLIFrameElement | null, func: string, args: unknown[] = []) {

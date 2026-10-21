@@ -10,7 +10,7 @@ import { BookmarkButton } from '@/components/common/BookmarkButton';
 import { LinkButton, IconButton } from '@/components/ui/Button';
 import { VolumeControl } from '@/components/ui/VolumeControl';
 import { ExtractedPalette } from '@/lib/colorExtractor';
-import { useAutoplayAllowed, useBackgroundTrailer } from '@/lib/youtube';
+import { TRAILER_FADE, useAutoplayAllowed, useBackgroundTrailer } from '@/lib/youtube';
 import { useUserStoreSelector } from '@/lib/store';
 
 interface HeroBannerProps {
@@ -181,8 +181,7 @@ export function HeroBanner({ item, items = [], onActiveItemChange, pageTitle = '
           sizes="100vw"
           onError={() => setBackdropError(true)}
           className={cn(
-            'object-cover object-[center_20%] animate-fade-in transition-opacity duration-1000',
-            showTrailer ? 'opacity-0' : 'opacity-100'
+            'object-cover object-[center_20%] animate-fade-in'
           )}
         />
         {trailerIframeProps && (
@@ -191,10 +190,11 @@ export function HeroBanner({ item, items = [], onActiveItemChange, pageTitle = '
             ref={attachIframe}
             {...trailerIframeProps}
             className={cn(
-              'absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 border-0 pointer-events-none transition-opacity duration-1000',
+              'absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 border-0 pointer-events-none',
+              TRAILER_FADE.base,
               // Cover the frame at any aspect ratio and crop YouTube's letterboxing
               'w-[max(100%,177.78vh)] h-[max(100%,56.25vw)] scale-[1.18]',
-              showTrailer ? 'opacity-100' : 'opacity-0'
+              showTrailer ? TRAILER_FADE.in : TRAILER_FADE.out
             )}
           />
         )}

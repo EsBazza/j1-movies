@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { Heart, Info, Share2, Star } from 'lucide-react';
 import { NormalizedMedia } from '@/types/tmdb';
 import { getBackdropUrl, getPosterUrl } from '@/lib/tmdb';
-import { useBackgroundTrailer } from '@/lib/youtube';
+import { TRAILER_FADE, useBackgroundTrailer } from '@/lib/youtube';
 import { useUserStoreSelector, userStoreActions } from '@/lib/store';
 import { toast } from '@/components/ui/Toast';
 import { formatYear, cn } from '@/lib/utils';
@@ -116,15 +116,16 @@ export function ReelItem({ item, trailerKey, isActive, index, onEnded }: ReelIte
             alt=""
             fill
             sizes="(max-width: 1024px) 100vw, 80vw"
-            className={cn('object-cover transition-opacity duration-700', showVideo ? 'opacity-0' : 'opacity-100')}
+            className="object-cover"
           />
           {isActive && iframeProps && (
             <iframe
               ref={attachIframe}
               {...iframeProps}
               className={cn(
-                'absolute inset-0 w-full h-full border-0 pointer-events-none scale-[1.02] transition-opacity duration-700',
-                showVideo ? 'opacity-100' : 'opacity-0'
+                'absolute inset-0 w-full h-full border-0 pointer-events-none scale-[1.02]',
+                TRAILER_FADE.base,
+                showVideo ? TRAILER_FADE.in : TRAILER_FADE.out
               )}
             />
           )}
