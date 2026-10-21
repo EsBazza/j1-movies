@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { Search, X, Shuffle } from 'lucide-react';
 import { SearchBar } from '@/components/common/SearchBar';
 import { openSurpriseMe } from '@/components/common/SurpriseMe';
@@ -23,6 +23,7 @@ const LINKS = [
 
 export function Navbar() {
   const pathname = usePathname();
+  const router = useRouter();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const watchlistCount = useUserStoreSelector((s) => s.watchlist.length);
@@ -49,11 +50,11 @@ export function Navbar() {
       if (['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName) || target.isContentEditable) return;
       e.preventDefault();
       if (window.matchMedia('(min-width: 1024px)').matches) setIsSearchOpen(true);
-      else window.location.assign('/search');
+      else router.push('/search');
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, []);
+  }, [router]);
 
   // Full-screen experiences render their own chrome
   if (pathname?.startsWith('/watch/') || pathname === '/reels') {

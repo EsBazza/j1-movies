@@ -271,6 +271,14 @@ export async function getTrailerKey(type: MediaType, id: number | string): Promi
   }
 }
 
+export async function getRecommendations(
+  type: MediaType,
+  id: number | string,
+  page: number = 1
+): Promise<TMDBPaginatedResponse<TMDBMediaItem>> {
+  return fetchFromTMDB<TMDBPaginatedResponse<TMDBMediaItem>>(`${type}/${id}/recommendations`, { page });
+}
+
 export async function getTVSeason(tvId: number | string, seasonNumber: number): Promise<TMDBSeason> {
   return fetchFromTMDB<TMDBSeason>(`tv/${tvId}/season/${seasonNumber}`);
 }

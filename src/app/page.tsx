@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useEffect, useState, useCallback } from 'react';
-import { Star, Sparkles, Swords, Heart } from 'lucide-react';
 import {
   getTrending,
   getPopularMovies,
@@ -18,6 +17,7 @@ import { extractPaletteFromImage, getPaletteForGenre, DEFAULT_PALETTE, Extracted
 import { HeroBanner } from '@/components/media/HeroBanner';
 import { MediaCarousel } from '@/components/media/MediaCarousel';
 import { ContinueWatchingRow } from '@/components/media/ContinueWatchingRow';
+import { BecauseYouWatched } from '@/components/media/BecauseYouWatched';
 import { SkeletonBanner } from '@/components/ui/SkeletonBanner';
 import { ApiKeyWarning } from '@/components/common/ApiKeyWarning';
 import { AmbientBackground } from '@/components/media/AmbientBackground';
@@ -145,114 +145,34 @@ export default function HomePage() {
     );
   }
 
-  const featuredItems = trending.length > 0 ? trending.slice(0, 8) : popularMovies.slice(0, 8);
+  const featuredItems = trending.length > 0 ? trending.slice(0, 6) : popularMovies.slice(0, 6);
   const activeHero = heroItem || featuredItems[0];
 
   return (
-    <div className="flex flex-col w-full pb-32 relative bg-transparent min-h-screen">
-      {/* 1. Dynamic Multi-Color Ambient Lighting Canvas */}
-      <AmbientBackground
-        backdropPath={activeHero?.backdropPath}
-        posterPath={activeHero?.posterPath}
-        palette={palette}
-      />
+    <div className="flex flex-col w-full pb-28 lg:pb-16 min-h-screen">
+      <AmbientBackground backdropPath={activeHero?.backdropPath} posterPath={activeHero?.posterPath} palette={palette} />
 
-      {/* Hero Spotlight Section */}
-      <div className="relative z-10">
-        {isLoading ? (
-          <SkeletonBanner />
-        ) : (
-          <HeroBanner
-            items={featuredItems}
-            item={heroItem || featuredItems[0]}
-            palette={palette}
-            onActiveItemChange={handleActiveHeroChange}
-          />
-        )}
-      </div>
+      {isLoading ? (
+        <SkeletonBanner />
+      ) : (
+        <HeroBanner items={featuredItems} item={activeHero} onActiveItemChange={handleActiveHeroChange} />
+      )}
 
-      {/* Spacious Main Content Rows (Starting naturally after the Hero Section) */}
-      <div className="relative pt-6 sm:pt-10 md:pt-14 z-20 flex flex-col gap-12 sm:gap-16 md:gap-20 max-w-[1750px] mx-auto w-full px-6 sm:px-10 lg:px-16 xl:px-20">
-        {/* Continue Watching (Local Storage) */}
-        <ContinueWatchingRow />
-
-        {/* Trending Right Now with Big Ranked Numbers (as in screenshot) */}
-        <MediaCarousel
-          title="Trending Right Now"
-          items={trending}
-          showRank={true}
-          seeAllHref="/movies"
-          isLoading={isLoading}
-          fullWidth={true}
-        />
-
-        {/* New Movies (as in screenshot) */}
-        <MediaCarousel
-          title="New Movies"
-          items={popularMovies}
-          seeAllHref="/movies"
-          isLoading={isLoading}
-          fullWidth={true}
-        />
-
-        {/* Popular TV Shows (as in screenshot) */}
-        <MediaCarousel
-          title="Popular TV Shows"
-          items={popularTV}
-          seeAllHref="/tv"
-          isLoading={isLoading}
-          fullWidth={true}
-        />
-
-        {/* Top Rated Cinema */}
-        <MediaCarousel
-          title="Critically Acclaimed"
-          icon={Star}
-          items={topRatedMovies}
-          isLoading={isLoading}
-          fullWidth={true}
-        />
-
-        {/* Trending Anime Hub */}
-        <MediaCarousel
-          title="Trending Anime"
-          icon={Sparkles}
-          items={animeList}
-          seeAllHref="/anime"
-          isLoading={isLoading}
-          fullWidth={true}
-        />
-
-        {/* Popular K-Dramas Hub */}
-        <MediaCarousel
-          title="Popular K-Dramas"
-          icon={Heart}
-          items={kdramaList}
-          seeAllHref="/kdrama"
-          isLoading={isLoading}
-          fullWidth={true}
-        />
-
-        {/* Action & Adventure */}
-        <MediaCarousel
-          title="Action Blockbusters"
-          icon={Swords}
-          items={actionMovies}
-          isLoading={isLoading}
-          fullWidth={true}
-        />
-
-        {/* Sci-Fi & Cyberpunk */}
-        <MediaCarousel
-          title="Sci-Fi & Future Worlds"
-          icon={Sparkles}
-          items={sciFiMovies}
-          isLoading={isLoading}
-          fullWidth={true}
-        />
+      {/* Rows overlap the hero's faded bottom so the page reads as one surface */}
+      <div className="relative z-10 -mt-10 sm:-mt-14 flex flex-col gap-10 sm:gap-14">
+        <div className="max-w-[1800px] w-full mx-auto px-4 sm:px-8 lg:px-12 empty:hidden">
+          <ContinueWatchingRow />
+        </div>
+        <MediaCarousel title="Top 10 today" items={trending.slice(0, 10)} showRank isLoading={isLoading} />
+        <BecauseYouWatched />
+        <MediaCarousel title="Popular movies" items={popularMovies} seeAllHref="/movies" isLoading={isLoading} />
+        <MediaCarousel title="Popular series" items={popularTV} seeAllHref="/tv" isLoading={isLoading} />
+        <MediaCarousel title="Trending anime" items={animeList} seeAllHref="/anime" isLoading={isLoading} />
+        <MediaCarousel title="Popular K-dramas" items={kdramaList} seeAllHref="/kdrama" isLoading={isLoading} />
+        <MediaCarousel title="Critically acclaimed" items={topRatedMovies} isLoading={isLoading} />
+        <MediaCarousel title="Action" items={actionMovies} seeAllHref="/genre/28?type=movie" isLoading={isLoading} />
+        <MediaCarousel title="Science fiction" items={sciFiMovies} seeAllHref="/genre/878?type=movie" isLoading={isLoading} />
       </div>
     </div>
   );
 }
-
-

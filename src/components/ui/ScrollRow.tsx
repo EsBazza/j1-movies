@@ -13,7 +13,7 @@ interface ScrollRowProps {
 }
 
 const arrowClass =
-  'absolute top-1/2 -translate-y-1/2 z-30 w-11 h-11 rounded-full bg-black/85 hover:bg-accent text-white flex items-center justify-center backdrop-blur-xl shadow-2xl border border-white/15 transition-all duration-300 opacity-0 group-hover/row:opacity-100 group-focus-within/row:opacity-100 disabled:!opacity-0 disabled:pointer-events-none [@media(hover:none)]:hidden';
+  'absolute top-1/2 -translate-y-1/2 z-30 w-11 h-11 rounded-full bg-black/75 hover:bg-white hover:text-black text-white flex items-center justify-center shadow-2xl transition-all duration-300 opacity-0 group-hover/row:opacity-100 group-focus-within/row:opacity-100 disabled:!opacity-0 disabled:pointer-events-none [@media(hover:none)]:hidden';
 
 /**
  * Horizontal scroll track with arrow buttons that hide at the edges and when

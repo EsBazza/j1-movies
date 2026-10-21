@@ -3,7 +3,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   Tv,
-  Loader2,
 } from 'lucide-react';
 import {
   discoverMedia,
@@ -18,6 +17,7 @@ import { NormalizedMedia } from '@/types/tmdb';
 import { MediaCard } from '@/components/media/MediaCard';
 import { MediaCarousel } from '@/components/media/MediaCarousel';
 import { ExploreConsole, FilterState } from '@/components/media/ExploreConsole';
+import { LoadMore } from '@/components/ui/LoadMore';
 import { HUB_CONFIGS } from '@/lib/hubExploreConfigs';
 import { SkeletonCard } from '@/components/ui/SkeletonCard';
 import { SkeletonBanner } from '@/components/ui/SkeletonBanner';
@@ -218,7 +218,7 @@ export default function TVSeriesPage() {
   const activeHero = heroItem || featuredItems[0];
 
   return (
-    <div className="flex flex-col w-full pb-32 relative bg-transparent min-h-screen">
+    <div className="flex flex-col w-full pb-28 lg:pb-16 min-h-screen">
       {/* 1. Dynamic Multi-Color Ambient Lighting Canvas (Identical to Home Page) */}
       <AmbientBackground
         backdropPath={activeHero?.backdropPath}
@@ -242,7 +242,7 @@ export default function TVSeriesPage() {
       </div>
 
       {/* 3. Spacious Content Rows */}
-      <div className="relative pt-6 sm:pt-10 md:pt-14 z-20 flex flex-col gap-12 sm:gap-16 md:gap-20 max-w-[1750px] mx-auto w-full px-6 sm:px-10 lg:px-16 xl:px-20">
+      <div className="relative z-10 -mt-10 sm:-mt-14 flex flex-col gap-10 sm:gap-14 max-w-[1800px] mx-auto w-full px-4 sm:px-8 lg:px-12">
         {/* Interactive Explore Console */}
         <ExploreConsole
           title="Explore TV Series"
@@ -260,9 +260,7 @@ export default function TVSeriesPage() {
         {/* Dynamic Display: If user filtered, show instant 6-column widescreen grid. Otherwise, show cinema shelves */}
         {isFiltering ? (
           <div className="flex flex-col gap-6">
-            <h3 className="text-xl font-bold text-white">
-              Filtered Series ({activeSubGenreObj?.name || 'Custom'})
-            </h3>
+            <h2 className="text-lg sm:text-xl font-bold text-white">{activeSubGenreObj?.name || 'Results'}</h2>
             {isLoadingCatalog ? (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 sm:gap-5">
                 {Array.from({ length: 18 }).map((_, i) => (
@@ -274,7 +272,7 @@ export default function TVSeriesPage() {
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 sm:gap-5">
                   {catalogShows.map((show, index) => (
                     <MediaCard
-                      key={`${show.id}-${index}`}
+                      key={`${show.type}-${show.id}`}
                       item={show}
                       priority={index < 6}
                     />
@@ -282,22 +280,7 @@ export default function TVSeriesPage() {
                 </div>
 
                 {page < totalPages && (
-                  <div className="flex justify-center mt-12">
-                    <button
-                      onClick={handleLoadMore}
-                      disabled={isLoadingMore}
-                      className="flex items-center gap-2 px-8 py-3.5 rounded-xl bg-zinc-900/90 hover:bg-zinc-800 border border-zinc-700 text-white font-semibold text-sm transition-all hover:scale-105 cursor-pointer shadow-lg"
-                    >
-                      {isLoadingMore ? (
-                        <>
-                          <Loader2 className="w-4 h-4 animate-spin text-red-500" />
-                          <span>Loading TV Series...</span>
-                        </>
-                      ) : (
-                        <span>Load More TV Series</span>
-                      )}
-                    </button>
-                  </div>
+                  <LoadMore onLoadMore={handleLoadMore} isLoading={isLoadingMore} />
                 )}
               </>
             ) : (

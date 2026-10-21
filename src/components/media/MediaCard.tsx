@@ -1,14 +1,14 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Play, Star } from 'lucide-react';
+import { Star } from 'lucide-react';
 import { NormalizedMedia } from '@/types/tmdb';
 import { getPosterUrl, getBackdropUrl } from '@/lib/tmdb';
 import { formatYear } from '@/lib/utils';
-import { BookmarkButton } from '@/components/common/BookmarkButton';
 import { useUserStoreSelector } from '@/lib/store';
+import { showPreview, hidePreview } from '@/components/media/PreviewPopover';
 
 interface MediaCardProps {
   item: NormalizedMedia;
@@ -16,113 +16,87 @@ interface MediaCardProps {
   rank?: number;
 }
 
+const HOVER_INTENT_MS = 550;
+
 export function MediaCard({ item, priority = false, rank }: MediaCardProps) {
   const [posterError, setPosterError] = useState(false);
+  const posterRef = useRef<HTMLAnchorElement>(null);
+  const intentTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Selector keeps cards from re-rendering on unrelated store writes
-  const historyItem = useUserStoreSelector((s) =>
-    s.history.find((h) => h.id === item.id && h.type === item.type)
+  const progress = useUserStoreSelector(
+    (s) => s.history.find((h) => h.id === item.id && h.type === item.type && !h.finished)?.progressPercent
   );
 
-  const detailsUrl = `/details/${item.type}/${item.id}`;
-  const playUrl =
-    item.type === 'tv' && historyItem?.season && historyItem.episode
-      ? `/watch/tv/${item.id}?season=${historyItem.season}&episode=${historyItem.episode}`
-      : `/watch/${item.type}/${item.id}`;
-  const typeLabel = item.type === 'movie' ? 'Movie' : 'Series';
+  useEffect(() => {
+    return () => {
+      if (intentTimer.current) clearTimeout(intentTimer.current);
+    };
+  }, []);
 
-  const imageUrl = posterError
-    ? getBackdropUrl(item.backdropPath, 'w780')
-    : getPosterUrl(item.posterPath, 'w500');
+  const detailsUrl = `/details/${item.type}/${item.id}`;
+  const imageUrl = posterError ? getBackdropUrl(item.backdropPath, 'w780') : getPosterUrl(item.posterPath, 'w342');
+
+  // Hover preview: mouse + hover-capable devices only; touch just opens details
+  const onPointerEnter = (e: React.PointerEvent) => {
+    if (e.pointerType !== 'mouse' || !window.matchMedia('(hover: hover)').matches) return;
+    intentTimer.current = setTimeout(() => {
+      const rect = posterRef.current?.getBoundingClientRect();
+      if (rect) showPreview(item, rect);
+    }, HOVER_INTENT_MS);
+  };
+  const onPointerLeave = () => {
+    if (intentTimer.current) clearTimeout(intentTimer.current);
+    hidePreview();
+  };
 
   return (
-    <div className="group/card relative flex flex-col w-full">
-      {/* 2:3 Vertical Poster Container */}
-      <div className="relative aspect-[2/3] w-full rounded-2xl overflow-hidden bg-zinc-950 border border-white/[0.08] hover:border-white/30 transition-all duration-300 shadow-xl hover:shadow-2xl hover:shadow-black/90 hover:-translate-y-1.5 flex flex-col">
+    <div className="group/card flex flex-col w-full" onPointerEnter={onPointerEnter} onPointerLeave={onPointerLeave}>
+      <Link
+        ref={posterRef}
+        href={detailsUrl}
+        className="relative block aspect-[2/3] w-full rounded-card overflow-hidden bg-surface-2 transition-transform duration-300 ease-out-expo group-hover/card:scale-[1.03] will-change-transform"
+        aria-label={rank ? `Number ${rank}: ${item.title}` : item.title}
+      >
         <Image
           src={imageUrl}
           alt=""
           fill
           priority={priority}
-          sizes="(max-width: 640px) 180px, (max-width: 1024px) 220px, 260px"
+          sizes="(max-width: 640px) 40vw, (max-width: 1024px) 22vw, 200px"
           onError={() => setPosterError(true)}
-          className="object-cover group-hover/card:scale-105 transition-all duration-500 brightness-95"
+          className="object-cover"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity duration-300 pointer-events-none" />
-
-        {/* Top Badges & Bookmark */}
-        <div className="absolute top-2.5 left-2.5 right-2.5 flex items-center justify-between z-20 pointer-events-none">
-          {item.rating > 0 ? (
-            <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-black/70 backdrop-blur-md text-amber-400 text-[11px] font-black border border-amber-500/20 shadow-md">
-              <Star className="w-2.5 h-2.5 fill-amber-400" aria-hidden="true" />
-              <span>
-                <span className="sr-only">Rated </span>
-                {item.rating.toFixed(1)}
-              </span>
-            </span>
-          ) : (
-            <span />
-          )}
-
-          <div className="pointer-events-auto">
-            <BookmarkButton
-              item={{
-                id: item.id,
-                type: item.type,
-                title: item.title,
-                poster_path: item.posterPath,
-                backdrop_path: item.backdropPath,
-                vote_average: item.rating,
-                release_date: item.releaseDate,
-              }}
-              variant="icon"
-            />
-          </div>
-        </div>
-
-        {/* Play button: hover-capable devices only, so a tap on touch opens details */}
-        <div className="absolute inset-0 hidden [@media(hover:hover)]:flex items-center justify-center pointer-events-none opacity-0 group-hover/card:opacity-100 group-focus-within/card:opacity-100 transition-opacity duration-300 z-20">
-          <Link
-            href={playUrl}
-            className="w-12 h-12 rounded-full bg-white hover:bg-zinc-200 text-black flex items-center justify-center shadow-2xl transition-transform hover:scale-110 active:scale-95 pointer-events-none group-hover/card:pointer-events-auto focus-visible:pointer-events-auto"
-            aria-label={`Play ${item.title}`}
-          >
-            <Play className="w-5 h-5 fill-black ml-0.5" aria-hidden="true" />
-          </Link>
-        </div>
-
-        {/* Whole poster links to details (the title link below is the keyboard stop) */}
-        <Link href={detailsUrl} className="absolute inset-0 z-10" tabIndex={-1} aria-hidden="true" />
-
-        {/* Bottom Progress Bar Line if watched */}
-        {historyItem?.progressPercent ? (
-          <div
-            className="absolute bottom-0 inset-x-0 z-20 pointer-events-none h-1 bg-black/70 overflow-hidden"
+        {item.rating > 0 && (
+          <span className="absolute top-2 left-2 flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-black/65 text-[11px] font-semibold text-white">
+            <Star className="w-3 h-3 fill-amber-400 text-amber-400" aria-hidden="true" />
+            <span className="sr-only">Rated </span>
+            {item.rating.toFixed(1)}
+          </span>
+        )}
+        {progress ? (
+          <span
+            className="absolute bottom-0 inset-x-0 h-1 bg-black/60"
             role="progressbar"
             aria-label="Watch progress"
-            aria-valuenow={historyItem.progressPercent}
+            aria-valuenow={progress}
             aria-valuemin={0}
             aria-valuemax={100}
           >
-            <div
-              className="h-full bg-accent shadow-[0_0_8px_rgba(229,9,20,0.9)]"
-              style={{ width: `${Math.min(100, Math.max(3, historyItem.progressPercent))}%` }}
-            />
-          </div>
+            <span className="block h-full bg-accent" style={{ width: `${Math.max(3, progress)}%` }} />
+          </span>
         ) : null}
-      </div>
-
-      {/* Details Title & Metadata below */}
-      <Link href={detailsUrl} className="pt-2.5 pb-1 flex flex-col gap-0.5 rounded-md">
-        <h3 className="font-semibold text-xs sm:text-sm text-zinc-100 truncate group-hover/card:text-red-400 transition-colors">
-          {rank ? <span className="sr-only">Number {rank}: </span> : null}
-          {item.title}
-        </h3>
-        <div className="flex items-center gap-1.5 text-xs text-zinc-400">
-          {item.releaseDate && <span>{formatYear(item.releaseDate)}</span>}
-          {item.releaseDate && <span className="text-zinc-500" aria-hidden="true">•</span>}
-          <span>{typeLabel}</span>
-        </div>
       </Link>
+
+      <div className="pt-2 min-w-0" aria-hidden="true">
+        <p className="text-[13px] font-medium text-zinc-200 truncate group-hover/card:text-white transition-colors">
+          {item.title}
+        </p>
+        <p className="text-xs text-subtle mt-0.5">
+          {item.releaseDate ? formatYear(item.releaseDate) : ''}
+          {item.releaseDate ? ' · ' : ''}
+          {item.type === 'movie' ? 'Movie' : 'Series'}
+        </p>
+      </div>
     </div>
   );
 }
