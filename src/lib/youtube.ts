@@ -14,13 +14,21 @@ export function getBackgroundTrailerUrl(key: string): string {
 }
 
 /**
- * YouTube shows its own play/pause overlay for a few seconds whenever playback
- * starts. We keep the backdrop image on top until that overlay has faded.
+ * YouTube shows its own play/pause cluster for a few seconds whenever playback starts.
+ * Background trailers hide it with a slow focus-pull (TRAILER_FADE.in); the small hover
+ * preview simply waits this long before revealing.
  */
 export const TRAILER_REVEAL_DELAY_MS = 4500;
 
 /** Trailer layer fade: gentle reveal, fast hide (the backdrop underneath stays opaque). */
-export const TRAILER_FADE = { base: 'transition-opacity ease-in-out', in: 'opacity-100 duration-[1200ms]', out: 'opacity-0 duration-300' };
+export const TRAILER_FADE = {
+  base: 'transition-[opacity,filter] will-change-[opacity,filter]',
+  // Focus pull: starts blurred and faint, sharpens mostly in the last second or so —
+  // by then YouTube's start-of-playback controls have faded, so they're never readable
+  in: 'opacity-100 blur-[0px] duration-[4500ms] ease-[cubic-bezier(0.65,0,0.85,0.35)]',
+  // Hide fast (before YouTube's pause controls can show)
+  out: 'opacity-0 blur-[28px] duration-300 ease-out',
+};
 
 /** Sends a YouTube IFrame API command (mute, unMute, setVolume, playVideo, pauseVideo…). */
 export function ytCommand(iframe: HTMLIFrameElement | null, func: string, args: unknown[] = []) {
@@ -187,10 +195,10 @@ export function useBackgroundTrailer({ videoKey, enabled = true, loop = true, on
           : undefined;
       if (state === YT_PLAYING) {
         // Reveal only after YouTube's start-of-playback overlay has faded
-        if (revealTimer) clearTimeout(revealTimer);
-        revealTimer = setTimeout(() => setPlayingKey(videoKey), TRAILER_REVEAL_DELAY_MS);
+        // Reveal right away: the slow focus-pull (TRAILER_FADE.in) keeps YouTube's
+        // start-of-playback controls blurred until they've faded on their own
+        setPlayingKey(videoKey);
       } else if (state === YT_PAUSED || state === YT_ENDED) {
-        if (revealTimer) clearTimeout(revealTimer);
         setPlayingKey(null);
         if (state === YT_ENDED) {
           if (loop) {
@@ -202,12 +210,8 @@ export function useBackgroundTrailer({ videoKey, enabled = true, loop = true, on
         }
       }
     };
-    let revealTimer: ReturnType<typeof setTimeout> | null = null;
     window.addEventListener('message', onMessage);
-    return () => {
-      window.removeEventListener('message', onMessage);
-      if (revealTimer) clearTimeout(revealTimer);
-    };
+    return () => window.removeEventListener('message', onMessage);
   }, [active, videoKey, iframe, loop]);
 
   useEffect(() => {
