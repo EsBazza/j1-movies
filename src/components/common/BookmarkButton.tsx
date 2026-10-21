@@ -2,8 +2,9 @@
 
 import React from 'react';
 import { Bookmark, BookmarkCheck } from 'lucide-react';
-import { useUserStore } from '@/lib/store';
-import { MediaType, WatchlistItem } from '@/types/tmdb';
+import { useUserStoreSelector, userStoreActions } from '@/lib/store';
+import { MediaType } from '@/types/tmdb';
+import { toast } from '@/components/ui/Toast';
 import { cn } from '@/lib/utils';
 
 interface BookmarkButtonProps {
@@ -21,27 +22,32 @@ interface BookmarkButtonProps {
 }
 
 export function BookmarkButton({ item, variant = 'icon', className }: BookmarkButtonProps) {
-  const { watchlist, addToWatchlist, removeFromWatchlist, hasHydrated } = useUserStore();
-
-  const isSaved = hasHydrated && watchlist.some((w) => w.id === item.id && w.type === item.type);
+  const isSaved = useUserStoreSelector((s) => s.watchlist.some((w) => w.id === item.id && w.type === item.type));
 
   const handleToggle = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
 
     if (isSaved) {
-      removeFromWatchlist(item.id, item.type);
+      userStoreActions.removeFromWatchlist(item.id, item.type);
+      toast(`Removed "${item.title}" from My List`, {
+        tone: 'info',
+        action: { label: 'Undo', onClick: () => userStoreActions.addToWatchlist(item) },
+      });
     } else {
-      addToWatchlist(item);
+      userStoreActions.addToWatchlist(item);
+      toast(`Added "${item.title}" to My List`);
     }
   };
 
   if (variant === 'button') {
     return (
       <button
+        type="button"
         onClick={handleToggle}
+        aria-pressed={isSaved}
         className={cn(
-          'flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg font-medium text-sm transition-all duration-200 cursor-pointer',
+          'flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg font-medium text-sm transition-colors duration-200',
           isSaved
             ? 'bg-zinc-800 text-zinc-100 border border-zinc-700 hover:bg-zinc-700'
             : 'bg-zinc-900/80 text-white border border-zinc-700/60 hover:bg-zinc-800 hover:border-zinc-500',
@@ -50,13 +56,13 @@ export function BookmarkButton({ item, variant = 'icon', className }: BookmarkBu
       >
         {isSaved ? (
           <>
-            <BookmarkCheck className="w-4 h-4 text-red-500 fill-red-500" />
-            <span>In Watchlist</span>
+            <BookmarkCheck className="w-4 h-4 text-accent fill-accent" aria-hidden="true" />
+            <span>In My List</span>
           </>
         ) : (
           <>
-            <Bookmark className="w-4 h-4 text-zinc-300" />
-            <span>Add to Watchlist</span>
+            <Bookmark className="w-4 h-4 text-zinc-300" aria-hidden="true" />
+            <span>Add to My List</span>
           </>
         )}
       </button>
@@ -65,21 +71,19 @@ export function BookmarkButton({ item, variant = 'icon', className }: BookmarkBu
 
   return (
     <button
+      type="button"
       onClick={handleToggle}
-      aria-label={isSaved ? 'Remove from Watchlist' : 'Add to Watchlist'}
+      aria-pressed={isSaved}
+      aria-label={isSaved ? `Remove ${item.title} from My List` : `Add ${item.title} to My List`}
       className={cn(
-        'p-2 rounded-full backdrop-blur-md transition-all duration-200 cursor-pointer',
+        'p-2 rounded-full backdrop-blur-md transition-colors duration-200',
         isSaved
-          ? 'bg-red-600/90 text-white shadow-lg shadow-red-600/30 hover:bg-red-700'
+          ? 'bg-accent/90 text-white shadow-lg shadow-red-600/30 hover:bg-accent-hover'
           : 'bg-black/60 text-white/90 hover:bg-black/80 hover:text-white border border-white/10',
         className
       )}
     >
-      {isSaved ? (
-        <BookmarkCheck className="w-4 h-4 fill-white" />
-      ) : (
-        <Bookmark className="w-4 h-4" />
-      )}
+      {isSaved ? <BookmarkCheck className="w-4 h-4 fill-white" aria-hidden="true" /> : <Bookmark className="w-4 h-4" aria-hidden="true" />}
     </button>
   );
 }

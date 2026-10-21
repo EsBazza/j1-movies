@@ -25,7 +25,7 @@ export function MobileNav() {
     },
   ];
 
-  if (pathname?.startsWith('/watch')) {
+  if (pathname?.startsWith('/watch/')) {
     return null;
   }
 

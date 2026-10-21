@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, Suspense } from 'react';
 import Link from 'next/link';
+import { useSearchParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import {
   Bookmark,
@@ -15,48 +16,65 @@ import {
   Film,
   Tv,
   Sparkles,
-  CheckCircle2,
-  AlertCircle,
   Plus,
+  X,
 } from 'lucide-react';
 import { useUserStore } from '@/lib/store';
-import { getPosterUrl, getBackdropUrl } from '@/lib/tmdb';
-import { formatRelativeTime, formatYear, cn } from '@/lib/utils';
+import { getBackdropUrl } from '@/lib/tmdb';
+import { formatRelativeTime, formatRuntime, cn } from '@/lib/utils';
 import { MediaCard } from '@/components/media/MediaCard';
 import { Modal } from '@/components/ui/Modal';
+import { toast } from '@/components/ui/Toast';
+import { WatchHistoryItem } from '@/types/tmdb';
 
-export default function WatchlistPage() {
+type Tab = 'watchlist' | 'history' | 'collections';
+const TABS: Tab[] = ['watchlist', 'history', 'collections'];
+
+function WatchlistContent() {
   const {
     watchlist,
     history,
     collections,
     createCollection,
     deleteCollection,
+    restoreCollection,
+    addItemToCollection,
     removeItemFromCollection,
     clearHistory,
     removeFromHistory,
-    removeFromWatchlist,
+    restoreHistoryItem,
     exportDataJSON,
     importDataJSON,
-    hasHydrated,
   } = useUserStore();
 
-  const [activeTab, setActiveTab] = useState<'watchlist' | 'history' | 'collections'>('watchlist');
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const tabParam = searchParams.get('tab') as Tab | null;
+  const activeTab: Tab = tabParam && TABS.includes(tabParam) ? tabParam : 'watchlist';
+  const setActiveTab = (tab: Tab) => router.replace(tab === 'watchlist' ? '/watchlist' : `/watchlist?tab=${tab}`, { scroll: false });
   const [filterType, setFilterType] = useState<'all' | 'movie' | 'tv'>('all');
-  const [selectedCollectionId, setSelectedCollectionId] = useState<string | null>(null);
 
   // New Collection Modal
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [newCollectionName, setNewCollectionName] = useState('');
   const [newCollectionDesc, setNewCollectionDesc] = useState('');
 
-  // Backup Toast
-  const [toastMessage, setToastMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const showToast = (type: 'success' | 'error', text: string) => {
-    setToastMessage({ type, text });
-    setTimeout(() => setToastMessage(null), 4000);
+  const showToast = (type: 'success' | 'error', text: string) => toast(text, { tone: type === 'success' ? 'success' : 'info' });
+
+  const handleRemoveHistory = (item: WatchHistoryItem) => {
+    removeFromHistory(item.id, item.type);
+    toast(`Removed "${item.title}"`, { tone: 'info', action: { label: 'Undo', onClick: () => restoreHistoryItem(item) } });
+  };
+
+  const handleClearHistory = () => {
+    const snapshot = history;
+    clearHistory();
+    toast('Watch history cleared', {
+      tone: 'info',
+      action: { label: 'Undo', onClick: () => snapshot.forEach(restoreHistoryItem) },
+    });
   };
 
   const handleExport = () => {
@@ -72,7 +90,7 @@ export default function WatchlistPage() {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
       showToast('success', 'Library backup successfully exported!');
-    } catch (err) {
+    } catch {
       showToast('error', 'Failed to export library backup.');
     }
   };
@@ -115,29 +133,14 @@ export default function WatchlistPage() {
     return item.type === filterType;
   });
 
-  const activeCollection = collections.find((c) => c.id === selectedCollectionId);
+  const tabMeta: Record<Tab, { label: string; icon: typeof Bookmark; count: number }> = {
+    watchlist: { label: 'My List', icon: Bookmark, count: watchlist.length },
+    history: { label: 'History', icon: History, count: history.length },
+    collections: { label: 'Collections', icon: Folders, count: collections.length },
+  };
 
   return (
-    <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-16">
-      {/* Toast Notification Banner */}
-      {toastMessage && (
-        <div
-          className={cn(
-            'fixed top-20 right-6 z-50 flex items-center gap-2 px-5 py-3 rounded-xl border backdrop-blur-xl shadow-2xl text-xs font-semibold animate-in slide-in-from-top-4 duration-300',
-            toastMessage.type === 'success'
-              ? 'bg-emerald-950/90 text-emerald-300 border-emerald-500/40 shadow-emerald-950/40'
-              : 'bg-red-950/90 text-red-300 border-red-500/40 shadow-red-950/40'
-          )}
-        >
-          {toastMessage.type === 'success' ? (
-            <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-          ) : (
-            <AlertCircle className="w-4 h-4 text-red-400" />
-          )}
-          <span>{toastMessage.text}</span>
-        </div>
-      )}
-
+    <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-28 md:pb-16">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-zinc-800">
         <div>
@@ -150,45 +153,29 @@ export default function WatchlistPage() {
         {/* Tab & Backup Controls */}
         <div className="flex flex-wrap items-center gap-3">
           {/* Tabs */}
-          <div className="flex items-center gap-1 bg-zinc-900 p-1.5 rounded-2xl border border-zinc-800">
-            <button
-              onClick={() => setActiveTab('watchlist')}
-              className={cn(
-                'flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer',
-                activeTab === 'watchlist'
-                  ? 'bg-red-600 text-white shadow-lg shadow-red-600/30'
-                  : 'text-zinc-400 hover:text-white'
-              )}
-            >
-              <Bookmark className="w-3.5 h-3.5" />
-              <span>Watchlist ({hasHydrated ? watchlist.length : 0})</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('history')}
-              className={cn(
-                'flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer',
-                activeTab === 'history'
-                  ? 'bg-red-600 text-white shadow-lg shadow-red-600/30'
-                  : 'text-zinc-400 hover:text-white'
-              )}
-            >
-              <History className="w-3.5 h-3.5" />
-              <span>History ({hasHydrated ? history.length : 0})</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('collections')}
-              className={cn(
-                'flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer',
-                activeTab === 'collections'
-                  ? 'bg-red-600 text-white shadow-lg shadow-red-600/30'
-                  : 'text-zinc-400 hover:text-white'
-              )}
-            >
-              <Folders className="w-3.5 h-3.5" />
-              <span>Collections ({hasHydrated ? collections.length : 0})</span>
-            </button>
+          <div role="tablist" aria-label="Library sections" className="flex items-center gap-1 bg-zinc-900 p-1.5 rounded-2xl border border-zinc-800">
+            {TABS.map((tab) => {
+              const { label, icon: Icon, count } = tabMeta[tab];
+              const selected = activeTab === tab;
+              return (
+                <button
+                  key={tab}
+                  type="button"
+                  role="tab"
+                  aria-selected={selected}
+                  onClick={() => setActiveTab(tab)}
+                  className={cn(
+                    'flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-xl text-xs font-semibold transition-colors',
+                    selected ? 'bg-accent text-white shadow-lg shadow-red-600/30' : 'text-zinc-400 hover:text-white'
+                  )}
+                >
+                  <Icon className="w-3.5 h-3.5" aria-hidden="true" />
+                  <span>
+                    {label} ({count})
+                  </span>
+                </button>
+              );
+            })}
           </div>
 
           {/* Backup Action Buttons */}
@@ -223,52 +210,30 @@ export default function WatchlistPage() {
       {/* Sub-bar Filter & Actions */}
       {activeTab !== 'collections' && (
         <div className="flex items-center justify-between py-4">
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setFilterType('all')}
-              className={cn(
-                'px-3 py-1 rounded-full text-xs font-medium transition-colors cursor-pointer',
-                filterType === 'all'
-                  ? 'bg-zinc-800 text-white border border-zinc-700'
-                  : 'text-zinc-400 hover:text-zinc-200'
-              )}
-            >
-              All
-            </button>
-            <button
-              onClick={() => setFilterType('movie')}
-              className={cn(
-                'px-3 py-1 rounded-full text-xs font-medium transition-colors cursor-pointer',
-                filterType === 'movie'
-                  ? 'bg-zinc-800 text-white border border-zinc-700'
-                  : 'text-zinc-400 hover:text-zinc-200'
-              )}
-            >
-              Movies
-            </button>
-            <button
-              onClick={() => setFilterType('tv')}
-              className={cn(
-                'px-3 py-1 rounded-full text-xs font-medium transition-colors cursor-pointer',
-                filterType === 'tv'
-                  ? 'bg-zinc-800 text-white border border-zinc-700'
-                  : 'text-zinc-400 hover:text-zinc-200'
-              )}
-            >
-              TV Series
-            </button>
+          <div className="flex items-center gap-2" role="group" aria-label="Filter by type">
+            {(['all', 'movie', 'tv'] as const).map((f) => (
+              <button
+                key={f}
+                type="button"
+                onClick={() => setFilterType(f)}
+                aria-pressed={filterType === f}
+                className={cn(
+                  'px-3 py-1 rounded-full text-xs font-medium transition-colors border',
+                  filterType === f ? 'bg-zinc-800 text-white border-zinc-700' : 'text-zinc-400 hover:text-zinc-200 border-transparent'
+                )}
+              >
+                {f === 'all' ? 'All' : f === 'movie' ? 'Movies' : 'TV Series'}
+              </button>
+            ))}
           </div>
 
           {activeTab === 'history' && history.length > 0 && (
             <button
-              onClick={() => {
-                if (confirm('Are you sure you want to clear your entire watch history?')) {
-                  clearHistory();
-                }
-              }}
-              className="flex items-center gap-1.5 text-xs text-zinc-400 hover:text-red-400 transition-colors cursor-pointer"
+              type="button"
+              onClick={handleClearHistory}
+              className="flex items-center gap-1.5 text-xs text-zinc-400 hover:text-red-400 transition-colors"
             >
-              <Trash2 className="w-3.5 h-3.5" />
+              <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
               <span>Clear History</span>
             </button>
           )}
@@ -281,27 +246,19 @@ export default function WatchlistPage() {
           {filteredWatchlist.length > 0 ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 sm:gap-6 mt-4">
               {filteredWatchlist.map((item) => (
-                <div key={`${item.type}-${item.id}`} className="relative group">
-                  <MediaCard
-                    item={{
-                      id: item.id,
-                      type: item.type,
-                      title: item.title,
-                      overview: '',
-                      posterPath: item.poster_path,
-                      backdropPath: item.backdrop_path,
-                      rating: item.vote_average,
-                      releaseDate: item.release_date || '',
-                    }}
-                  />
-                  <button
-                    onClick={() => removeFromWatchlist(item.id, item.type)}
-                    title="Remove from watchlist"
-                    className="absolute top-2.5 right-2.5 z-20 p-2 rounded-full bg-red-600 hover:bg-red-700 text-white shadow-lg opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
-                </div>
+                <MediaCard
+                  key={`${item.type}-${item.id}`}
+                  item={{
+                    id: item.id,
+                    type: item.type,
+                    title: item.title,
+                    overview: '',
+                    posterPath: item.poster_path,
+                    backdropPath: item.backdrop_path,
+                    rating: item.vote_average,
+                    releaseDate: item.release_date || '',
+                  }}
+                />
               ))}
             </div>
           ) : (
@@ -309,7 +266,7 @@ export default function WatchlistPage() {
               <div className="w-16 h-16 rounded-full bg-zinc-900 flex items-center justify-center text-zinc-500 mb-4">
                 <Bookmark className="w-8 h-8" />
               </div>
-              <h3 className="text-xl font-bold text-white mb-1">Your Watchlist is empty</h3>
+              <h2 className="text-xl font-bold text-white mb-1">Your list is empty</h2>
               <p className="text-sm text-zinc-400 max-w-sm mb-6">
                 Explore movies and series, and click the bookmark icon to save titles here for later.
               </p>
@@ -335,6 +292,10 @@ export default function WatchlistPage() {
                   item.type === 'tv' && item.season && item.episode
                     ? `/watch/tv/${item.id}?season=${item.season}&episode=${item.episode}`
                     : `/watch/${item.type}/${item.id}`;
+                const remaining =
+                  item.durationSeconds && item.progressSeconds
+                    ? formatRuntime(Math.max(1, Math.floor((item.durationSeconds - item.progressSeconds) / 60)))
+                    : '';
 
                 return (
                   <div
@@ -345,7 +306,7 @@ export default function WatchlistPage() {
                     <div className="relative aspect-video w-full overflow-hidden bg-zinc-950">
                       <Image
                         src={getBackdropUrl(item.backdrop_path || item.poster_path, 'w780')}
-                        alt={item.title}
+                        alt=""
                         fill
                         sizes="(max-width: 640px) 100vw, 300px"
                         className="object-cover group-hover:scale-105 transition-transform duration-300"
@@ -354,20 +315,29 @@ export default function WatchlistPage() {
 
                       <Link
                         href={playUrl}
+                        tabIndex={-1}
+                        aria-hidden="true"
                         className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity"
                       >
-                        <div className="w-12 h-12 rounded-full bg-red-600 text-white flex items-center justify-center shadow-lg shadow-red-600/50">
+                        <div className="w-12 h-12 rounded-full bg-accent text-white flex items-center justify-center shadow-lg shadow-red-600/50">
                           <Play className="w-5 h-5 fill-white ml-0.5" />
                         </div>
                       </Link>
 
                       <button
-                        onClick={() => removeFromHistory(item.id, item.type)}
-                        title="Remove from history"
-                        className="absolute top-2 right-2 p-1.5 rounded-full bg-black/60 text-zinc-400 hover:text-red-400 hover:bg-black/90 transition-colors z-10 cursor-pointer"
+                        type="button"
+                        onClick={() => handleRemoveHistory(item)}
+                        aria-label={`Remove ${item.title} from history`}
+                        className="absolute top-2 right-2 p-1.5 rounded-full bg-black/60 text-zinc-300 hover:text-red-400 hover:bg-black/90 transition-colors z-10"
                       >
-                        <Trash2 className="w-3.5 h-3.5" />
+                        <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
                       </button>
+
+                      {item.progressPercent ? (
+                        <div className="absolute bottom-0 inset-x-0 h-1 bg-black/70" aria-hidden="true">
+                          <div className="h-full bg-accent" style={{ width: `${Math.max(3, item.progressPercent)}%` }} />
+                        </div>
+                      ) : null}
                     </div>
 
                     {/* Details */}
@@ -388,13 +358,16 @@ export default function WatchlistPage() {
                         )}
                       </div>
 
-                      <div className="flex items-center justify-between pt-3 mt-3 border-t border-zinc-800/60 text-xs text-zinc-500">
-                        <span>{formatRelativeTime(item.lastWatchedAt)}</span>
+                      <div className="flex items-center justify-between pt-3 mt-3 border-t border-zinc-800/60 text-xs text-zinc-400">
+                        <span>
+                          {formatRelativeTime(item.lastWatchedAt)}
+                          {item.finished ? ' · Watched' : remaining ? ` · ${remaining} left` : ''}
+                        </span>
                         <Link
                           href={playUrl}
                           className="font-semibold text-red-400 hover:text-red-300 flex items-center gap-1"
                         >
-                          <span>Resume</span>
+                          <span>{item.finished ? 'Watch again' : 'Resume'}</span>
                           <Play className="w-3 h-3 fill-red-400" />
                         </Link>
                       </div>
@@ -408,7 +381,7 @@ export default function WatchlistPage() {
               <div className="w-16 h-16 rounded-full bg-zinc-900 flex items-center justify-center text-zinc-500 mb-4">
                 <History className="w-8 h-8" />
               </div>
-              <h3 className="text-xl font-bold text-white mb-1">No watch history yet</h3>
+              <h2 className="text-xl font-bold text-white mb-1">No watch history yet</h2>
               <p className="text-sm text-zinc-400 max-w-sm mb-6">
                 When you stream movies and episodes, your progress will be saved here automatically.
               </p>
@@ -450,21 +423,56 @@ export default function WatchlistPage() {
                     <div>
                       <h3 className="text-lg font-bold text-white">{col.name}</h3>
                       {col.description && <p className="text-xs text-zinc-400 mt-0.5">{col.description}</p>}
-                      <span className="text-[11px] text-zinc-500">{col.items.length} titles</span>
+                      <span className="text-xs text-zinc-400">{col.items.length} titles</span>
                     </div>
 
                     <button
+                      type="button"
                       onClick={() => {
-                        if (confirm(`Delete "${col.name}" collection?`)) {
-                          deleteCollection(col.id);
-                        }
+                        deleteCollection(col.id);
+                        toast(`Deleted "${col.name}"`, {
+                          tone: 'info',
+                          action: { label: 'Undo', onClick: () => restoreCollection(col) },
+                        });
                       }}
-                      className="p-2 rounded-xl bg-zinc-800 hover:bg-red-600 text-zinc-400 hover:text-white transition-colors cursor-pointer"
-                      title="Delete Collection"
+                      className="p-2 rounded-xl bg-zinc-800 hover:bg-accent text-zinc-300 hover:text-white transition-colors"
+                      aria-label={`Delete collection ${col.name}`}
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 className="w-4 h-4" aria-hidden="true" />
                     </button>
                   </div>
+
+                  {(() => {
+                    const candidates = watchlist.filter(
+                      (w) => !col.items.some((i) => i.id === w.id && i.type === w.type)
+                    );
+                    if (candidates.length === 0) return null;
+                    return (
+                      <label className="flex flex-wrap items-center gap-2 text-xs text-zinc-400">
+                        <span>Add from My List:</span>
+                        <select
+                          value=""
+                          onChange={(e) => {
+                            const picked = candidates.find((w) => `${w.type}-${w.id}` === e.target.value);
+                            if (picked) {
+                              addItemToCollection(col.id, picked);
+                              toast(`Added "${picked.title}" to ${col.name}`);
+                            }
+                          }}
+                          className="bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-1.5 text-zinc-100 text-xs max-w-[260px]"
+                        >
+                          <option value="" disabled>
+                            Choose a title…
+                          </option>
+                          {candidates.map((w) => (
+                            <option key={`${w.type}-${w.id}`} value={`${w.type}-${w.id}`}>
+                              {w.title}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                    );
+                  })()}
 
                   {col.items.length > 0 ? (
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
@@ -483,18 +491,19 @@ export default function WatchlistPage() {
                             }}
                           />
                           <button
+                            type="button"
                             onClick={() => removeItemFromCollection(col.id, item.id, item.type)}
-                            title="Remove from collection"
-                            className="absolute top-2.5 right-2.5 z-20 p-2 rounded-full bg-red-600 hover:bg-red-700 text-white shadow-lg opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                            aria-label={`Remove ${item.title} from ${col.name}`}
+                            className="absolute top-12 right-2.5 z-20 p-2 rounded-full bg-black/70 hover:bg-accent text-white shadow-lg border border-white/10 transition-opacity [@media(hover:hover)]:opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
                           >
-                            <Trash2 className="w-3.5 h-3.5" />
+                            <X className="w-3.5 h-3.5" aria-hidden="true" />
                           </button>
                         </div>
                       ))}
                     </div>
                   ) : (
-                    <div className="py-8 text-center text-xs text-zinc-500">
-                      This collection is currently empty.
+                    <div className="py-8 text-center text-xs text-zinc-400">
+                      This collection is empty. Add titles from My List above.
                     </div>
                   )}
                 </div>
@@ -529,29 +538,31 @@ export default function WatchlistPage() {
       >
         <form onSubmit={handleCreateCollection} className="flex flex-col gap-4 p-2">
           <div>
-            <label className="block text-xs font-bold text-zinc-300 uppercase tracking-wider mb-2">
+            <label htmlFor="collection-name" className="block text-xs font-bold text-zinc-300 uppercase tracking-wider mb-2">
               Collection Name
             </label>
             <input
+              id="collection-name"
               type="text"
               required
               placeholder="e.g. Marvel Marathon, Anime Favorites..."
               value={newCollectionName}
               onChange={(e) => setNewCollectionName(e.target.value)}
-              className="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-red-500"
+              className="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-white text-sm focus:border-red-500"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-zinc-300 uppercase tracking-wider mb-2">
+            <label htmlFor="collection-desc" className="block text-xs font-bold text-zinc-300 uppercase tracking-wider mb-2">
               Description (Optional)
             </label>
             <input
+              id="collection-desc"
               type="text"
               placeholder="e.g. My favorite weekend movie binges"
               value={newCollectionDesc}
               onChange={(e) => setNewCollectionDesc(e.target.value)}
-              className="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-red-500"
+              className="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-white text-sm focus:border-red-500"
             />
           </div>
 
@@ -573,5 +584,13 @@ export default function WatchlistPage() {
         </form>
       </Modal>
     </div>
+  );
+}
+
+export default function WatchlistPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen" />}>
+      <WatchlistContent />
+    </Suspense>
   );
 }

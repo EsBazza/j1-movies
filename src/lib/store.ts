@@ -233,6 +233,12 @@ const storeApi = {
     emitChange();
   },
 
+  restoreCollection: (collection: CustomCollection) => {
+    if (memoryState.collections.some((c) => c.id === collection.id)) return;
+    memoryState = { ...memoryState, collections: [...memoryState.collections, collection] };
+    emitChange();
+  },
+
   deleteCollection: (id: string) => {
     memoryState = {
       ...memoryState,
@@ -352,6 +358,7 @@ export function useUserStore() {
     clearHistory: storeApi.clearHistory,
     createCollection: storeApi.createCollection,
     deleteCollection: storeApi.deleteCollection,
+    restoreCollection: storeApi.restoreCollection,
     addItemToCollection: storeApi.addItemToCollection,
     removeItemFromCollection: storeApi.removeItemFromCollection,
     exportDataJSON: storeApi.exportDataJSON,

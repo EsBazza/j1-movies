@@ -44,7 +44,7 @@ export function Navbar() {
     },
   ];
 
-  if (pathname?.startsWith('/watch')) {
+  if (pathname?.startsWith('/watch/')) {
     return null;
   }
 

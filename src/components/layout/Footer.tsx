@@ -12,7 +12,7 @@ export function Footer() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  if (pathname?.startsWith('/watch')) {
+  if (pathname?.startsWith('/watch/')) {
     return null;
   }
 

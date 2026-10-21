@@ -237,6 +237,7 @@ export default function MoviesPage() {
           <SkeletonBanner />
         ) : (
           <HeroBanner
+            pageTitle="Movies"
             items={featuredItems}
             item={heroItem || featuredItems[0]}
             palette={palette}

@@ -19,15 +19,14 @@ export function AmbientBackground({
   const imageSource = backdropPath || posterPath;
 
   return (
-    <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+    <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden" aria-hidden="true">
       {/* Dynamic High-Diffusion Multi-Color Backdrop Image */}
       {imageSource && (
         <div className="absolute -inset-[15%] pointer-events-none overflow-hidden">
           <Image
-            src={getBackdropUrl(imageSource, 'w1280')}
+            src={getBackdropUrl(imageSource, 'w780')}
             alt=""
             fill
-            priority
             sizes="100vw"
             className="object-cover scale-135 filter blur-[80px] saturate-[280%] brightness-80 opacity-80 transition-all duration-1000"
           />
@@ -48,19 +47,19 @@ export function AmbientBackground({
 
       {/* Spot 3: Chromatic Tertiary Color Bloom (Mid Body) */}
       <div
-        className="absolute top-[35%] -left-[20%] w-[90vw] h-[950px] rounded-full filter blur-[100px] opacity-85 transition-all duration-1000 mix-blend-screen"
+        className="hidden md:block absolute top-[35%] -left-[20%] w-[90vw] h-[950px] rounded-full filter blur-[100px] opacity-85 transition-all duration-1000 mix-blend-screen"
         style={{ backgroundColor: palette.tertiaryGlow }}
       />
 
       {/* Spot 4: Atmospheric Quaternary Color Bloom (Lower Body) */}
       <div
-        className="absolute top-[60%] -right-[20%] w-[95vw] h-[1000px] rounded-full filter blur-[110px] opacity-85 transition-all duration-1000 mix-blend-screen"
+        className="hidden md:block absolute top-[60%] -right-[20%] w-[95vw] h-[1000px] rounded-full filter blur-[110px] opacity-85 transition-all duration-1000 mix-blend-screen"
         style={{ backgroundColor: palette.quaternaryGlow }}
       />
 
       {/* Spot 5: Central Chromatic Mixing Orb */}
       <div
-        className="absolute top-[20%] left-[20%] w-[60vw] h-[600px] rounded-full filter blur-[90px] opacity-80 transition-all duration-1000 mix-blend-screen"
+        className="hidden md:block absolute top-[20%] left-[20%] w-[60vw] h-[600px] rounded-full filter blur-[90px] opacity-80 transition-all duration-1000 mix-blend-screen"
         style={{ backgroundColor: palette.primaryGlow }}
       />
 

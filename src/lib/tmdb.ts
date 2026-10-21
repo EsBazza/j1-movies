@@ -60,8 +60,44 @@ export function normalizeMediaItem(item: TMDBMediaItem, fallbackType: MediaType 
     backdropPath: item.backdrop_path,
     rating: typeof item.vote_average === 'number' ? Math.round(item.vote_average * 10) / 10 : 0,
     releaseDate,
+    popularity: item.popularity,
     genres: item.genres,
   };
+}
+
+/** Normalizes a list and drops duplicates (e.g. titles present in both recommendations and similar). */
+export function normalizeUnique(items: TMDBMediaItem[], fallbackType: MediaType = 'movie'): NormalizedMedia[] {
+  const seen = new Set<string>();
+  const out: NormalizedMedia[] = [];
+  for (const item of items) {
+    const normalized = normalizeMediaItem(item, fallbackType);
+    const key = `${normalized.type}-${normalized.id}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(normalized);
+  }
+  return out;
+}
+
+/** Picks the best title logo: English PNG first, then any English, then any PNG. */
+export function pickLogo(logos: { iso_639_1: string | null; file_path: string }[] | undefined) {
+  if (!logos?.length) return undefined;
+  return (
+    logos.find((l) => l.iso_639_1 === 'en' && l.file_path?.endsWith('.png')) ||
+    logos.find((l) => l.iso_639_1 === 'en') ||
+    logos.find((l) => l.file_path?.endsWith('.png')) ||
+    logos[0]
+  );
+}
+
+/** US content rating (e.g. PG-13, TV-MA) when TMDB has one. */
+export function getCertification(details: TMDBMovieDetails | TMDBTVDetails, type: MediaType): string | null {
+  if (type === 'movie') {
+    const us = (details as TMDBMovieDetails).release_dates?.results?.find((r) => r.iso_3166_1 === 'US');
+    return us?.release_dates?.find((d) => d.certification)?.certification || null;
+  }
+  const us = (details as TMDBTVDetails).content_ratings?.results?.find((r) => r.iso_3166_1 === 'US');
+  return us?.rating || null;
 }
 
 /**
@@ -170,14 +206,14 @@ export async function getTVByGenre(
 
 export async function getMovieDetails(id: number | string): Promise<TMDBMovieDetails> {
   return fetchFromTMDB<TMDBMovieDetails>(`movie/${id}`, {
-    append_to_response: 'credits,videos,recommendations,similar,images',
+    append_to_response: 'credits,videos,recommendations,similar,images,release_dates',
     include_image_language: 'en,null,ja,ko,fr,es,de,it',
   });
 }
 
 export async function getTVDetails(id: number | string): Promise<TMDBTVDetails> {
   return fetchFromTMDB<TMDBTVDetails>(`tv/${id}`, {
-    append_to_response: 'credits,videos,recommendations,similar,images',
+    append_to_response: 'credits,videos,recommendations,similar,images,content_ratings',
     include_image_language: 'en,null,ja,ko,fr,es,de,it',
   });
 }

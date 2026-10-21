@@ -245,6 +245,7 @@ export default function KDramaHubPage() {
           <SkeletonBanner />
         ) : (
           <HeroBanner
+            pageTitle="K-Drama"
             items={featuredItems}
             item={heroItem || featuredItems[0]}
             palette={palette}

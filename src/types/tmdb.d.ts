@@ -164,6 +164,9 @@ export interface TMDBMovieDetails extends TMDBMediaItem {
   images?: TMDBImagesResponse;
   similar?: TMDBPaginatedResponse<TMDBMediaItem>;
   recommendations?: TMDBPaginatedResponse<TMDBMediaItem>;
+  release_dates?: {
+    results: Array<{ iso_3166_1: string; release_dates: Array<{ certification: string; type: number }> }>;
+  };
 }
 
 export interface TMDBTVDetails extends TMDBMediaItem {
@@ -178,6 +181,7 @@ export interface TMDBTVDetails extends TMDBMediaItem {
   images?: TMDBImagesResponse;
   similar?: TMDBPaginatedResponse<TMDBMediaItem>;
   recommendations?: TMDBPaginatedResponse<TMDBMediaItem>;
+  content_ratings?: { results: Array<{ iso_3166_1: string; rating: string }> };
 }
 
 export interface NormalizedMedia {
@@ -189,6 +193,7 @@ export interface NormalizedMedia {
   backdropPath: string | null;
   rating: number;
   releaseDate: string;
+  popularity?: number;
   genres?: TMDBGenre[];
 }
 

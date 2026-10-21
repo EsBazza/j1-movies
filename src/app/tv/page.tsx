@@ -237,6 +237,7 @@ export default function TVSeriesPage() {
           <SkeletonBanner />
         ) : (
           <HeroBanner
+            pageTitle="TV Shows"
             items={featuredItems}
             item={heroItem || featuredItems[0]}
             palette={palette}

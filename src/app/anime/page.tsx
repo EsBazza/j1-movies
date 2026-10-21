@@ -253,6 +253,7 @@ export default function AnimeHubPage() {
           <SkeletonBanner />
         ) : (
           <HeroBanner
+            pageTitle="Anime"
             items={featuredItems}
             item={heroItem || featuredItems[0]}
             palette={palette}
