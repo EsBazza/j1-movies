@@ -10,6 +10,8 @@ interface UserStoreData {
   collections: CustomCollection[];
   preferredServerId: string;
   adShieldEnabled: boolean;
+  /** Opt-in (age-confirmed) inclusion of TMDB adult titles in search */
+  showAdult: boolean;
 }
 
 type StartWatchingInput = Omit<
@@ -53,6 +55,7 @@ const defaultData: UserStoreData = {
   collections: [],
   preferredServerId: DEFAULT_SERVER_ID,
   adShieldEnabled: true,
+  showAdult: false,
 };
 
 function getStoredData(): UserStoreData {
@@ -69,6 +72,7 @@ function getStoredData(): UserStoreData {
       // Migrates users off retired servers (e.g. 111movies, filmu)
       preferredServerId: isStreamingSourceId(state.preferredServerId) ? state.preferredServerId : DEFAULT_SERVER_ID,
       adShieldEnabled: typeof state.adShieldEnabled === 'boolean' ? state.adShieldEnabled : true,
+      showAdult: state.showAdult === true,
     };
   } catch (e) {
     console.error('Error reading localStorage:', e);
@@ -118,6 +122,11 @@ const storeApi = {
 
   setAdShieldEnabled: (val: boolean) => {
     memoryState = { ...memoryState, adShieldEnabled: val };
+    emitChange();
+  },
+
+  setShowAdult: (val: boolean) => {
+    memoryState = { ...memoryState, showAdult: val };
     emitChange();
   },
 
@@ -315,6 +324,7 @@ const storeApi = {
             ? data.preferredServerId
             : memoryState.preferredServerId,
           adShieldEnabled: typeof data.adShieldEnabled === 'boolean' ? data.adShieldEnabled : memoryState.adShieldEnabled,
+          showAdult: memoryState.showAdult,
         };
         emitChange();
         return true;
@@ -354,6 +364,8 @@ export function useUserStore() {
     collections: data.collections,
     preferredServerId: data.preferredServerId,
     adShieldEnabled: data.adShieldEnabled,
+    showAdult: data.showAdult,
+    setShowAdult: storeApi.setShowAdult,
     hasHydrated: true,
     setHasHydrated: () => {},
     setPreferredServerId: storeApi.setPreferredServerId,

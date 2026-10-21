@@ -7,6 +7,7 @@ import { Search, X, Film, Tv, Star, Loader2, User, History, TrendingUp } from 'l
 import { searchMulti, getTrending, getPosterUrl, getImageUrl, normalizeMediaItem } from '@/lib/tmdb';
 import { formatYear, cn } from '@/lib/utils';
 import { readRecentSearches as readRecent, saveRecentSearch as saveRecent } from '@/lib/recentSearches';
+import { useUserStoreSelector } from '@/lib/store';
 
 interface Suggestion {
   key: string;
@@ -38,6 +39,7 @@ export function SearchBar({ autoFocus = false, onDone, className }: SearchBarPro
   const router = useRouter();
   const listboxId = useId();
 
+  const showAdult = useUserStoreSelector((st) => st.showAdult);
   const trimmed = query.trim();
 
   // Debounced search; responses for an outdated query are ignored
@@ -47,7 +49,7 @@ export function SearchBar({ autoFocus = false, onDone, className }: SearchBarPro
     setIsLoading(true);
     const timer = setTimeout(async () => {
       try {
-        const res = await searchMulti(trimmed);
+        const res = await searchMulti(trimmed, 1, showAdult);
         if (ignore) return;
         const suggestions: Suggestion[] = (res.results || [])
           .filter((r) => r.media_type === 'movie' || r.media_type === 'tv' || (r.media_type as string | undefined) === 'person')
@@ -86,7 +88,7 @@ export function SearchBar({ autoFocus = false, onDone, className }: SearchBarPro
       ignore = true;
       clearTimeout(timer);
     };
-  }, [trimmed]);
+  }, [trimmed, showAdult]);
 
   // Trending suggestions for the empty state (loaded once, on first open)
   const loadTrending = useCallback(() => {

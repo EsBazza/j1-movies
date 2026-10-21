@@ -14,6 +14,9 @@ import { Chip } from '@/components/ui/Chip';
 import { LoadMore } from '@/components/ui/LoadMore';
 import { readRecentSearches, saveRecentSearch, clearRecentSearches } from '@/lib/recentSearches';
 import { useReveal } from '@/lib/useReveal';
+import { useUserStoreSelector, userStoreActions } from '@/lib/store';
+import { Modal } from '@/components/ui/Modal';
+import { Button } from '@/components/ui/Button';
 
 interface PersonResult {
   id: number;
@@ -97,6 +100,8 @@ function SearchContent() {
   const [recent, setRecent] = useState<string[]>([]);
   const [trending, setTrending] = useState<NormalizedMedia[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
+  const showAdult = useUserStoreSelector((s) => s.showAdult);
+  const [isAgeCheckOpen, setIsAgeCheckOpen] = useState(false);
   // The query the current results belong to — guards "Load more" against a changed query
   const resultsQueryRef = useRef('');
 
@@ -144,7 +149,7 @@ function SearchContent() {
       router.replace(`/search?q=${encodeURIComponent(trimmed)}`, { scroll: false });
 
       try {
-        const res = await searchMulti(trimmed, 1);
+        const res = await searchMulti(trimmed, 1, showAdult);
         if (ignore) return;
         const split = splitResults(res.results || []);
         resultsQueryRef.current = trimmed;
@@ -168,7 +173,7 @@ function SearchContent() {
       ignore = true;
       clearTimeout(timer);
     };
-  }, [trimmed, router]);
+  }, [trimmed, router, showAdult]);
 
   const handleLoadMore = async () => {
     if (page >= totalPages || isLoadingMore) return;
@@ -176,7 +181,7 @@ function SearchContent() {
     setIsLoadingMore(true);
     try {
       const nextPage = page + 1;
-      const res = await searchMulti(forQuery, nextPage);
+      const res = await searchMulti(forQuery, nextPage, showAdult);
       if (resultsQueryRef.current !== forQuery) return;
       const split = splitResults(res.results || []);
       setResults((prev) => dedupe([...prev, ...split.media]));
@@ -248,6 +253,27 @@ function SearchContent() {
             </button>
           )}
         </form>
+
+        {/* Opt-in adult results (age-confirmed, remembered in this browser) */}
+        <div className="mt-4 flex justify-center">
+          <label className="inline-flex items-center gap-3 cursor-pointer select-none text-sm text-muted hover:text-white transition-colors">
+            <input
+              type="checkbox"
+              role="switch"
+              checked={showAdult}
+              onChange={(e) => {
+                if (e.target.checked) setIsAgeCheckOpen(true);
+                else userStoreActions.setShowAdult(false);
+              }}
+              className="peer sr-only"
+            />
+            <span
+              aria-hidden="true"
+              className="relative w-10 h-6 rounded-full bg-white/15 peer-checked:bg-accent transition-colors after:absolute after:top-1 after:left-1 after:w-4 after:h-4 after:rounded-full after:bg-white after:transition-transform after:duration-200 peer-checked:after:translate-x-4 peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-[var(--dyn-accent)] peer-focus-visible:outline-offset-2"
+            />
+            Include 18+ titles
+          </label>
+        </div>
 
         {hasQuery && !isLoading && !searchError && counts.all > 0 && (
           <div className="flex flex-wrap justify-center gap-2 mt-6 animate-fade-in" role="group" aria-label="Filter results">
@@ -393,6 +419,31 @@ function SearchContent() {
           </>
         )}
       </div>
+
+      <Modal
+        isOpen={isAgeCheckOpen}
+        onClose={() => setIsAgeCheckOpen(false)}
+        title="Show 18+ titles?"
+        description="Adult titles may contain explicit content."
+        className="max-w-md"
+      >
+        <p className="text-sm text-zinc-300">
+          Confirm that you are 18 or older. You can turn this off again at any time; the setting is only saved in this browser.
+        </p>
+        <div className="mt-6 flex justify-end gap-3">
+          <Button variant="ghost" onClick={() => setIsAgeCheckOpen(false)}>
+            Cancel
+          </Button>
+          <Button
+            onClick={() => {
+              userStoreActions.setShowAdult(true);
+              setIsAgeCheckOpen(false);
+            }}
+          >
+            I&apos;m 18 or older
+          </Button>
+        </div>
+      </Modal>
     </div>
   );
 }

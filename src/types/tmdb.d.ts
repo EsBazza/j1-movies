@@ -194,6 +194,8 @@ export interface NormalizedMedia {
   rating: number;
   releaseDate: string;
   popularity?: number;
+  /** TMDB adult flag (only present when 18+ titles are enabled in search) */
+  adult?: boolean;
   genres?: TMDBGenre[];
 }
 

@@ -73,6 +73,11 @@ export function MediaCard({ item, priority = false, rank }: MediaCardProps) {
             {item.rating.toFixed(1)}
           </span>
         )}
+        {item.adult && (
+          <span className="absolute top-2 right-2 px-1.5 py-0.5 rounded-md bg-accent text-on-accent text-[11px] font-bold">
+            18+
+          </span>
+        )}
         {progress ? (
           <span
             className="absolute bottom-0 inset-x-0 h-1 bg-black/60"

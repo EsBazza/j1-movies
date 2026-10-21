@@ -61,6 +61,7 @@ export function normalizeMediaItem(item: TMDBMediaItem, fallbackType: MediaType 
     rating: typeof item.vote_average === 'number' ? Math.round(item.vote_average * 10) / 10 : 0,
     releaseDate,
     popularity: item.popularity,
+    adult: item.adult || undefined,
     genres: item.genres,
   };
 }
@@ -283,11 +284,15 @@ export async function getTVSeason(tvId: number | string, seasonNumber: number): 
   return fetchFromTMDB<TMDBSeason>(`tv/${tvId}/season/${seasonNumber}`);
 }
 
-export async function searchMulti(query: string, page: number = 1): Promise<TMDBPaginatedResponse<TMDBMediaItem>> {
+export async function searchMulti(
+  query: string,
+  page: number = 1,
+  includeAdult: boolean = false
+): Promise<TMDBPaginatedResponse<TMDBMediaItem>> {
   return fetchFromTMDB<TMDBPaginatedResponse<TMDBMediaItem>>('search/multi', {
     query,
     page,
-    include_adult: 'false',
+    include_adult: includeAdult ? 'true' : 'false',
   });
 }
 
