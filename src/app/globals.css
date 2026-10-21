@@ -38,7 +38,7 @@
   --color-surface-2: #1a1a1d;
   --color-surface-3: #242428;
   --color-muted: #a1a1aa;
-  --color-subtle: #71717a;
+  --color-subtle: #8a8a93; /* 5.8:1 on --color-bg (WCAG AA for body text) */
   /* Hairlines only for inputs/focus — layout never uses visible borders */
   --color-border: rgb(255 255 255 / 0.08);
   --color-border-strong: rgb(255 255 255 / 0.16);
