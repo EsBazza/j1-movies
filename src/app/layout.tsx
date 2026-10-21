@@ -1,15 +1,22 @@
 import type { Metadata, Viewport } from 'next';
-import { Plus_Jakarta_Sans } from 'next/font/google';
+import { Inter, Montserrat } from 'next/font/google';
 import './globals.css';
 import { Navbar } from '@/components/layout/Navbar';
 import { MobileNav } from '@/components/layout/MobileNav';
 import { Footer } from '@/components/layout/Footer';
 import { Toaster } from '@/components/ui/Toast';
+import { AmbientLayer } from '@/components/media/AmbientBackground';
 
-const plusJakartaSans = Plus_Jakarta_Sans({
+const inter = Inter({
   subsets: ['latin'],
-  weight: ['400', '500', '600', '700', '800'],
-  variable: '--font-sans',
+  variable: '--font-inter',
+  display: 'swap',
+});
+
+const montserrat = Montserrat({
+  subsets: ['latin'],
+  weight: ['600', '700', '800'],
+  variable: '--font-montserrat',
   display: 'swap',
 });
 
@@ -17,7 +24,7 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   viewportFit: 'cover',
-  themeColor: '#0f1014',
+  themeColor: '#0a0a0b',
   colorScheme: 'dark',
 };
 
@@ -36,7 +43,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`dark ${plusJakartaSans.variable}`}>
+    <html lang="en" className={`dark ${inter.variable} ${montserrat.variable}`}>
       <body className="bg-bg font-sans text-zinc-100 min-h-screen flex flex-col antialiased selection:bg-accent selection:text-white">
         <a
           href="#main"
@@ -44,6 +51,7 @@ export default function RootLayout({
         >
           Skip to content
         </a>
+        <AmbientLayer />
         <Navbar />
         <main id="main" className="flex-1 w-full">
           {children}

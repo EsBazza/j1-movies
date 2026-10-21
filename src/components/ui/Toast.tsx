@@ -52,7 +52,7 @@ export function Toaster() {
       {items.map((t) => (
         <div
           key={t.id}
-          className="pointer-events-auto flex items-center gap-3 max-w-md w-full sm:w-auto pl-4 pr-2 py-2.5 rounded-full bg-surface-2/95 backdrop-blur-xl border border-border-strong shadow-2xl text-sm text-white animate-slide-up"
+          className="pointer-events-auto flex items-center gap-3 max-w-md w-full sm:w-auto pl-4 pr-2 py-2.5 rounded-full bg-surface-2/95 backdrop-blur-xl shadow-2xl text-sm text-white animate-slide-up"
         >
           {t.tone === 'success' ? (
             <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" aria-hidden="true" />

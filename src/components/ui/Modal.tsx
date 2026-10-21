@@ -120,15 +120,15 @@ export function Modal({
         className={cn(
           'relative z-10 flex flex-col bg-surface-1 text-zinc-100 shadow-2xl outline-none',
           variant === 'center' &&
-            'w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-2xl border border-border p-6 animate-scale-in',
+            'w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-panel p-6 animate-scale-in',
           variant === 'drawer' &&
-            'h-full w-full max-w-md overflow-hidden border-l border-border p-5 sm:p-6 animate-slide-in-right',
+            'h-full w-full max-w-md overflow-hidden p-5 sm:p-6 animate-slide-in-right',
           variant === 'sheet' && 'w-full h-full overflow-y-auto p-4 sm:p-6 animate-fade-in',
           className
         )}
       >
         {!hideHeader && (
-          <div className="flex items-start justify-between gap-4 pb-4 border-b border-border mb-4 flex-shrink-0">
+          <div className="flex items-start justify-between gap-4 pb-2 mb-4 flex-shrink-0">
             <div className="min-w-0">
               {title && (
                 <h2 id={titleId} className="text-lg sm:text-xl font-bold tracking-tight text-white truncate">
