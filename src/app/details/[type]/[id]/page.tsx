@@ -3,7 +3,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useParams, notFound } from 'next/navigation';
 import Image from 'next/image';
-import Link from 'next/link';
 import { AlertCircle, Play } from 'lucide-react';
 import {
   getMovieDetails,
@@ -16,12 +15,12 @@ import {
 } from '@/lib/tmdb';
 import { TMDBMovieDetails, TMDBTVDetails, TMDBVideo } from '@/types/tmdb';
 import { extractPaletteFromImage, getPaletteForGenre, DEFAULT_PALETTE, ExtractedPalette } from '@/lib/colorExtractor';
-import { formatCurrency, formatDateFull, formatRuntime } from '@/lib/utils';
 import { useUserStoreSelector } from '@/lib/store';
 import { AmbientBackground } from '@/components/media/AmbientBackground';
 import { CastList } from '@/components/media/CastList';
 import { DetailsHero } from '@/components/details/DetailsHero';
 import { EpisodesPanel } from '@/components/details/EpisodesPanel';
+import { AboutSection } from '@/components/details/AboutSection';
 import { SkeletonBanner } from '@/components/ui/SkeletonBanner';
 import { Modal } from '@/components/ui/Modal';
 import { SectionHeader } from '@/components/ui/SectionHeader';
@@ -141,25 +140,7 @@ export default function MediaDetailsPage() {
     );
   }
 
-  const movie = type === 'movie' ? (details as TMDBMovieDetails) : null;
   const tv = type === 'tv' ? (details as TMDBTVDetails) : null;
-  const info: [string, React.ReactNode][] = [
-    ['Released', formatDateFull(movie?.release_date || tv?.first_air_date)],
-    ['Status', details.status],
-    ['Original language', details.original_language?.toUpperCase()],
-    ...(movie?.runtime ? ([['Runtime', formatRuntime(movie.runtime)]] as [string, React.ReactNode][]) : []),
-    ...(tv
-      ? ([
-          ['Seasons', tv.number_of_seasons],
-          ['Episodes', tv.number_of_episodes],
-        ] as [string, React.ReactNode][])
-      : []),
-    ...(movie?.budget ? ([['Budget', formatCurrency(movie.budget)]] as [string, React.ReactNode][]) : []),
-    ...(movie?.revenue ? ([['Box office', formatCurrency(movie.revenue)]] as [string, React.ReactNode][]) : []),
-    ...((details.production_companies?.length ?? 0) > 0
-      ? ([['Studios', details.production_companies!.slice(0, 4).map((c) => c.name).join(', ')]] as [string, React.ReactNode][])
-      : []),
-  ];
 
   return (
     <div className="w-full pb-28 lg:pb-16">
@@ -185,6 +166,10 @@ export default function MediaDetailsPage() {
             <EpisodesPanel tvId={tv.id} seasons={derived.seasons} fallbackStill={tv.backdrop_path} historyItem={historyItem} />
           </DetailsSection>
         )}
+
+        <DetailsSection id="about" title="About">
+          <AboutSection details={details} type={type} />
+        </DetailsSection>
 
         {(details.credits?.cast?.length ?? 0) > 0 && (
           <DetailsSection id="cast" title="Cast & crew">
@@ -221,37 +206,6 @@ export default function MediaDetailsPage() {
           </DetailsSection>
         )}
 
-        <DetailsSection id="about" title="About">
-          <div className="grid lg:grid-cols-[1fr_320px] gap-12 lg:gap-24">
-            <div>
-              {details.tagline && <p className="text-lg text-zinc-200 italic mb-4">&ldquo;{details.tagline}&rdquo;</p>}
-              <p className="text-sm sm:text-base text-zinc-300 leading-relaxed max-w-3xl">{details.overview}</p>
-              {details.genres?.length > 0 && (
-                <div className="flex flex-wrap gap-2 mt-6">
-                  {details.genres.map((g) => (
-                    <Link
-                      key={g.id}
-                      href={`/genre/${g.id}?type=${type}`}
-                      className="h-9 px-4 inline-flex items-center rounded-full bg-white/8 hover:bg-white/14 text-xs font-semibold text-zinc-200 transition-colors"
-                    >
-                      {g.name}
-                    </Link>
-                  ))}
-                </div>
-              )}
-            </div>
-            <dl className="grid grid-cols-2 lg:grid-cols-1 gap-x-8 gap-y-6 content-start">
-              {info
-                .filter(([, v]) => v !== undefined && v !== null && v !== '' && v !== '—')
-                .map(([label, value]) => (
-                  <div key={label}>
-                    <dt className="text-xs text-subtle">{label}</dt>
-                    <dd className="text-sm text-zinc-100 mt-0.5">{value}</dd>
-                  </div>
-                ))}
-            </dl>
-          </div>
-        </DetailsSection>
 
         {derived.recommendations.length > 0 && <MediaCarousel title="More like this" items={derived.recommendations} />}
 

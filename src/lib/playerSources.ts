@@ -1,4 +1,5 @@
-export type StreamingSourceId = 'vidlink' | 'vixsrc' | 'moviesapi' | 'vidfast';
+// VidLink and VixSrc were removed: in testing only these two played reliably.
+export type StreamingSourceId = 'moviesapi' | 'vidfast';
 
 export interface PlayerUrlOptions {
   /** Resume position in seconds */
@@ -19,7 +20,6 @@ export interface StreamingSource {
 }
 
 const BRAND = 'e50914';
-const BRAND_DARK = 'b91c1c';
 
 function query(params: Record<string, string | number | boolean | undefined>): string {
   const search = new URLSearchParams();
@@ -36,54 +36,9 @@ function startAt(opts?: PlayerUrlOptions): number | undefined {
 
 export const STREAMING_SERVERS: StreamingSource[] = [
   {
-    id: 'vidlink',
-    name: 'VidLink',
-    badge: 'Ad-free · Resume',
-    origin: 'https://vidlink.pro',
-    emitsProgress: true,
-    getMovieUrl: (id, opts) =>
-      `https://vidlink.pro/movie/${id}` +
-      query({
-        primaryColor: BRAND,
-        secondaryColor: BRAND_DARK,
-        iconColor: 'ffffff',
-        icons: 'vid',
-        title: false,
-        poster: true,
-        autoplay: opts?.autoplay,
-        startAt: startAt(opts),
-      }),
-    getTvUrl: (id, s, e, opts) =>
-      `https://vidlink.pro/tv/${id}/${s}/${e}` +
-      query({
-        primaryColor: BRAND,
-        secondaryColor: BRAND_DARK,
-        iconColor: 'ffffff',
-        icons: 'vid',
-        title: false,
-        poster: true,
-        nextbutton: true,
-        autoplay: opts?.autoplay,
-        startAt: startAt(opts),
-      }),
-  },
-  {
-    id: 'vixsrc',
-    name: 'VixSrc',
-    badge: 'Fast · Resume',
-    origin: 'https://vixsrc.to',
-    emitsProgress: true,
-    getMovieUrl: (id, opts) =>
-      `https://vixsrc.to/movie/${id}` +
-      query({ primaryColor: BRAND, secondaryColor: BRAND_DARK, autoplay: opts?.autoplay, startAt: startAt(opts) }),
-    getTvUrl: (id, s, e, opts) =>
-      `https://vixsrc.to/tv/${id}/${s}/${e}` +
-      query({ primaryColor: BRAND, secondaryColor: BRAND_DARK, autoplay: opts?.autoplay, startAt: startAt(opts) }),
-  },
-  {
     id: 'moviesapi',
     name: 'MoviesAPI',
-    badge: 'Backup',
+    badge: 'Recommended',
     origin: 'https://moviesapi.to',
     emitsProgress: true,
     getMovieUrl: (id, opts) => `https://moviesapi.to/movie/${id}` + query({ theme: BRAND, startAt: startAt(opts) }),
@@ -93,9 +48,10 @@ export const STREAMING_SERVERS: StreamingSource[] = [
   {
     id: 'vidfast',
     name: 'VidFast',
-    badge: 'Backup',
+    badge: 'Alternative',
     origin: 'https://vidfast.vc',
-    emitsProgress: false,
+    // Undocumented; if it posts PLAYER_EVENT messages they're picked up, otherwise ignored
+    emitsProgress: true,
     getMovieUrl: (id, opts) =>
       `https://vidfast.vc/movie/${id}` + query({ theme: BRAND, autoPlay: opts?.autoplay, startAt: startAt(opts) }),
     getTvUrl: (id, s, e, opts) =>
@@ -104,7 +60,7 @@ export const STREAMING_SERVERS: StreamingSource[] = [
   },
 ];
 
-export const DEFAULT_SERVER_ID: StreamingSourceId = 'vidlink';
+export const DEFAULT_SERVER_ID: StreamingSourceId = 'moviesapi';
 
 export function isStreamingSourceId(id: unknown): id is StreamingSourceId {
   return typeof id === 'string' && STREAMING_SERVERS.some((s) => s.id === id);

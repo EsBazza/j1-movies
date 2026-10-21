@@ -22,7 +22,7 @@ function toNumber(value: unknown): number {
 
 /**
  * Normalizes the postMessage formats of the supported embeds:
- * - VidLink / VixSrc: { type: 'PLAYER_EVENT', data: { event, currentTime, duration } }
+ * - VidFast (and similar): { type: 'PLAYER_EVENT', data: { event, currentTime, duration } }
  * - MoviesAPI:        { source: 'moviesapi-player', event|type, currentTime, duration }
  */
 function parseMessage(raw: unknown): ParsedEvent {
