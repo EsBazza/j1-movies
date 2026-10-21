@@ -4,80 +4,29 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   compress: true,
   images: {
+    // Images are served straight from TMDB/YouTube CDNs at hand-picked sizes to avoid
+    // Vercel image-transformation quotas, so Next's optimizer options don't apply here.
     unoptimized: true,
-    formats: ['image/avif', 'image/webp'],
-    minimumCacheTTL: 60 * 60 * 24 * 7, // 7 days image caching
-    dangerouslyAllowSVG: true,
-    contentDispositionType: 'attachment',
-    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
     remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: 'image.tmdb.org',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
-        hostname: 'images.tmdb.org',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
-        hostname: 'themoviedb.org',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
-        hostname: 'www.themoviedb.org',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
-        hostname: 'img.youtube.com',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
-        hostname: 'i.ytimg.com',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
-        hostname: 'i1.ytimg.com',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
-        hostname: 'i2.ytimg.com',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
-        hostname: 'i3.ytimg.com',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
-        hostname: 'i4.ytimg.com',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
-        hostname: 'yt3.ggpht.com',
-        pathname: '/**',
-      },
+      { protocol: 'https', hostname: 'image.tmdb.org', pathname: '/**' },
+      { protocol: 'https', hostname: 'img.youtube.com', pathname: '/**' },
+      { protocol: 'https', hostname: 'i.ytimg.com', pathname: '/**' },
     ],
   },
   async headers() {
     return [
       {
-        source: '/:all*(svg|jpg|jpeg|png|webp|avif|ico)',
+        source: '/:path*',
         headers: [
-          {
-            key: 'Cache-Control',
-            value: 'public, max-age=31536000, immutable',
-          },
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+          { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=(), display-capture=()' },
         ],
+      },
+      {
+        // Files in /public aren't content-hashed, so they must not be cached as immutable
+        source: '/:all*(svg|jpg|jpeg|png|webp|avif|ico)',
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=86400, stale-while-revalidate=604800' }],
       },
     ];
   },

@@ -3,20 +3,16 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   Sparkles,
-  Flame,
   Star,
   Film,
-  Tv,
   Loader2,
   Swords,
-  Heart,
 } from 'lucide-react';
 import {
   getTrendingAnime,
   getPopularAnime,
   getTopRatedAnime,
   getAnimeMovies,
-  getTVByGenre,
   discoverMedia,
   normalizeMediaItem,
   getBackdropUrl,
@@ -93,18 +89,23 @@ export default function AnimeHubPage() {
           actionRes,
           fantasyRes,
         ] = await Promise.all([
-          getTrendingAnime(1),
-          getPopularAnime(1),
-          getTopRatedAnime(1),
-          getAnimeMovies(1),
-          getTVByGenre(10759, 1).catch(() => null), // Action & Adventure TV
-          getTVByGenre(10765, 1).catch(() => null), // Sci-Fi & Fantasy TV
+          getTrendingAnime(1).catch(() => null),
+          getPopularAnime(1).catch(() => null),
+          getTopRatedAnime(1).catch(() => null),
+          getAnimeMovies(1).catch(() => null),
+          // Japanese animation AND action/fantasy — not every Western action show
+          discoverMedia({ mediaType: 'tv', genreId: '16,10759', withOriginalLanguage: 'ja' }).catch(() => null),
+          discoverMedia({ mediaType: 'tv', genreId: '16,10765', withOriginalLanguage: 'ja' }).catch(() => null),
         ]);
 
-        const normTrending = (trendingRes.results || []).map((i) => normalizeMediaItem(i, 'tv'));
-        const normPopular = (popularRes.results || []).map((i) => normalizeMediaItem(i, 'tv'));
-        const normTopRated = (topRatedRes.results || []).map((i) => normalizeMediaItem(i, 'tv'));
-        const normMovies = (moviesRes.results || []).map((i) => normalizeMediaItem(i, 'movie'));
+        if (!trendingRes && !popularRes && !topRatedRes && !moviesRes) {
+          throw new Error('All anime hub requests failed');
+        }
+
+        const normTrending = (trendingRes?.results || []).map((i) => normalizeMediaItem(i, 'tv'));
+        const normPopular = (popularRes?.results || []).map((i) => normalizeMediaItem(i, 'tv'));
+        const normTopRated = (topRatedRes?.results || []).map((i) => normalizeMediaItem(i, 'tv'));
+        const normMovies = (moviesRes?.results || []).map((i) => normalizeMediaItem(i, 'movie'));
         const normAction = (actionRes?.results || []).map((i) => normalizeMediaItem(i, 'tv'));
         const normFantasy = (fantasyRes?.results || []).map((i) => normalizeMediaItem(i, 'tv'));
 

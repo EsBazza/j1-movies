@@ -6,7 +6,6 @@ import {
   Flame,
   Star,
   Film,
-  Tv,
   Loader2,
   Sparkles,
 } from 'lucide-react';
@@ -15,7 +14,6 @@ import {
   getTopRatedKDrama,
   getPopularKDrama,
   getKDramaMovies,
-  getTVByGenre,
   discoverMedia,
   normalizeMediaItem,
   getBackdropUrl,
@@ -92,18 +90,23 @@ export default function KDramaHubPage() {
           romanceRes,
           mysteryRes,
         ] = await Promise.all([
-          getTrendingKDrama(1),
-          getTopRatedKDrama(1),
-          getPopularKDrama(1),
-          getKDramaMovies(1),
-          getTVByGenre(10749, 1).catch(() => null), // Romance
-          getTVByGenre(9648, 1).catch(() => null), // Mystery
+          getTrendingKDrama(1).catch(() => null),
+          getTopRatedKDrama(1).catch(() => null),
+          getPopularKDrama(1).catch(() => null),
+          getKDramaMovies(1).catch(() => null),
+          // Korean titles only; TV has no Romance genre, so use the "romance" keyword
+          discoverMedia({ mediaType: 'tv', withOriginalLanguage: 'ko', withKeywords: '9840' }).catch(() => null),
+          discoverMedia({ mediaType: 'tv', genreId: 9648, withOriginalLanguage: 'ko' }).catch(() => null),
         ]);
 
-        const normTrending = (trendingRes.results || []).map((i) => normalizeMediaItem(i, 'tv'));
-        const normTopRated = (topRatedRes.results || []).map((i) => normalizeMediaItem(i, 'tv'));
-        const normPopular = (popularRes.results || []).map((i) => normalizeMediaItem(i, 'tv'));
-        const normMovies = (moviesRes.results || []).map((i) => normalizeMediaItem(i, 'movie'));
+        if (!trendingRes && !topRatedRes && !popularRes && !moviesRes) {
+          throw new Error('All K-Drama hub requests failed');
+        }
+
+        const normTrending = (trendingRes?.results || []).map((i) => normalizeMediaItem(i, 'tv'));
+        const normTopRated = (topRatedRes?.results || []).map((i) => normalizeMediaItem(i, 'tv'));
+        const normPopular = (popularRes?.results || []).map((i) => normalizeMediaItem(i, 'tv'));
+        const normMovies = (moviesRes?.results || []).map((i) => normalizeMediaItem(i, 'movie'));
         const normRomance = (romanceRes?.results || []).map((i) => normalizeMediaItem(i, 'tv'));
         const normMystery = (mysteryRes?.results || []).map((i) => normalizeMediaItem(i, 'tv'));
 

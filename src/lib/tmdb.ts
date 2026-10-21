@@ -79,6 +79,16 @@ export function normalizeUnique(items: TMDBMediaItem[], fallbackType: MediaType 
   return out;
 }
 
+/** Client-side sort for lists merged from several endpoints (e.g. movies + TV). */
+export function sortMediaList(items: NormalizedMedia[], sortBy: string): NormalizedMedia[] {
+  const sorted = [...items];
+  if (sortBy.startsWith('vote_average')) sorted.sort((a, b) => b.rating - a.rating);
+  else if (sortBy.includes('date')) sorted.sort((a, b) => (b.releaseDate || '').localeCompare(a.releaseDate || ''));
+  else if (sortBy.includes('title') || sortBy.includes('name')) sorted.sort((a, b) => a.title.localeCompare(b.title));
+  else sorted.sort((a, b) => (b.popularity || 0) - (a.popularity || 0));
+  return sorted;
+}
+
 /** Picks the best title logo: English PNG first, then any English, then any PNG. */
 export function pickLogo(logos: { iso_639_1: string | null; file_path: string }[] | undefined) {
   if (!logos?.length) return undefined;
@@ -172,20 +182,43 @@ export async function getTopRatedTV(page: number = 1): Promise<TMDBPaginatedResp
   return fetchFromTMDB<TMDBPaginatedResponse<TMDBMediaItem>>('tv/top_rated', { page });
 }
 
+/**
+ * Movie and TV discover endpoints use different field names for date/title sorts.
+ * Accept either spelling and translate to the one the endpoint understands.
+ */
+export function normalizeSortBy(sortBy: string | undefined, mediaType: 'movie' | 'tv'): string {
+  const sort = sortBy || 'popularity.desc';
+  const map: Record<string, Record<'movie' | 'tv', string>> = {
+    'primary_release_date.desc': { movie: 'primary_release_date.desc', tv: 'first_air_date.desc' },
+    'first_air_date.desc': { movie: 'primary_release_date.desc', tv: 'first_air_date.desc' },
+    'primary_release_date.asc': { movie: 'primary_release_date.asc', tv: 'first_air_date.asc' },
+    'first_air_date.asc': { movie: 'primary_release_date.asc', tv: 'first_air_date.asc' },
+    'original_title.asc': { movie: 'original_title.asc', tv: 'original_name.asc' },
+    'original_name.asc': { movie: 'original_title.asc', tv: 'original_name.asc' },
+    'title.asc': { movie: 'title.asc', tv: 'name.asc' },
+    'name.asc': { movie: 'title.asc', tv: 'name.asc' },
+  };
+  return map[sort]?.[mediaType] ?? sort;
+}
+
+// TMDB uses separate genre ids for some movie/TV categories (e.g. TV "Action & Adventure").
+const TV_TO_MOVIE_GENRE: Record<string, string> = { '10759': '28', '10765': '14', '10768': '10752' };
+const MOVIE_TO_TV_GENRE: Record<string, string> = { '28': '10759', '12': '10759', '14': '10765', '878': '10765', '10752': '10768' };
+
+export function mapGenresForMediaType(genreIds: number | string, mediaType: 'movie' | 'tv'): string {
+  const map = mediaType === 'movie' ? TV_TO_MOVIE_GENRE : MOVIE_TO_TV_GENRE;
+  return String(genreIds)
+    .split(',')
+    .map((g) => map[g.trim()] ?? g.trim())
+    .join(',');
+}
+
 export async function getMoviesByGenre(
   genreId: number | string,
   page: number = 1,
   sortBy: string = 'popularity.desc'
 ): Promise<TMDBPaginatedResponse<TMDBMediaItem>> {
-  const params: Record<string, string | number> = {
-    with_genres: genreId,
-    sort_by: sortBy,
-    page,
-  };
-  if (sortBy === 'vote_average.desc') {
-    params['vote_count.gte'] = 100;
-  }
-  return fetchFromTMDB<TMDBPaginatedResponse<TMDBMediaItem>>('discover/movie', params);
+  return discoverMedia({ mediaType: 'movie', genreId, sortBy, page });
 }
 
 export async function getTVByGenre(
@@ -193,15 +226,7 @@ export async function getTVByGenre(
   page: number = 1,
   sortBy: string = 'popularity.desc'
 ): Promise<TMDBPaginatedResponse<TMDBMediaItem>> {
-  const params: Record<string, string | number> = {
-    with_genres: genreId,
-    sort_by: sortBy,
-    page,
-  };
-  if (sortBy === 'vote_average.desc') {
-    params['vote_count.gte'] = 50;
-  }
-  return fetchFromTMDB<TMDBPaginatedResponse<TMDBMediaItem>>('discover/tv', params);
+  return discoverMedia({ mediaType: 'tv', genreId, sortBy, page });
 }
 
 export async function getMovieDetails(id: number | string): Promise<TMDBMovieDetails> {
@@ -288,26 +313,43 @@ export interface DiscoverFilters {
 }
 
 export async function discoverMedia(filters: DiscoverFilters): Promise<TMDBPaginatedResponse<TMDBMediaItem>> {
+  const sortBy = normalizeSortBy(filters.sortBy, filters.mediaType);
   const params: Record<string, string | number> = {
-    sort_by: filters.sortBy || 'popularity.desc',
+    sort_by: sortBy,
     page: filters.page || 1,
   };
 
   if (filters.genreId) {
-    params.with_genres = filters.genreId;
+    params.with_genres = mapGenresForMediaType(filters.genreId, filters.mediaType);
   }
 
   if (filters.withoutGenres) {
     params.without_genres = filters.withoutGenres;
   }
 
+  // Rating sorts/filters need a vote floor, otherwise 1-vote 10/10 titles dominate
   if (filters.minRating && filters.minRating > 0) {
     params['vote_average.gte'] = filters.minRating;
     params['vote_count.gte'] = 20;
   }
+  if (sortBy === 'vote_average.desc') {
+    params['vote_count.gte'] = Math.max(Number(params['vote_count.gte'] || 0), filters.mediaType === 'movie' ? 200 : 100);
+  }
+  // Newest-first should only list titles that are already out
+  if (sortBy.endsWith('date.desc')) {
+    const today = new Date().toISOString().slice(0, 10);
+    params[filters.mediaType === 'movie' ? 'primary_release_date.lte' : 'first_air_date.lte'] = today;
+  }
 
   if (filters.year) {
-    if (filters.mediaType === 'movie') {
+    const dateField = filters.mediaType === 'movie' ? 'primary_release_date' : 'first_air_date';
+    const decade = /^(\d{4})s$/.exec(filters.year);
+    if (decade) {
+      // "1990s" → 1990-01-01 … 1999-12-31
+      const start = Number(decade[1]);
+      params[`${dateField}.gte`] = `${start}-01-01`;
+      params[`${dateField}.lte`] = `${start + 9}-12-31`;
+    } else if (filters.mediaType === 'movie') {
       params['primary_release_year'] = filters.year;
     } else {
       params['first_air_date_year'] = filters.year;

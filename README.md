@@ -1,16 +1,16 @@
 # 🍿 J1 Movies
 
-> A personal cinema streaming and discovery platform with rich TMDB metadata, high-definition posters, Videasy playback, and zero-database local storage.
+> A personal cinema streaming and discovery platform with rich TMDB metadata, high-definition posters, multi-server playback with resume, and zero-database local storage.
 
 ---
 
 ## ✨ Features
 
 - 🎬 **Extensive Cinema Catalog:** Browse trending, popular, and top-rated movies & TV series powered by the TMDB API.
-- ⚡ **Seamless Playback:** High-definition video player with native fullscreen, theater mode, and episode navigation.
+- ⚡ **Multi-Server Playback:** VidLink, VixSrc, MoviesAPI and VidFast embeds with a server picker, Ad-Shield sandbox, resume from where you left off, next-episode and auto-next.
 - 🎭 **Actor & Director Filmography:** Explore biographies and complete career filmographies with instant watch links.
 - 🎛️ **Advanced Discovery Filter Suite:** Filter by release year, minimum TMDB rating, language/region, and genres.
-- 👁️ **Instant Quick Preview:** Netflix-style trailer popups without losing your place in the catalog.
+- 🔎 **Instant Search:** Keyboard-navigable suggestions (press `/`), recent searches and trending titles.
 - 📁 **Custom Watchlist & Collections:** Zero-database library saved directly to browser `localStorage`.
 - 💾 **1-Click JSON Backup & Restore:** Export or import your watchlist and watch history to any device.
 - 🌙 **Dark Luxury Cinema UI:** Built with Tailwind CSS, glassmorphism, ambient ambilight halo, and smooth micro-interactions.
@@ -23,7 +23,7 @@
 - **UI & Styling:** [Tailwind CSS](https://tailwindcss.com/), Lucide Icons
 - **State Management:** Zero-dependency React `useSyncExternalStore`
 - **Metadata Provider:** [The Movie Database (TMDB) API](https://www.themoviedb.org/)
-- **Video Embed Provider:** [Videasy](https://player.videasy.net/)
+- **Video Embed Providers:** VidLink (default), VixSrc, MoviesAPI, VidFast — configured in `src/lib/playerSources.ts`
 
 ---
 
@@ -48,11 +48,15 @@ TMDB_API_KEY=your_tmdb_api_key_here
 TMDB_READ_ACCESS_TOKEN=your_tmdb_read_access_token_here
 ```
 
+> These are **server-only** variables. Never prefix them with `NEXT_PUBLIC_`; the browser talks to TMDB only through the `/api/tmdb` proxy.
+
 ### 4. Run Development Server
 ```bash
 npm run dev
 ```
 Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+Other scripts: `npm run lint` (ESLint flat config), `npm run build`.
 
 ---
 

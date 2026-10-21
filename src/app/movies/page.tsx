@@ -3,11 +3,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   Film,
-  Flame,
-  Star,
-  Sparkles,
-  TrendingUp,
-  Swords,
   Loader2,
 } from 'lucide-react';
 import {

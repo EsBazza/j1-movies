@@ -1,8 +1,7 @@
 'use client';
 
 import React, { useEffect, useState, useCallback } from 'react';
-import Image from 'next/image';
-import { Flame, Star, Film, Tv, Sparkles, Swords, Heart } from 'lucide-react';
+import { Star, Sparkles, Swords, Heart } from 'lucide-react';
 import {
   getTrending,
   getPopularMovies,

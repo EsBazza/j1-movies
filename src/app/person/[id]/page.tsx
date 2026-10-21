@@ -3,7 +3,6 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
-import Link from 'next/link';
 import {
   User,
   ArrowLeft,
@@ -13,7 +12,6 @@ import {
   Tv,
   Clapperboard,
   ArrowUpDown,
-  Sparkles,
   ChevronDown,
   ChevronUp,
 } from 'lucide-react';
@@ -95,7 +93,7 @@ function PersonContent() {
 
   // Deduplicate items
   const seenIds = new Set<string>();
-  let itemsToDisplay: NormalizedMedia[] = [];
+  const itemsToDisplay: NormalizedMedia[] = [];
 
   const rawList = filterType === 'crew' ? crewItems : castItems;
 
@@ -126,7 +124,7 @@ function PersonContent() {
     });
   } else {
     // Default popularity
-    itemsToDisplay.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+    itemsToDisplay.sort((a, b) => (b.popularity || 0) - (a.popularity || 0));
   }
 
   return (

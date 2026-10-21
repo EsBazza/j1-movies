@@ -13,8 +13,6 @@ import {
   Upload,
   Trash2,
   Play,
-  Film,
-  Tv,
   Sparkles,
   Plus,
   X,

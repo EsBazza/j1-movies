@@ -560,6 +560,17 @@ function WatchContent() {
             );
           })}
         </ul>
+        <button
+          type="button"
+          onClick={() => {
+            setReloadKey((k) => k + 1);
+            setIsServerSheetOpen(false);
+          }}
+          className="mt-3 w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-control bg-white/5 hover:bg-white/10 border border-border text-sm font-semibold text-white transition-colors"
+        >
+          <RefreshCw className="w-4 h-4" aria-hidden="true" />
+          Reload player
+        </button>
         <label className="mt-5 flex items-start gap-3 p-3 rounded-control bg-white/[0.03] border border-border cursor-pointer">
           <input
             type="checkbox"

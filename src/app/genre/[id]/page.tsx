@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, Suspense } from 'react';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
-import Link from 'next/link';
 import {
   Sparkles,
   ArrowLeft,
@@ -17,8 +16,9 @@ import {
   getMovieGenres,
   getTVGenres,
   normalizeMediaItem,
+  sortMediaList,
 } from '@/lib/tmdb';
-import { TMDBGenre, NormalizedMedia, MediaType } from '@/types/tmdb';
+import { NormalizedMedia, MediaType } from '@/types/tmdb';
 import { MediaCard } from '@/components/media/MediaCard';
 import { SkeletonCard } from '@/components/ui/SkeletonCard';
 import { cn } from '@/lib/utils';
@@ -97,6 +97,7 @@ function GenreContent() {
   // Load Content for Genre
   useEffect(() => {
     if (!genreId) return;
+    let ignore = false;
 
     async function loadGenreMedia() {
       setIsLoading(true);
@@ -105,11 +106,13 @@ function GenreContent() {
       try {
         if (mediaType === 'movie') {
           const res = await getMoviesByGenre(genreId, 1, sortBy);
+          if (ignore) return;
           const normalized = (res.results || []).map((m) => normalizeMediaItem(m, 'movie'));
           setItems(normalized);
           setTotalPages(res.total_pages || 1);
         } else if (mediaType === 'tv') {
           const res = await getTVByGenre(genreId, 1, sortBy);
+          if (ignore) return;
           const normalized = (res.results || []).map((t) => normalizeMediaItem(t, 'tv'));
           setItems(normalized);
           setTotalPages(res.total_pages || 1);
@@ -119,29 +122,24 @@ function GenreContent() {
             getMoviesByGenre(genreId, 1, sortBy).catch(() => ({ results: [], total_pages: 1 })),
             getTVByGenre(genreId, 1, sortBy).catch(() => ({ results: [], total_pages: 1 })),
           ]);
+          if (ignore) return;
 
           const normMovies = (mRes.results || []).map((m) => normalizeMediaItem(m, 'movie'));
           const normTv = (tRes.results || []).map((t) => normalizeMediaItem(t, 'tv'));
-
-          // Combine
-          const combined = [...normMovies, ...normTv];
-          if (sortBy === 'vote_average.desc') {
-            combined.sort((a, b) => b.rating - a.rating);
-          } else {
-            combined.sort((a, b) => (b.rating || 0) - (a.rating || 0));
-          }
-
-          setItems(combined);
+          setItems(sortMediaList([...normMovies, ...normTv], sortBy));
           setTotalPages(Math.max(mRes.total_pages || 1, tRes.total_pages || 1));
         }
       } catch (err) {
         console.error('Failed to load genre media:', err);
       } finally {
-        setIsLoading(false);
+        if (!ignore) setIsLoading(false);
       }
     }
 
     loadGenreMedia();
+    return () => {
+      ignore = true;
+    };
   }, [genreId, mediaType, sortBy]);
 
   const handleLoadMore = async () => {
@@ -262,7 +260,8 @@ function GenreContent() {
             <select
               value={sortBy}
               onChange={(e) => handleSortChange(e.target.value)}
-              className="appearance-none bg-zinc-900 border border-zinc-700/80 hover:border-zinc-500 text-white text-xs font-semibold rounded-xl pl-9 pr-9 py-2.5 focus:outline-none focus:border-red-500 cursor-pointer shadow-lg transition-colors"
+              aria-label="Sort by"
+              className="appearance-none bg-zinc-900 border border-zinc-700/80 hover:border-zinc-500 text-white text-xs font-semibold rounded-xl pl-9 pr-9 py-2.5 focus:border-red-500 cursor-pointer shadow-lg transition-colors"
             >
               <option value="popularity.desc">Most Popular</option>
               <option value="vote_average.desc">Highest Rated</option>

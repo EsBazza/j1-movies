@@ -9,7 +9,6 @@ import {
   Pause,
   Star,
   Clock,
-  Calendar,
   Volume1,
   Volume2,
   VolumeX,

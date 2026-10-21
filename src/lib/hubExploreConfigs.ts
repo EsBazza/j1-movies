@@ -80,7 +80,8 @@ export const HUB_CONFIGS: Record<'movies' | 'tv' | 'anime' | 'kdrama', HubExplor
     defaultOriginalLanguage: 'ko',
     subGenres: [
       { id: 'all', name: 'All K-Dramas' },
-      { id: 'romance', name: 'Heartfelt Romance', genreId: 10749 },
+      // TV has no Romance genre on TMDB; use the "romance" keyword instead
+      { id: 'romance', name: 'Heartfelt Romance', keywordId: 9840 },
       { id: 'enemies_lovers', name: 'Enemies to Lovers', keywordId: 280398 },
       { id: 'webtoon', name: 'Webtoon Adaptations', keywordId: 270030 },
       { id: 'chaebol', name: 'Chaebol & High Society', keywordId: 279932 },

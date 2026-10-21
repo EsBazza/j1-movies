@@ -8,7 +8,6 @@ import {
   ArrowUpDown,
   Calendar,
   Star,
-  Globe,
   Tag,
   Check,
 } from 'lucide-react';
@@ -48,8 +47,9 @@ const YEAR_OPTIONS = [
   { label: '2020', value: '2020' },
   { label: '2015', value: '2015' },
   { label: '2010', value: '2010' },
-  { label: '2000s Classic', value: '2000' },
-  { label: '90s Golden Era', value: '1995' },
+  { label: '2010s', value: '2010s' },
+  { label: '2000s Classics', value: '2000s' },
+  { label: '90s Golden Era', value: '1990s' },
 ];
 
 const RATING_OPTIONS = [
@@ -82,8 +82,6 @@ export function ExploreConsole({
   allowFormatSwitch = false,
 }: ExploreConsoleProps) {
   const [isDrawerOpen, setIsDrawerOpen] = React.useState(false);
-
-  const activeSubGenre = subGenres.find((s) => s.id === activeSubGenreId);
   const hasDrawerFilters = Boolean(filters.year || filters.minRating > 0 || (allowFormatSwitch && filters.format && filters.format !== 'all'));
 
   return (

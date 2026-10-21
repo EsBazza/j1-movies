@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect, useRef, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Search, Film, Tv, Sparkles, Loader2 } from 'lucide-react';
 import { searchMulti, normalizeMediaItem } from '@/lib/tmdb';
@@ -8,6 +8,16 @@ import { NormalizedMedia, MediaType } from '@/types/tmdb';
 import { MediaCard } from '@/components/media/MediaCard';
 import { SkeletonCard } from '@/components/ui/SkeletonCard';
 import { cn } from '@/lib/utils';
+
+function dedupe(items: NormalizedMedia[]): NormalizedMedia[] {
+  const seen = new Set<string>();
+  return items.filter((i) => {
+    const key = `${i.type}-${i.id}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
 
 function SearchContent() {
   const searchParams = useSearchParams();
@@ -21,52 +31,76 @@ function SearchContent() {
   const [totalPages, setTotalPages] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [searchError, setSearchError] = useState(false);
+  // The query the current results belong to — guards "Load more" against a changed query
+  const resultsQueryRef = useRef('');
 
+  // Sync from the URL only when it changes externally (e.g. navbar search, back button)
+  const lastUrlQueryRef = useRef(initialQuery);
   useEffect(() => {
-    setQuery(initialQuery);
+    if (initialQuery !== lastUrlQueryRef.current) {
+      lastUrlQueryRef.current = initialQuery;
+      setQuery(initialQuery);
+    }
   }, [initialQuery]);
 
   useEffect(() => {
-    if (!query.trim()) {
+    const trimmed = query.trim();
+    if (!trimmed) {
       setResults([]);
+      setIsLoading(false);
       return;
     }
+    let ignore = false;
 
-    async function executeSearch() {
+    const timer = setTimeout(async () => {
       setIsLoading(true);
+      setSearchError(false);
       setPage(1);
+      // Keep the URL shareable without fighting the user's typing
+      lastUrlQueryRef.current = trimmed;
+      router.replace(`/search?q=${encodeURIComponent(trimmed)}`, { scroll: false });
 
       try {
-        const res = await searchMulti(query.trim(), 1);
-        const filtered = (res.results || [])
-          .filter((item) => item.media_type === 'movie' || item.media_type === 'tv')
-          .map((item) => normalizeMediaItem(item));
-
+        const res = await searchMulti(trimmed, 1);
+        if (ignore) return;
+        const filtered = dedupe(
+          (res.results || [])
+            .filter((item) => item.media_type === 'movie' || item.media_type === 'tv')
+            .map((item) => normalizeMediaItem(item))
+        );
+        resultsQueryRef.current = trimmed;
         setResults(filtered);
         setTotalPages(res.total_pages || 1);
       } catch (err) {
+        if (ignore) return;
         console.error('Failed to search TMDB:', err);
+        setSearchError(true);
       } finally {
-        setIsLoading(false);
+        if (!ignore) setIsLoading(false);
       }
-    }
+    }, 300);
 
-    const timer = setTimeout(executeSearch, 300);
-    return () => clearTimeout(timer);
-  }, [query]);
+    return () => {
+      ignore = true;
+      clearTimeout(timer);
+    };
+  }, [query, router]);
 
   const handleLoadMore = async () => {
     if (page >= totalPages || isLoadingMore) return;
+    const forQuery = resultsQueryRef.current;
     setIsLoadingMore(true);
 
     try {
       const nextPage = page + 1;
-      const res = await searchMulti(query.trim(), nextPage);
+      const res = await searchMulti(forQuery, nextPage);
+      if (resultsQueryRef.current !== forQuery) return;
       const newFiltered = (res.results || [])
         .filter((item) => item.media_type === 'movie' || item.media_type === 'tv')
         .map((item) => normalizeMediaItem(item));
 
-      setResults((prev) => [...prev, ...newFiltered]);
+      setResults((prev) => dedupe([...prev, ...newFiltered]));
       setPage(nextPage);
     } catch (err) {
       console.error('Failed to load more results:', err);
@@ -90,24 +124,27 @@ function SearchContent() {
         </p>
 
         <div className="relative flex items-center">
+          <label htmlFor="search-page-input" className="sr-only">
+            Search movies and TV series
+          </label>
           <input
-            type="text"
+            id="search-page-input"
+            type="search"
+            enterKeyHint="search"
             value={query}
-            onChange={(e) => {
-              setQuery(e.target.value);
-              router.replace(`/search?q=${encodeURIComponent(e.target.value)}`);
-            }}
+            onChange={(e) => setQuery(e.target.value)}
             placeholder="Search by title, character, or franchise..."
-            className="w-full bg-zinc-900 text-base text-zinc-100 placeholder-zinc-500 pl-12 pr-4 py-4 rounded-2xl border border-zinc-800 focus:border-red-500 focus:outline-none shadow-2xl transition-all"
+            className="w-full bg-zinc-900 text-base text-zinc-100 placeholder-zinc-500 pl-12 pr-4 py-4 rounded-2xl border border-zinc-800 focus:border-red-500 shadow-2xl transition-colors"
             autoFocus
           />
-          <Search className="absolute left-4 w-5 h-5 text-zinc-400" />
+          <Search className="absolute left-4 w-5 h-5 text-zinc-400" aria-hidden="true" />
         </div>
 
         {/* Filter Pills */}
-        <div className="flex items-center justify-center gap-3 mt-4">
+        <div className="flex items-center justify-center gap-3 mt-4" role="group" aria-label="Filter results">
           <button
             onClick={() => setFilterType('all')}
+            aria-pressed={filterType === 'all'}
             className={cn(
               'px-4 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer',
               filterType === 'all'
@@ -115,10 +152,11 @@ function SearchContent() {
                 : 'bg-zinc-900 text-zinc-400 hover:text-white border border-zinc-800'
             )}
           >
-            All Results ({results.length})
+            All ({results.length})
           </button>
           <button
             onClick={() => setFilterType('movie')}
+            aria-pressed={filterType === 'movie'}
             className={cn(
               'flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer',
               filterType === 'movie'
@@ -131,6 +169,7 @@ function SearchContent() {
           </button>
           <button
             onClick={() => setFilterType('tv')}
+            aria-pressed={filterType === 'tv'}
             className={cn(
               'flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer',
               filterType === 'tv'
@@ -154,8 +193,8 @@ function SearchContent() {
       ) : query && displayedResults.length > 0 ? (
         <>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 sm:gap-6">
-            {displayedResults.map((item, index) => (
-              <MediaCard key={`${item.type}-${item.id}-${index}`} item={item} />
+            {displayedResults.map((item) => (
+              <MediaCard key={`${item.type}-${item.id}`} item={item} />
             ))}
           </div>
 
@@ -178,12 +217,17 @@ function SearchContent() {
             </div>
           )}
         </>
+      ) : searchError ? (
+        <div className="py-20 text-center flex flex-col items-center justify-center" role="alert">
+          <h2 className="text-lg font-bold text-white mb-1">Search is unavailable right now</h2>
+          <p className="text-sm text-zinc-400 max-w-sm">Check your connection and try again in a moment.</p>
+        </div>
       ) : query ? (
-        <div className="py-20 text-center flex flex-col items-center justify-center">
+        <div className="py-20 text-center flex flex-col items-center justify-center" role="status">
           <div className="w-16 h-16 rounded-full bg-zinc-900 flex items-center justify-center text-zinc-500 mb-4">
-            <Search className="w-8 h-8" />
+            <Search className="w-8 h-8" aria-hidden="true" />
           </div>
-          <h3 className="text-lg font-bold text-white mb-1">No matches found</h3>
+          <h2 className="text-lg font-bold text-white mb-1">No matches found</h2>
           <p className="text-sm text-zinc-400 max-w-sm">
             We couldn&apos;t find any movies or TV series matching &quot;{query}&quot;. Try checking for typos or searching a different keyword.
           </p>
@@ -193,7 +237,7 @@ function SearchContent() {
           <div className="w-16 h-16 rounded-full bg-red-600/10 border border-red-500/20 flex items-center justify-center text-red-500 mb-4">
             <Sparkles className="w-8 h-8" />
           </div>
-          <h3 className="text-lg font-bold text-white mb-1">Discover Something New</h3>
+          <h2 className="text-lg font-bold text-white mb-1">Discover Something New</h2>
           <p className="text-sm text-zinc-400 max-w-sm">
             Start typing above to search instantly across TMDB&apos;s global movie and TV catalog.
           </p>
