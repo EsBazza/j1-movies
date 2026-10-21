@@ -27,7 +27,7 @@ export function ReelItem({ item, trailerKey, isActive, index, onEnded }: ReelIte
   const singleTapTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isSaved = useUserStoreSelector((s) => s.watchlist.some((w) => w.id === item.id && w.type === item.type));
 
-  const { observeContainer, attachIframe, iframeProps, isPlaying, togglePause } =
+  const { observeContainer, attachIframe, iframeProps, isPlaying, revealClass, togglePause } =
     useBackgroundTrailer({ videoKey: trailerKey, enabled: isActive, loop: false, onEnded });
 
   const watchlistItem = {
@@ -125,7 +125,7 @@ export function ReelItem({ item, trailerKey, isActive, index, onEnded }: ReelIte
               className={cn(
                 'absolute inset-0 w-full h-full border-0 pointer-events-none scale-[1.02]',
                 TRAILER_FADE.base,
-                showVideo ? TRAILER_FADE.in : TRAILER_FADE.out
+                showVideo ? revealClass : TRAILER_FADE.out
               )}
             />
           )}

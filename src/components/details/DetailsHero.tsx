@@ -51,6 +51,7 @@ export function DetailsHero({
     attachIframe,
     iframeProps,
     isPlaying,
+    revealClass,
   } = useBackgroundTrailer({ videoKey: trailerKey, enabled: autoplayAllowed, loop: true });
 
   // Ambient colours follow the trailer while it plays
@@ -124,7 +125,7 @@ export function DetailsHero({
               'absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 border-0 pointer-events-none',
               TRAILER_FADE.base,
               'w-[max(100%,177.78vh)] h-[max(100%,56.25vw)] scale-[1.18]',
-              showTrailer ? TRAILER_FADE.in : TRAILER_FADE.out
+              showTrailer ? revealClass : TRAILER_FADE.out
             )}
           />
         )}

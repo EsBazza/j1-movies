@@ -77,6 +77,7 @@ export function HeroBanner({ item, items = [], palette, onActiveItemChange, page
     attachIframe,
     iframeProps: trailerIframeProps,
     isPlaying: trailerPlaying,
+    revealClass,
     isPaused: userPaused,
     togglePause,
   } = useBackgroundTrailer({
@@ -198,7 +199,7 @@ export function HeroBanner({ item, items = [], palette, onActiveItemChange, page
               TRAILER_FADE.base,
               // Cover the frame at any aspect ratio and crop YouTube's letterboxing
               'w-[max(100%,177.78vh)] h-[max(100%,56.25vw)] scale-[1.18]',
-              showTrailer ? TRAILER_FADE.in : TRAILER_FADE.out
+              showTrailer ? revealClass : TRAILER_FADE.out
             )}
           />
         )}

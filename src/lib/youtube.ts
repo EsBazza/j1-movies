@@ -26,6 +26,9 @@ export const TRAILER_FADE = {
   // Focus pull: starts blurred and faint, sharpens mostly in the last second or so —
   // by then YouTube's start-of-playback controls have faded, so they're never readable
   in: 'opacity-100 blur-[0px] duration-[4500ms] ease-[cubic-bezier(0.65,0,0.85,0.35)]',
+  // Resuming (scrolled back, tab refocused, loop): YouTube only flashes a brief icon,
+  // so a short focus pull is enough
+  resume: 'opacity-100 blur-[0px] duration-[1500ms] ease-[cubic-bezier(0.65,0,0.85,0.35)]',
   // Hide fast (before YouTube's pause controls can show)
   out: 'opacity-0 blur-[28px] duration-300 ease-out',
 };
@@ -164,6 +167,9 @@ export function useBackgroundTrailer({ videoKey, enabled = true, loop = true, on
   const [iframe, setIframe] = useState<HTMLIFrameElement | null>(null);
   const [container, setContainer] = useState<HTMLElement | null>(null);
   const [playingKey, setPlayingKey] = useState<string | null>(null);
+  // Whether the current trailer has already played once (later plays are resumes)
+  const [resumed, setResumed] = useState(false);
+  const startedKeyRef = useRef<string | null>(null);
   const [userPaused, setUserPaused] = useState(false);
   const [inView, setInView] = useState(true);
   const [tabHidden, setTabHidden] = useState(false);
@@ -196,7 +202,10 @@ export function useBackgroundTrailer({ videoKey, enabled = true, loop = true, on
       if (state === YT_PLAYING) {
         // Reveal only after YouTube's start-of-playback overlay has faded
         // Reveal right away: the slow focus-pull (TRAILER_FADE.in) keeps YouTube's
-        // start-of-playback controls blurred until they've faded on their own
+        // start-of-playback controls blurred until they've faded on their own;
+        // later plays of the same trailer use the short TRAILER_FADE.resume
+        setResumed(startedKeyRef.current === videoKey);
+        startedKeyRef.current = videoKey;
         setPlayingKey(videoKey);
       } else if (state === YT_PAUSED || state === YT_ENDED) {
         setPlayingKey(null);
@@ -259,6 +268,8 @@ export function useBackgroundTrailer({ videoKey, enabled = true, loop = true, on
           }
         : null,
     isPlaying: active && playingKey === videoKey && shouldPlay,
+    /** Reveal class for the trailer layer: long focus pull first time, short on resume */
+    revealClass: resumed ? TRAILER_FADE.resume : TRAILER_FADE.in,
     isMuted,
     toggleMute: () => setTrailerMuted(!isMuted),
     isPaused: userPaused,
