@@ -189,11 +189,6 @@ export function DetailsHero({
             </p>
           )}
 
-          {details.overview && (
-            <p className="mt-4 text-sm sm:text-base text-zinc-300 leading-relaxed line-clamp-4 sm:line-clamp-none max-w-xl">
-              {details.overview}
-            </p>
-          )}
 
           {hasProgress && historyItem?.progressPercent ? (
             <div className="mt-5 flex items-center gap-3 max-w-xs" aria-hidden="true">
