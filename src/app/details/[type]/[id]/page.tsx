@@ -19,19 +19,28 @@ import { extractPaletteFromImage, getPaletteForGenre, DEFAULT_PALETTE, Extracted
 import { formatCurrency, formatDateFull, formatRuntime } from '@/lib/utils';
 import { useUserStoreSelector } from '@/lib/store';
 import { AmbientBackground } from '@/components/media/AmbientBackground';
-import { MediaCard } from '@/components/media/MediaCard';
 import { CastList } from '@/components/media/CastList';
 import { DetailsHero } from '@/components/details/DetailsHero';
 import { EpisodesPanel } from '@/components/details/EpisodesPanel';
 import { SkeletonBanner } from '@/components/ui/SkeletonBanner';
 import { Modal } from '@/components/ui/Modal';
-import { Tabs, tabPanelProps, TabItem } from '@/components/ui/Tabs';
+import { SectionHeader } from '@/components/ui/SectionHeader';
+import { MediaCarousel, PAGE_GUTTER } from '@/components/media/MediaCarousel';
+import { useReveal } from '@/lib/useReveal';
 import { Button, LinkButton } from '@/components/ui/Button';
-
-type TabId = 'episodes' | 'more' | 'videos' | 'cast' | 'details';
 
 function pickTrailer(videos: TMDBVideo[]): TMDBVideo | undefined {
   return videos.find((v) => v.type === 'Trailer') || videos.find((v) => v.type === 'Teaser') || videos[0];
+}
+
+function DetailsSection({ id, title, children }: { id: string; title: string; children: React.ReactNode }) {
+  const revealRef = useReveal<HTMLElement>();
+  return (
+    <section ref={revealRef} aria-labelledby={`${id}-heading`} className={`reveal ${PAGE_GUTTER} w-full`}>
+      <SectionHeader id={`${id}-heading`} title={title} className="mb-5 sm:mb-6" />
+      {children}
+    </section>
+  );
 }
 
 export default function MediaDetailsPage() {
@@ -48,7 +57,6 @@ export default function MediaDetailsPage() {
   } | null>(null);
   const [palette, setPalette] = useState<ExtractedPalette>(DEFAULT_PALETTE);
   const [retryKey, setRetryKey] = useState(0);
-  const [tab, setTab] = useState<TabId | null>(null);
   const [modalVideo, setModalVideo] = useState<TMDBVideo | null>(null);
 
   const requestKey = `${type}-${id}-${retryKey}`;
@@ -133,15 +141,6 @@ export default function MediaDetailsPage() {
     );
   }
 
-  const tabs: TabItem<TabId>[] = [
-    ...(type === 'tv' && derived.seasons.length > 0 ? [{ id: 'episodes' as const, label: 'Episodes' }] : []),
-    ...(derived.recommendations.length > 0 ? [{ id: 'more' as const, label: 'More like this' }] : []),
-    ...(derived.videos.length > 0 ? [{ id: 'videos' as const, label: 'Trailers & clips', count: derived.videos.length }] : []),
-    ...((details.credits?.cast?.length ?? 0) > 0 ? [{ id: 'cast' as const, label: 'Cast & crew' }] : []),
-    { id: 'details' as const, label: 'Details' },
-  ];
-  const activeTab = tab && tabs.some((t) => t.id === tab) ? tab : tabs[0].id;
-
   const movie = type === 'movie' ? (details as TMDBMovieDetails) : null;
   const tv = type === 'tv' ? (details as TMDBTVDetails) : null;
   const info: [string, React.ReactNode][] = [
@@ -179,88 +178,82 @@ export default function MediaDetailsPage() {
         onOpenTrailer={derived.trailer ? () => setModalVideo(derived.trailer!) : undefined}
       />
 
-      <div className="max-w-[1800px] mx-auto px-4 sm:px-8 lg:px-12">
-        {/* Sticky, borderless tab bar */}
-        <div className="sticky top-16 lg:top-[72px] z-20 -mx-4 px-4 sm:-mx-8 sm:px-8 lg:-mx-12 lg:px-12 bg-bg/90 backdrop-blur-md">
-          <Tabs items={tabs} value={activeTab} onChange={setTab} label="Title sections" />
-        </div>
+      {/* One scrolling page: spacious, revealed sections (no tabs) */}
+      <div className="flex flex-col gap-16 sm:gap-24 pt-8 sm:pt-12">
+        {tv && derived.seasons.length > 0 && (
+          <DetailsSection id="episodes" title="Episodes">
+            <EpisodesPanel tvId={tv.id} seasons={derived.seasons} fallbackStill={tv.backdrop_path} historyItem={historyItem} />
+          </DetailsSection>
+        )}
 
-        <div className="pt-6 min-h-[40vh]" {...tabPanelProps(activeTab)} key={activeTab}>
-          <div className="animate-fade-in">
-            {activeTab === 'episodes' && tv && (
-              <EpisodesPanel tvId={tv.id} seasons={derived.seasons} fallbackStill={tv.backdrop_path} historyItem={historyItem} />
-            )}
+        {(details.credits?.cast?.length ?? 0) > 0 && (
+          <DetailsSection id="cast" title="Cast & crew">
+            <CastList cast={details.credits?.cast || []} crew={details.credits?.crew || []} />
+          </DetailsSection>
+        )}
 
-            {activeTab === 'more' && (
-              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-x-3 gap-y-6">
-                {derived.recommendations.map((item) => (
-                  <MediaCard key={`${item.type}-${item.id}`} item={item} />
-                ))}
-              </div>
-            )}
-
-            {activeTab === 'videos' && (
-              <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-4 gap-y-6">
-                {derived.videos.slice(0, 16).map((vid) => (
-                  <li key={vid.id}>
-                    <button type="button" onClick={() => setModalVideo(vid)} className="group block w-full text-left">
-                      <span className="relative block aspect-video rounded-card overflow-hidden bg-surface-2">
-                        <Image
-                          src={`https://i.ytimg.com/vi/${vid.key}/hqdefault.jpg`}
-                          alt=""
-                          fill
-                          sizes="(max-width: 640px) 100vw, 25vw"
-                          className="object-cover transition-transform duration-500 ease-out-expo group-hover:scale-[1.04]"
-                        />
-                        <span className="absolute inset-0 flex items-center justify-center bg-black/25 group-hover:bg-black/40 transition-colors">
-                          <span className="w-11 h-11 rounded-full bg-white/90 text-black flex items-center justify-center">
-                            <Play className="w-5 h-5 fill-black ml-0.5" aria-hidden="true" />
-                          </span>
+        {derived.videos.length > 0 && (
+          <DetailsSection id="videos" title="Trailers & clips">
+            <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-5 gap-y-8">
+              {derived.videos.slice(0, 8).map((vid) => (
+                <li key={vid.id}>
+                  <button type="button" onClick={() => setModalVideo(vid)} className="group block w-full text-left">
+                    <span className="relative block aspect-video rounded-card overflow-hidden bg-surface-2">
+                      <Image
+                        src={`https://i.ytimg.com/vi/${vid.key}/hqdefault.jpg`}
+                        alt=""
+                        fill
+                        sizes="(max-width: 640px) 100vw, 25vw"
+                        className="object-cover transition-transform duration-500 ease-out-expo group-hover:scale-[1.04]"
+                      />
+                      <span className="absolute inset-0 flex items-center justify-center bg-black/25 group-hover:bg-black/40 transition-colors">
+                        <span className="w-11 h-11 rounded-full bg-white/90 text-black flex items-center justify-center">
+                          <Play className="w-5 h-5 fill-black ml-0.5" aria-hidden="true" />
                         </span>
                       </span>
-                      <span className="block mt-2 text-sm font-medium text-zinc-200 group-hover:text-white line-clamp-1">{vid.name}</span>
-                      <span className="block text-xs text-subtle">{vid.type}</span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
+                    </span>
+                    <span className="block mt-3 text-sm font-medium text-zinc-200 group-hover:text-white line-clamp-1">{vid.name}</span>
+                    <span className="block text-xs text-subtle mt-0.5">{vid.type}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </DetailsSection>
+        )}
 
-            {activeTab === 'cast' && <CastList cast={details.credits?.cast || []} crew={details.credits?.crew || []} />}
+        {derived.recommendations.length > 0 && <MediaCarousel title="More like this" items={derived.recommendations} />}
 
-            {activeTab === 'details' && (
-              <div className="grid lg:grid-cols-[1fr_320px] gap-10">
-                <div>
-                  {details.tagline && <p className="text-lg text-zinc-200 italic mb-4">&ldquo;{details.tagline}&rdquo;</p>}
-                  <p className="text-sm sm:text-base text-zinc-300 leading-relaxed max-w-3xl">{details.overview}</p>
-                  {details.genres?.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mt-6">
-                      {details.genres.map((g) => (
-                        <Link
-                          key={g.id}
-                          href={`/genre/${g.id}?type=${type}`}
-                          className="h-9 px-4 inline-flex items-center rounded-full bg-white/8 hover:bg-white/14 text-xs font-semibold text-zinc-200 transition-colors"
-                        >
-                          {g.name}
-                        </Link>
-                      ))}
-                    </div>
-                  )}
+        <DetailsSection id="about" title="About">
+          <div className="grid lg:grid-cols-[1fr_320px] gap-10 lg:gap-16">
+            <div>
+              {details.tagline && <p className="text-lg text-zinc-200 italic mb-4">&ldquo;{details.tagline}&rdquo;</p>}
+              <p className="text-sm sm:text-base text-zinc-300 leading-relaxed max-w-3xl">{details.overview}</p>
+              {details.genres?.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-6">
+                  {details.genres.map((g) => (
+                    <Link
+                      key={g.id}
+                      href={`/genre/${g.id}?type=${type}`}
+                      className="h-9 px-4 inline-flex items-center rounded-full bg-white/8 hover:bg-white/14 text-xs font-semibold text-zinc-200 transition-colors"
+                    >
+                      {g.name}
+                    </Link>
+                  ))}
                 </div>
-                <dl className="grid grid-cols-2 lg:grid-cols-1 gap-x-6 gap-y-4 content-start">
-                  {info
-                    .filter(([, v]) => v !== undefined && v !== null && v !== '' && v !== '—')
-                    .map(([label, value]) => (
-                      <div key={label}>
-                        <dt className="text-xs text-subtle">{label}</dt>
-                        <dd className="text-sm text-zinc-100 mt-0.5">{value}</dd>
-                      </div>
-                    ))}
-                </dl>
-              </div>
-            )}
+              )}
+            </div>
+            <dl className="grid grid-cols-2 lg:grid-cols-1 gap-x-6 gap-y-5 content-start">
+              {info
+                .filter(([, v]) => v !== undefined && v !== null && v !== '' && v !== '—')
+                .map(([label, value]) => (
+                  <div key={label}>
+                    <dt className="text-xs text-subtle">{label}</dt>
+                    <dd className="text-sm text-zinc-100 mt-0.5">{value}</dd>
+                  </div>
+                ))}
+            </dl>
           </div>
-        </div>
+        </DetailsSection>
       </div>
 
       <Modal isOpen={Boolean(modalVideo)} onClose={() => setModalVideo(null)} title={modalVideo?.name} className="max-w-5xl">
