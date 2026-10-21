@@ -1,25 +1,26 @@
 'use client';
 
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect, useCallback, Suspense } from 'react';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
-import {
-  Sparkles,
-  ArrowLeft,
-  ArrowUpDown,
-  Film,
-  Tv,
-  Loader2,
-} from 'lucide-react';
 import {
   getMoviesByGenre,
   getTVByGenre,
   getMovieGenres,
   getTVGenres,
+  getBackdropUrl,
   normalizeMediaItem,
   sortMediaList,
 } from '@/lib/tmdb';
 import { NormalizedMedia, MediaType } from '@/types/tmdb';
 import { MediaCard } from '@/components/media/MediaCard';
+import { HeroBanner } from '@/components/media/HeroBanner';
+import { AmbientBackground } from '@/components/media/AmbientBackground';
+import { PAGE_GUTTER } from '@/components/media/MediaCarousel';
+import { SkeletonBanner } from '@/components/ui/SkeletonBanner';
+import { Chip } from '@/components/ui/Chip';
+import { LoadMore } from '@/components/ui/LoadMore';
+import { useReveal } from '@/lib/useReveal';
+import { extractPaletteFromImage, getPaletteForGenre, ExtractedPalette } from '@/lib/colorExtractor';
 import { SkeletonCard } from '@/components/ui/SkeletonCard';
 import { cn } from '@/lib/utils';
 
@@ -54,6 +55,8 @@ const GENRE_MAP: Record<string, string> = {
   '10768': 'War & Politics',
 };
 
+const GRID = 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-4 gap-y-8 sm:gap-x-6 sm:gap-y-10';
+
 function GenreContent() {
   const routeParams = useParams();
   const searchParams = useSearchParams();
@@ -71,6 +74,22 @@ function GenreContent() {
   const [totalPages, setTotalPages] = useState<number>(1);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isLoadingMore, setIsLoadingMore] = useState<boolean>(false);
+  const [palette, setPalette] = useState<ExtractedPalette>(() => getPaletteForGenre(Number(genreId)));
+  const gridRevealRef = useReveal<HTMLDivElement>();
+
+  const handleActiveHeroChange = useCallback(
+    (active: NormalizedMedia) => {
+      const src = active.backdropPath || active.posterPath;
+      if (src) extractPaletteFromImage(getBackdropUrl(src, 'w780'), Number(genreId)).then(setPalette);
+    },
+    [genreId]
+  );
+
+  const appendUnique = (incoming: NormalizedMedia[]) =>
+    setItems((prev) => {
+      const known = new Set(prev.map((m) => `${m.type}-${m.id}`));
+      return [...prev, ...incoming.filter((m) => !known.has(`${m.type}-${m.id}`))];
+    });
 
   // Fetch Genre Name
   useEffect(() => {
@@ -151,11 +170,11 @@ function GenreContent() {
       if (mediaType === 'movie') {
         const res = await getMoviesByGenre(genreId, nextPage, sortBy);
         const newItems = (res.results || []).map((m) => normalizeMediaItem(m, 'movie'));
-        setItems((prev) => [...prev, ...newItems]);
+        appendUnique(newItems);
       } else if (mediaType === 'tv') {
         const res = await getTVByGenre(genreId, nextPage, sortBy);
         const newItems = (res.results || []).map((t) => normalizeMediaItem(t, 'tv'));
-        setItems((prev) => [...prev, ...newItems]);
+        appendUnique(newItems);
       } else {
         const [mRes, tRes] = await Promise.all([
           getMoviesByGenre(genreId, nextPage, sortBy).catch(() => ({ results: [] })),
@@ -163,7 +182,7 @@ function GenreContent() {
         ]);
         const newMovies = (mRes.results || []).map((m) => normalizeMediaItem(m, 'movie'));
         const newTv = (tRes.results || []).map((t) => normalizeMediaItem(t, 'tv'));
-        setItems((prev) => [...prev, ...newMovies, ...newTv]);
+        appendUnique(sortMediaList([...newMovies, ...newTv], sortBy));
       }
       setPage(nextPage);
     } catch (err) {
@@ -183,146 +202,92 @@ function GenreContent() {
     router.replace(`/genre/${genreId}?type=${mediaType}&sort_by=${newSort}`);
   };
 
+  const featured = items.filter((m) => m.backdropPath && m.posterPath).slice(0, 5);
+
   return (
-    <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-20">
-      {/* Back Button */}
-      <div className="mb-4">
-        <button
-          onClick={() => router.back()}
-          className="inline-flex items-center gap-2 text-xs font-semibold text-zinc-400 hover:text-white transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          <span>Back</span>
-        </button>
-      </div>
+    <div className="flex flex-col w-full pb-28 lg:pb-16 min-h-screen">
+      <AmbientBackground palette={palette} />
 
-      {/* Header Banner */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6">
-        <div>
-          <div className="flex items-center gap-2 text-accent text-xs font-bold uppercase tracking-wider mb-1">
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>Genre Explorer</span>
-          </div>
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-white tracking-tight">
-            {genreName}
-          </h1>
-          <p className="text-xs sm:text-sm text-zinc-400 mt-1">
-            Browse all top-rated and trending titles under {genreName}.
-          </p>
-        </div>
+      {isLoading && items.length === 0 ? (
+        <SkeletonBanner />
+      ) : featured.length > 0 ? (
+        <HeroBanner
+          key={`${genreId}-${mediaType}`}
+          pageTitle={genreName}
+          items={featured}
+          palette={palette}
+          onActiveItemChange={handleActiveHeroChange}
+        />
+      ) : (
+        <div className="pt-36" />
+      )}
 
-        {/* Filters and Sorting Controls */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-          {/* Media Type Tabs */}
-          <div className="flex items-center gap-1 bg-zinc-900/90 p-1 rounded-xl">
-            <button
-              onClick={() => handleTypeChange('all')}
-              className={cn(
-                'px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all',
-                mediaType === 'all'
-                  ? 'bg-accent text-on-accent shadow-md'
-                  : 'text-zinc-400 hover:text-white'
-              )}
-            >
-              All
-            </button>
-            <button
-              onClick={() => handleTypeChange('movie')}
-              className={cn(
-                'flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all',
-                mediaType === 'movie'
-                  ? 'bg-accent text-on-accent shadow-md'
-                  : 'text-zinc-400 hover:text-white'
-              )}
-            >
-              <Film className="w-3.5 h-3.5" />
-              <span>Movies</span>
-            </button>
-            <button
-              onClick={() => handleTypeChange('tv')}
-              className={cn(
-                'flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all',
-                mediaType === 'tv'
-                  ? 'bg-accent text-on-accent shadow-md'
-                  : 'text-zinc-400 hover:text-white'
-              )}
-            >
-              <Tv className="w-3.5 h-3.5" />
-              <span>TV Series</span>
-            </button>
-          </div>
+      <section className={cn(PAGE_GUTTER, 'relative z-10 -mt-8 sm:-mt-12 w-full')} aria-labelledby="genre-heading">
+        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-accent">Genre</p>
+        <h2 id="genre-heading" className="mt-1 text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white">
+          {genreName}
+        </h2>
 
-          {/* Sort By Dropdown */}
-          <div className="relative flex items-center">
-            <div className="absolute left-3 pointer-events-none text-zinc-400 flex items-center gap-1 text-xs">
-              <ArrowUpDown className="w-3.5 h-3.5 text-accent" />
-            </div>
-            <select
-              value={sortBy}
-              onChange={(e) => handleSortChange(e.target.value)}
-              aria-label="Sort by"
-              className="appearance-none bg-zinc-900 border border-zinc-700/80 hover:border-zinc-500 text-white text-xs font-semibold rounded-xl pl-9 pr-9 py-2.5 focus:border-red-500 cursor-pointer shadow-lg transition-colors"
-            >
-              <option value="popularity.desc">Most Popular</option>
-              <option value="vote_average.desc">Highest Rated</option>
-              <option value="primary_release_date.desc">Newest Releases</option>
-              <option value="original_title.asc">Title (A - Z)</option>
-            </select>
-          </div>
-        </div>
-      </div>
-
-      {/* Grid Content */}
-      {isLoading ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-4 gap-y-8 sm:gap-x-6 sm:gap-y-10 mt-8">
-          {Array.from({ length: 15 }).map((_, i) => (
-            <SkeletonCard key={i} />
-          ))}
-        </div>
-      ) : items.length > 0 ? (
-        <>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-4 gap-y-8 sm:gap-x-6 sm:gap-y-10 mt-8">
-            {items.map((item, index) => (
-              <MediaCard
-                key={`${item.type}-${item.id}-${index}`}
-                item={item}
-                priority={index < 5}
-              />
+        <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-wrap gap-2" role="group" aria-label="Type">
+            {(
+              [
+                ['all', 'All'],
+                ['movie', 'Movies'],
+                ['tv', 'Series'],
+              ] as [MediaType | 'all', string][]
+            ).map(([id, label]) => (
+              <Chip key={id} selected={mediaType === id} onClick={() => handleTypeChange(id)}>
+                {label}
+              </Chip>
             ))}
           </div>
-
-          {/* Load More Button */}
-          {page < totalPages && (
-            <div className="flex justify-center mt-12">
-              <button
-                onClick={handleLoadMore}
-                disabled={isLoadingMore}
-                className="flex items-center gap-2 px-8 py-3.5 rounded-xl bg-surface-1 hover:bg-zinc-800 text-white font-semibold text-sm transition-all hover:scale-105 shadow-lg"
-              >
-                {isLoadingMore ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin text-accent" />
-                    <span>Loading {genreName} Titles...</span>
-                  </>
-                ) : (
-                  <span>Load More {genreName} Titles</span>
-                )}
-              </button>
-            </div>
-          )}
-        </>
-      ) : (
-        <div className="py-24 text-center text-zinc-400">
-          No titles found for this genre filter.
+          <div className="flex flex-wrap gap-2" role="group" aria-label="Sort">
+            {(
+              [
+                ['popularity.desc', 'Popular'],
+                ['vote_average.desc', 'Top rated'],
+                ['primary_release_date.desc', 'Newest'],
+                ['original_title.asc', 'A–Z'],
+              ] as [string, string][]
+            ).map(([id, label]) => (
+              <Chip key={id} selected={sortBy === id} onClick={() => handleSortChange(id)}>
+                {label}
+              </Chip>
+            ))}
+          </div>
         </div>
-      )}
+
+        <div className="mt-10">
+          {isLoading ? (
+            <div className={GRID} role="status" aria-label="Loading titles">
+              {Array.from({ length: 18 }).map((_, i) => (
+                <SkeletonCard key={i} />
+              ))}
+            </div>
+          ) : items.length > 0 ? (
+            <>
+              <div key={`${mediaType}-${sortBy}`} className={cn('stagger reveal', GRID)} ref={gridRevealRef}>
+                {items.map((item, i) => (
+                  <div key={`${item.type}-${item.id}`} style={{ '--i': i % 12 } as React.CSSProperties}>
+                    <MediaCard item={item} />
+                  </div>
+                ))}
+              </div>
+              {page < totalPages && <LoadMore onLoadMore={handleLoadMore} isLoading={isLoadingMore} />}
+            </>
+          ) : (
+            <p className="py-20 text-center text-sm text-muted">Nothing in this genre for that filter yet.</p>
+          )}
+        </div>
+      </section>
     </div>
   );
 }
 
 export default function GenrePage() {
   return (
-    <Suspense fallback={<div className="min-h-screen pt-28 text-center text-zinc-400">Loading Genre Explorer...</div>}>
+    <Suspense fallback={<div className="min-h-screen" />}>
       <GenreContent />
     </Suspense>
   );
