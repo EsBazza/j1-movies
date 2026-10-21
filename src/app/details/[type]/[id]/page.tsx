@@ -161,15 +161,15 @@ export default function MediaDetailsPage() {
 
       {/* One scrolling page: spacious, revealed sections (no tabs) */}
       <div className="flex flex-col gap-20 sm:gap-28 pt-10 sm:pt-16">
+        <DetailsSection id="about" title="About">
+          <AboutSection details={details} type={type} />
+        </DetailsSection>
+
         {tv && derived.seasons.length > 0 && (
           <DetailsSection id="episodes" title="Episodes">
             <EpisodesPanel tvId={tv.id} seasons={derived.seasons} fallbackStill={tv.backdrop_path} historyItem={historyItem} />
           </DetailsSection>
         )}
-
-        <DetailsSection id="about" title="About">
-          <AboutSection details={details} type={type} />
-        </DetailsSection>
 
         {(details.credits?.cast?.length ?? 0) > 0 && (
           <DetailsSection id="cast" title="Cast & crew">
