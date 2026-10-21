@@ -29,8 +29,8 @@ export const TRAILER_FADE = {
   // Resuming (scrolled back, tab refocused, loop): YouTube only flashes a brief icon,
   // so a short focus pull is enough
   resume: 'opacity-100 blur-[0px] duration-[1500ms] ease-[cubic-bezier(0.65,0,0.85,0.35)]',
-  // Hide fast (before YouTube's pause controls can show)
-  out: 'opacity-0 blur-[28px] duration-300 ease-out',
+  // Hide fast; on a user pause this runs before the player is told to pause
+  out: 'opacity-0 blur-[28px] duration-150 ease-out',
 };
 
 /** Sends a YouTube IFrame API command (mute, unMute, setVolume, playVideo, pauseVideo…). */
@@ -181,7 +181,15 @@ export function useBackgroundTrailer({ videoKey, enabled = true, loop = true, on
   });
 
   const active = enabled && Boolean(videoKey);
-  const shouldPlay = !userPaused && inView && !tabHidden;
+  // Off-screen / background tab: keep playing but silent. Pausing would make YouTube
+  // draw its play/pause overlay again on resume; a muted, still-playing trailer never does.
+  const audible = inView && !tabHidden;
+  // Pause only on an explicit user pause — after the trailer has faded out
+  const PAUSE_AFTER_FADE_MS = 180;
+  const audibleRef = useRef(audible);
+  useEffect(() => {
+    audibleRef.current = audible;
+  });
 
   useEffect(() => {
     if (!active) return;
@@ -237,18 +245,23 @@ export function useBackgroundTrailer({ videoKey, enabled = true, loop = true, on
   }, []);
 
   useEffect(() => {
-    ytCommand(iframe, shouldPlay ? 'playVideo' : 'pauseVideo');
-  }, [shouldPlay, iframe]);
+    if (!userPaused) {
+      ytCommand(iframe, 'playVideo');
+      return;
+    }
+    const t = setTimeout(() => ytCommand(iframe, 'pauseVideo'), PAUSE_AFTER_FADE_MS);
+    return () => clearTimeout(t);
+  }, [userPaused, iframe]);
 
   useEffect(() => {
-    ytSetVolume(iframe, isMuted ? 0 : level);
-  }, [isMuted, level, iframe]);
+    ytSetVolume(iframe, isMuted || !audible ? 0 : level);
+  }, [isMuted, level, audible, iframe]);
 
   const onLoad = useCallback(() => {
     // Subscribe to player events, then re-apply the current mute/pause state
     iframe?.contentWindow?.postMessage(JSON.stringify({ event: 'listening', id: videoKey, channel: 'widget' }), YT_ORIGIN);
     ytCommand(iframe, 'addEventListener', ['onStateChange']);
-    if (!readMuted()) ytSetVolume(iframe, readVolume());
+    if (!readMuted() && audibleRef.current) ytSetVolume(iframe, readVolume());
   }, [videoKey, iframe]);
 
   return {
@@ -267,7 +280,8 @@ export function useBackgroundTrailer({ videoKey, enabled = true, loop = true, on
             'aria-hidden': true as const,
           }
         : null,
-    isPlaying: active && playingKey === videoKey && shouldPlay,
+    // Hides immediately on a user pause (before the PAUSED event arrives)
+    isPlaying: active && playingKey === videoKey && !userPaused,
     /** Reveal class for the trailer layer: long focus pull first time, short on resume */
     revealClass: resumed ? TRAILER_FADE.resume : TRAILER_FADE.in,
     isMuted,
