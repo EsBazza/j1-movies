@@ -132,6 +132,16 @@ const storeApi = {
     }
   },
 
+  /** Moves a watchlist entry to a new position (drag-and-drop / move buttons). */
+  moveWatchlistItem: (from: number, to: number) => {
+    const list = [...memoryState.watchlist];
+    if (from < 0 || from >= list.length || to < 0 || to >= list.length || from === to) return;
+    const [moved] = list.splice(from, 1);
+    list.splice(to, 0, moved);
+    memoryState = { ...memoryState, watchlist: list };
+    emitChange();
+  },
+
   removeFromWatchlist: (id: number, type: MediaType) => {
     memoryState = {
       ...memoryState,
@@ -350,6 +360,7 @@ export function useUserStore() {
     setAdShieldEnabled: storeApi.setAdShieldEnabled,
     addToWatchlist: storeApi.addToWatchlist,
     removeFromWatchlist: storeApi.removeFromWatchlist,
+    moveWatchlistItem: storeApi.moveWatchlistItem,
     startWatching: storeApi.startWatching,
     updateProgress: storeApi.updateProgress,
     markFinished: storeApi.markFinished,
