@@ -25,12 +25,13 @@ export const TRAILER_FADE = {
   base: 'transition-[opacity,filter] will-change-[opacity,filter]',
   // Focus pull: starts blurred and faint, sharpens mostly in the last second or so —
   // by then YouTube's start-of-playback controls have faded, so they're never readable
-  in: 'opacity-100 blur-[0px] duration-[4500ms] ease-[cubic-bezier(0.65,0,0.85,0.35)]',
+  // Held fully hidden for 2.5s (YouTube's controls are at full strength then), then a 3s pull
+  in: 'opacity-100 blur-[0px] duration-[3000ms] delay-[2500ms] ease-[cubic-bezier(0.65,0,0.85,0.35)]',
   // Resuming (scrolled back, tab refocused, loop): YouTube only flashes a brief icon,
   // so a short focus pull is enough
-  resume: 'opacity-100 blur-[0px] duration-[1500ms] ease-[cubic-bezier(0.65,0,0.85,0.35)]',
+  resume: 'opacity-100 blur-[0px] duration-[1500ms] delay-[600ms] ease-[cubic-bezier(0.65,0,0.85,0.35)]',
   // Hide fast; on a user pause this runs before the player is told to pause
-  out: 'opacity-0 blur-[28px] duration-150 ease-out',
+  out: 'opacity-0 blur-[28px] duration-150 delay-0 ease-out',
 };
 
 /** Sends a YouTube IFrame API command (mute, unMute, setVolume, playVideo, pauseVideo…). */

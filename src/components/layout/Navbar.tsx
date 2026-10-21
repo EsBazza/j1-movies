@@ -9,6 +9,7 @@ import { SearchBar } from '@/components/common/SearchBar';
 import { openSurpriseMe } from '@/components/common/SurpriseMe';
 import { useUserStoreSelector } from '@/lib/store';
 import { cn } from '@/lib/utils';
+import { GLASS } from '@/lib/styles';
 
 const LINKS = [
   { label: 'Home', href: '/' },
@@ -20,9 +21,6 @@ const LINKS = [
   { label: 'My List', href: '/watchlist' },
 ];
 
-// Frosted glass tinted with the live palette (follows the trailer/poster colours)
-const GLASS =
-  'bg-[color-mix(in_srgb,var(--dyn-glow-1)_20%,rgb(10_10_11/0.55))] backdrop-blur-xl backdrop-saturate-150 shadow-[inset_0_1px_0_rgb(255_255_255/0.08),0_10px_30px_rgb(0_0_0/0.35)]';
 
 const HIDE_AFTER_PX = 160;
 const SCROLL_SLOP_PX = 6;

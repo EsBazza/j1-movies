@@ -23,8 +23,10 @@ import { STREAMING_SERVERS, getServer, getPlayerUrlForServer } from '@/lib/playe
 import { useUserStoreSelector, userStoreActions } from '@/lib/store';
 import { usePlayerProgress } from '@/lib/usePlayerProgress';
 import { Modal } from '@/components/ui/Modal';
+import { Chip } from '@/components/ui/Chip';
 import { toast } from '@/components/ui/Toast';
 import { cn } from '@/lib/utils';
+import { GLASS } from '@/lib/styles';
 
 const CONTROLS_HIDE_MS = 3500;
 const SLOW_LOAD_MS = 12000;
@@ -35,8 +37,10 @@ function parsePositiveInt(value: string | null, fallback = 1): number {
   return Number.isFinite(n) && n > 0 ? n : fallback;
 }
 
-const pillClass =
-  'flex items-center gap-2 px-3.5 py-2 rounded-full bg-black/60 hover:bg-black/80 text-white backdrop-blur-xl text-xs font-semibold shadow-2xl transition-colors';
+const pillClass = cn(
+  'flex items-center gap-2 h-11 px-4 rounded-full text-white text-sm font-semibold transition-[filter,background-color] duration-300 hover:brightness-125',
+  GLASS
+);
 
 function WatchContent() {
   const router = useRouter();
@@ -367,23 +371,31 @@ function WatchContent() {
 
       {/* Loading overlay */}
       {isPlayerLoading && (
-        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-bg/90 backdrop-blur-md gap-4 px-4 text-center">
-          <div className="w-12 h-12 rounded-full border-t-accent animate-spin" aria-hidden="true" />
-          <div role="status">
-            <p className="text-sm font-bold text-white">
-              {isSlow ? `${server.name} is taking longer than usual` : `Connecting to ${server.name}…`}
-            </p>
-            <p className="text-xs text-zinc-400 mt-1">
-              {title}
-              {type === 'tv' ? ` · S${season} E${episode}` : ''}
+        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-5 px-4 text-center bg-bg animate-fade-in">
+          {details.backdrop_path && (
+            <Image
+              src={getImageUrl(details.backdrop_path, 'w780')}
+              alt=""
+              fill
+              sizes="100vw"
+              className="object-cover opacity-25 scale-110 blur-2xl"
+              aria-hidden="true"
+            />
+          )}
+          <div className="relative w-14 h-14 rounded-full border-4 border-white/15 border-t-accent animate-spin" aria-hidden="true" />
+          <div role="status" className="relative">
+            <p className="font-display text-xl sm:text-2xl font-bold text-white">{title}</p>
+            <p className="text-sm text-muted mt-1">
+              {type === 'tv' ? `Season ${season} · Episode ${episode} · ` : ''}
+              {isSlow ? 'Taking longer than usual' : 'Loading player…'}
             </p>
           </div>
           <button
             type="button"
             onClick={() => (hasAlternatives ? handleServerChange(fallbackServer.id) : setReloadKey((k) => k + 1))}
             className={cn(
-              'px-4 py-2 rounded-full text-white text-xs font-semibold transition-colors flex items-center gap-1.5',
-              isSlow ? 'bg-accent hover:bg-accent-hover' : 'bg-white/10 hover:bg-white/15'
+              'relative h-10 px-5 rounded-full text-sm font-semibold transition-colors flex items-center gap-2',
+              isSlow ? 'bg-accent hover:bg-accent-hover text-on-accent' : 'bg-white/10 hover:bg-white/15 text-white'
             )}
           >
             <RefreshCw className="w-3.5 h-3.5" aria-hidden="true" />
@@ -408,7 +420,7 @@ function WatchContent() {
         ref={headerRef}
         onFocusCapture={revealControls}
         className={cn(
-          'absolute top-0 inset-x-0 z-30 p-3 sm:p-6 flex items-start sm:items-center justify-between gap-3 transition-opacity duration-300 bg-gradient-to-b from-black/85 via-black/40 to-transparent',
+          'absolute top-0 inset-x-0 z-30 px-4 py-4 sm:px-8 sm:py-6 flex items-start sm:items-center justify-between gap-3 transition-opacity duration-300 bg-gradient-to-b from-black/70 via-black/25 to-transparent',
           controlsVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'
         )}
       >
@@ -417,13 +429,11 @@ function WatchContent() {
             <ArrowLeft className="w-4 h-4 text-accent" aria-hidden="true" />
             <span className="hidden sm:inline">Details</span>
           </Link>
-          <div className="flex items-center gap-2 px-3 sm:px-4 py-2 rounded-full bg-black/50 backdrop-blur-xl min-w-0">
-            <span className="text-xs sm:text-sm font-semibold text-white truncate max-w-[120px] sm:max-w-[320px]">
-              {title}
-            </span>
+          <div className={cn('flex items-center gap-2 h-11 px-4 rounded-full min-w-0', GLASS)}>
+            <span className="text-sm font-semibold text-white truncate max-w-[120px] sm:max-w-[360px]">{title}</span>
             {type === 'tv' && (
-              <span className="px-2 py-0.5 rounded text-white text-[11px] font-bold bg-accent tracking-wider flex-shrink-0">
-                S{season} E{episode}
+              <span className="px-2 py-0.5 rounded-md text-on-accent text-[11px] font-bold bg-accent tracking-wide flex-shrink-0">
+                S{season} · E{episode}
               </span>
             )}
           </div>
@@ -498,25 +508,38 @@ function WatchContent() {
         <div
           role="alertdialog"
           aria-label="Next episode"
-          className="absolute bottom-6 right-4 sm:right-6 z-30 w-[calc(100%-2rem)] max-w-xs p-4 rounded-card bg-surface-1/95 backdrop-blur-xl shadow-2xl animate-slide-up"
+          className={cn(
+            'absolute bottom-6 right-4 sm:right-8 z-30 w-[calc(100%-2rem)] max-w-sm p-5 rounded-panel overflow-hidden animate-slide-up',
+            GLASS
+          )}
         >
-          <p className="text-xs text-zinc-400">Up next in {nextUpCountdown}s</p>
-          <p className="text-sm font-bold text-white mt-0.5">
-            Season {nextEpisode.season}, Episode {nextEpisode.episode}
+          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted">Up next</p>
+          <p className="font-display text-lg font-bold text-white mt-1">
+            Season {nextEpisode.season} · Episode {nextEpisode.episode}
           </p>
-          <div className="flex gap-2 mt-3">
+          <span className="absolute bottom-0 inset-x-0 h-1 bg-white/10" aria-hidden="true">
+            <span
+              key={`${nextEpisode.season}-${nextEpisode.episode}`}
+              className="block h-full w-full bg-accent hero-progress"
+              style={{ '--hero-duration': `${AUTO_NEXT_SECONDS}s` } as React.CSSProperties}
+            />
+          </span>
+          <p className="sr-only" aria-live="polite">
+            Playing in {nextUpCountdown} seconds
+          </p>
+          <div className="flex gap-2 mt-4">
             <button
               type="button"
               onClick={() => goToEpisode(nextEpisode.season, nextEpisode.episode)}
-              className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-full bg-white text-black text-xs font-bold hover:bg-zinc-200 transition-colors"
+              className="flex-1 flex items-center justify-center gap-2 h-10 rounded-full bg-accent text-on-accent text-sm font-semibold hover:bg-accent-hover transition-colors"
             >
-              <Play className="w-3.5 h-3.5 fill-black" aria-hidden="true" />
-              Play now
+              <Play className="w-4 h-4 fill-current" aria-hidden="true" />
+              Play now ({nextUpCountdown})
             </button>
             <button
               type="button"
               onClick={() => setNextUpCountdown(null)}
-              className="px-3 py-2 rounded-full bg-white/10 text-white text-xs font-semibold hover:bg-white/15 transition-colors"
+              className="h-10 px-4 rounded-full bg-white/10 text-white text-sm font-semibold hover:bg-white/15 transition-colors"
             >
               Cancel
             </button>
@@ -579,30 +602,19 @@ function WatchContent() {
           variant="drawer"
         >
           {seasons.length > 1 && (
-            <div className="flex gap-2 overflow-x-auto pb-3 no-scrollbar flex-shrink-0" role="group" aria-label="Season">
+            <div className="flex gap-2 overflow-x-auto pb-4 no-scrollbar flex-shrink-0" role="group" aria-label="Season">
               {seasons.map((s) => (
-                <button
-                  key={s.id}
-                  type="button"
-                  onClick={() => setSelectedSeasonNum(s.season_number)}
-                  aria-pressed={selectedSeasonNum === s.season_number}
-                  className={cn(
-                    'px-3.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors',
-                    selectedSeasonNum === s.season_number
-                      ? 'bg-accent text-white'
-                      : 'bg-white/5 text-zinc-300 hover:text-white hover:bg-white/10'
-                  )}
-                >
+                <Chip key={s.id} selected={selectedSeasonNum === s.season_number} onClick={() => setSelectedSeasonNum(s.season_number)}>
                   Season {s.season_number}
-                </button>
+                </Chip>
               ))}
             </div>
           )}
 
-          <div className="flex-1 overflow-y-auto pr-1 space-y-2.5">
+          <div className="flex-1 overflow-y-auto pr-1 space-y-2">
             {isSeasonLoading ? (
               Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="h-[68px] rounded-xl bg-white/[0.04] animate-pulse" />
+                <div key={i} className="h-[84px] rounded-panel bg-white/[0.04] animate-pulse" />
               ))
             ) : seasonData?.episodes?.length ? (
               seasonData.episodes.map((ep: TMDBEpisode) => {
@@ -615,19 +627,18 @@ function WatchContent() {
                     onClick={() => goToEpisode(selectedSeasonNum, ep.episode_number)}
                     aria-current={isCurrent ? 'true' : undefined}
                     className={cn(
-                      'w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition-colors group',
-                      isCurrent
-                        ? 'bg-accent/15 border-accent/50'
-                        : 'bg-white/[0.03] hover:bg-white/[0.08]'
+                      'relative w-full flex items-center gap-4 p-2.5 pl-3 rounded-panel text-left transition-colors group',
+                      isCurrent ? 'bg-accent/15' : 'hover:bg-white/[0.06]'
                     )}
                   >
-                    <div className="relative w-24 aspect-video rounded-lg overflow-hidden bg-black/40 flex-shrink-0">
+                    {isCurrent && <span className="absolute left-0 top-3 bottom-3 w-1 rounded-full bg-accent" aria-hidden="true" />}
+                    <div className="relative w-32 aspect-video rounded-md overflow-hidden bg-black/40 flex-shrink-0">
                       {ep.still_path ? (
                         <Image
                           src={getImageUrl(ep.still_path, 'w300')}
                           alt=""
                           fill
-                          sizes="96px"
+                          sizes="128px"
                           className="object-cover"
                         />
                       ) : (
@@ -645,10 +656,10 @@ function WatchContent() {
                       <span className="block text-sm font-bold text-white truncate">
                         {ep.episode_number}. {ep.name}
                       </span>
-                      <span className="block text-xs text-zinc-400 mt-0.5">
+                      <span className={cn('block text-xs mt-0.5', isCurrent ? 'text-accent font-semibold' : 'text-subtle')}>
                         {isCurrent ? 'Now playing' : ep.runtime ? `${ep.runtime}m` : ''}
                       </span>
-                      <span className="block text-xs text-zinc-400 line-clamp-1 mt-0.5">
+                      <span className="block text-xs text-muted line-clamp-2 mt-1">
                         {ep.overview || 'No description available.'}
                       </span>
                     </div>
