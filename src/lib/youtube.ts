@@ -14,17 +14,10 @@ export function getBackgroundTrailerUrl(key: string): string {
 }
 
 /**
- * YouTube shows its own play/pause cluster for a few seconds whenever playback starts.
- * Background trailers hide it with a slow focus-pull (TRAILER_FADE.in); the small hover
- * preview simply waits this long before revealing.
+ * Trailer layer fade (the backdrop underneath stays opaque). YouTube shows its own
+ * play/pause controls for a few seconds whenever playback starts; the slow focus pull
+ * keeps them blurred out until they've faded on their own.
  */
-export const TRAILER_REVEAL_DELAY_MS = 4500;
-
-/** Trailer layer fade: gentle reveal, fast hide (the backdrop underneath stays opaque). */
-// One consistent reveal for first plays and resumes: a 4.5s focus pull (blurred and
-// faint first, sharpening mostly at the end) so YouTube's start controls stay hidden
-const TRAILER_REVEAL = 'opacity-100 blur-[0px] duration-[4500ms] delay-0 ease-[cubic-bezier(0.65,0,0.85,0.35)]';
-
 export const TRAILER_FADE = {
   base: 'transition-[opacity,filter] will-change-[opacity,filter]',
   // First play: 4.5s focus pull (blurred and faint first, sharpening mostly at the end),

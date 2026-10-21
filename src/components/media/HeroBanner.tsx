@@ -77,7 +77,6 @@ export function HeroBanner({ item, items = [], palette, onActiveItemChange, page
     attachIframe,
     iframeProps: trailerIframeProps,
     isPlaying: trailerPlaying,
-    revealClass,
     isPaused: userPaused,
     togglePause,
   } = useBackgroundTrailer({
@@ -115,31 +114,37 @@ export function HeroBanner({ item, items = [], palette, onActiveItemChange, page
     }
   }, [current, onActiveItemChange]);
 
-  // Logo, trailer and genre names for the active slide (cached per id)
+  // Logo, trailer and genre names, cached per id. The next slide is fetched ahead of
+  // time so its trailer can start the moment the slide rotates in.
   useEffect(() => {
-    if (!current || mediaById[current.id]) return;
+    if (slides.length === 0) return;
+    const wanted = [slides[index], slides[(index + 1) % slides.length]].filter(
+      (s, i, arr): s is NormalizedMedia => Boolean(s) && arr.indexOf(s) === i && !mediaById[s!.id]
+    );
+    if (wanted.length === 0) return;
     let ignore = false;
-    const { id, type } = current;
-    (type === 'movie' ? getMovieDetails(id) : getTVDetails(id))
-      .then((d) => {
-        if (ignore) return;
-        setMediaById((prev) => ({
-          ...prev,
-          [id]: {
-            id,
-            logoPath: pickLogo(d.images?.logos)?.file_path || null,
-            trailerKey: pickTrailerKey(d.videos?.results),
-            genres: (d.genres || []).slice(0, 3).map((g) => g.name),
-          },
-        }));
-      })
-      .catch(() => {
-        if (!ignore) setMediaById((prev) => ({ ...prev, [id]: { id, logoPath: null, trailerKey: null, genres: [] } }));
-      });
+    wanted.forEach(({ id, type }) => {
+      (type === 'movie' ? getMovieDetails(id) : getTVDetails(id))
+        .then((d) => {
+          if (ignore) return;
+          setMediaById((prev) => ({
+            ...prev,
+            [id]: {
+              id,
+              logoPath: pickLogo(d.images?.logos)?.file_path || null,
+              trailerKey: pickTrailerKey(d.videos?.results),
+              genres: (d.genres || []).slice(0, 3).map((g) => g.name),
+            },
+          }));
+        })
+        .catch(() => {
+          if (!ignore) setMediaById((prev) => ({ ...prev, [id]: { id, logoPath: null, trailerKey: null, genres: [] } }));
+        });
+    });
     return () => {
       ignore = true;
     };
-  }, [current, mediaById]);
+  }, [slides, index, mediaById]);
 
   const historyItem = useUserStoreSelector((s) =>
     current ? s.history.find((h) => h.id === current.id && h.type === current.type) : undefined
@@ -199,7 +204,8 @@ export function HeroBanner({ item, items = [], palette, onActiveItemChange, page
               TRAILER_FADE.base,
               // Cover the frame at any aspect ratio and crop YouTube's letterboxing
               'w-[max(100%,177.78vh)] h-[max(100%,56.25vw)] scale-[1.18]',
-              showTrailer ? revealClass : TRAILER_FADE.out
+              // Every hero reveal uses the full 4.5s focus pull
+              showTrailer ? TRAILER_FADE.in : TRAILER_FADE.out
             )}
           />
         )}

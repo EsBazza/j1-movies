@@ -46,6 +46,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`dark ${inter.variable} ${montserrat.variable}`}>
+      <head>
+        {/* Background trailers: open YouTube connections before the first player mounts */}
+        <link rel="preconnect" href="https://www.youtube-nocookie.com" />
+        <link rel="preconnect" href="https://www.youtube.com" />
+        <link rel="preconnect" href="https://i.ytimg.com" />
+        <link rel="dns-prefetch" href="https://www.google.com" />
+      </head>
       <body className="bg-bg font-sans text-zinc-100 min-h-screen flex flex-col antialiased selection:bg-accent selection:text-white">
         <a
           href="#main"
