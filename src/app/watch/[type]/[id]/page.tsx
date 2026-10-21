@@ -287,6 +287,7 @@ function WatchContent() {
 
   const currentIndex = STREAMING_SERVERS.findIndex((s) => s.id === server.id);
   const fallbackServer = STREAMING_SERVERS[(currentIndex + 1) % STREAMING_SERVERS.length];
+  const hasAlternatives = STREAMING_SERVERS.length > 1;
 
   const handleServerChange = (serverId: string) => {
     setIsServerSheetOpen(false);
@@ -379,14 +380,14 @@ function WatchContent() {
           </div>
           <button
             type="button"
-            onClick={() => handleServerChange(fallbackServer.id)}
+            onClick={() => (hasAlternatives ? handleServerChange(fallbackServer.id) : setReloadKey((k) => k + 1))}
             className={cn(
               'px-4 py-2 rounded-full text-white text-xs font-semibold transition-colors flex items-center gap-1.5',
               isSlow ? 'bg-accent hover:bg-accent-hover' : 'bg-white/10 hover:bg-white/15'
             )}
           >
             <RefreshCw className="w-3.5 h-3.5" aria-hidden="true" />
-            Try {fallbackServer.name}
+            {hasAlternatives ? `Try ${fallbackServer.name}` : 'Reload player'}
           </button>
         </div>
       )}
@@ -465,15 +466,17 @@ function WatchContent() {
               <span className="hidden md:inline">Episodes</span>
             </button>
           )}
-          <button
-            type="button"
-            onClick={() => setIsServerSheetOpen(true)}
-            className={pillClass}
-            aria-label={`Change server (current: ${server.name})`}
-          >
-            <Server className="w-4 h-4 text-accent" aria-hidden="true" />
-            <span className="hidden md:inline">{server.name}</span>
-          </button>
+          {hasAlternatives && (
+            <button
+              type="button"
+              onClick={() => setIsServerSheetOpen(true)}
+              className={pillClass}
+              aria-label={`Change server (current: ${server.name})`}
+            >
+              <Server className="w-4 h-4 text-accent" aria-hidden="true" />
+              <span className="hidden md:inline">{server.name}</span>
+            </button>
+          )}
           <button
             type="button"
             onClick={toggleFullscreen}

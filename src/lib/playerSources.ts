@@ -1,5 +1,6 @@
-// VidLink and VixSrc were removed: in testing only these two played reliably.
-export type StreamingSourceId = 'moviesapi' | 'vidfast';
+// VidFast only: it was the most reliable/responsive in testing. Add sources here to
+// bring back the server picker (the watch page shows it when there's more than one).
+export type StreamingSourceId = 'vidfast';
 
 export interface PlayerUrlOptions {
   /** Resume position in seconds */
@@ -36,19 +37,9 @@ function startAt(opts?: PlayerUrlOptions): number | undefined {
 
 export const STREAMING_SERVERS: StreamingSource[] = [
   {
-    id: 'moviesapi',
-    name: 'MoviesAPI',
-    badge: 'Recommended',
-    origin: 'https://moviesapi.to',
-    emitsProgress: true,
-    getMovieUrl: (id, opts) => `https://moviesapi.to/movie/${id}` + query({ theme: BRAND, startAt: startAt(opts) }),
-    getTvUrl: (id, s, e, opts) =>
-      `https://moviesapi.to/tv/${id}/${s}/${e}` + query({ theme: BRAND, startAt: startAt(opts) }),
-  },
-  {
     id: 'vidfast',
     name: 'VidFast',
-    badge: 'Alternative',
+    badge: 'Default',
     origin: 'https://vidfast.vc',
     // Undocumented; if it posts PLAYER_EVENT messages they're picked up, otherwise ignored
     emitsProgress: true,
@@ -60,7 +51,7 @@ export const STREAMING_SERVERS: StreamingSource[] = [
   },
 ];
 
-export const DEFAULT_SERVER_ID: StreamingSourceId = 'moviesapi';
+export const DEFAULT_SERVER_ID: StreamingSourceId = 'vidfast';
 
 export function isStreamingSourceId(id: unknown): id is StreamingSourceId {
   return typeof id === 'string' && STREAMING_SERVERS.some((s) => s.id === id);

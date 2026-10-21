@@ -7,7 +7,7 @@
 ## ✨ Features
 
 - 🎬 **Extensive Cinema Catalog:** Browse trending, popular, and top-rated movies & TV series powered by the TMDB API.
-- ⚡ **Multi-Server Playback:** MoviesAPI and VidFast embeds with a server picker, resume from where you left off, next-episode and auto-next.
+- ⚡ **Multi-Server Playback:** VidFast embed with resume from where you left off, next-episode and auto-next.
 - 🎭 **Actor & Director Filmography:** Explore biographies and complete career filmographies with instant watch links.
 - 🎛️ **Advanced Discovery Filter Suite:** Filter by release year, minimum TMDB rating, language/region, and genres.
 - 🔎 **Instant Search:** Keyboard-navigable suggestions (press `/`), recent searches and trending titles.
@@ -23,7 +23,7 @@
 - **UI & Styling:** [Tailwind CSS](https://tailwindcss.com/), Lucide Icons
 - **State Management:** Zero-dependency React `useSyncExternalStore`
 - **Metadata Provider:** [The Movie Database (TMDB) API](https://www.themoviedb.org/)
-- **Video Embed Providers:** MoviesAPI (default), VidFast — configured in `src/lib/playerSources.ts`
+- **Video Embed Providers:** VidFast — configured in `src/lib/playerSources.ts`
 
 ---
 
