@@ -256,7 +256,7 @@ export function SearchBar({ autoFocus = false, onDone, className }: SearchBarPro
       </form>
 
       {showDropdown && (
-        <div className="absolute top-full left-0 right-0 mt-2 bg-zinc-950/95 backdrop-blur-xl border border-zinc-800 rounded-xl shadow-2xl overflow-hidden z-[var(--z-overlay)]">
+        <div className="absolute top-full left-0 right-0 mt-2 bg-zinc-950/95 backdrop-blur-xl rounded-xl shadow-2xl overflow-hidden z-[var(--z-overlay)]">
           {!trimmed && recent.length > 0 && (
             <div className="px-3 pt-3 pb-1">
               <p className="px-1 text-[11px] font-bold uppercase tracking-wider text-zinc-400 mb-1.5">Recent</p>
@@ -298,20 +298,20 @@ export function SearchBar({ autoFocus = false, onDone, className }: SearchBarPro
                   onClick={() => navigate(item.href)}
                   onMouseEnter={() => setActiveIndex(idx)}
                   className={cn(
-                    'flex items-center gap-3 px-4 py-2 cursor-pointer transition-colors',
+                    'flex items-center gap-3 px-4 py-2 transition-colors',
                     idx === activeIndex ? 'bg-white/10' : 'hover:bg-white/5'
                   )}
                 >
                   <div
                     className={cn(
-                      'relative w-10 h-14 overflow-hidden flex-shrink-0 bg-zinc-800 flex items-center justify-center',
+                      'relative w-10 h-14 overflow-hidden flex-shrink-0 bg-surface-3 flex items-center justify-center',
                       item.kind === 'person' ? 'rounded-full w-10 h-10' : 'rounded'
                     )}
                   >
                     {item.image ? (
                       <Image src={item.image} alt="" fill sizes="40px" className="object-cover" />
                     ) : (
-                      <User className="w-4 h-4 text-zinc-500" aria-hidden="true" />
+                      <User className="w-4 h-4 text-subtle" aria-hidden="true" />
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -319,7 +319,7 @@ export function SearchBar({ autoFocus = false, onDone, className }: SearchBarPro
                     <span className="flex items-center gap-2 text-xs text-zinc-400 mt-0.5">
                       <span className="flex items-center gap-1">
                         {item.kind === 'movie' ? (
-                          <Film className="w-3 h-3 text-red-500" aria-hidden="true" />
+                          <Film className="w-3 h-3 text-accent" aria-hidden="true" />
                         ) : item.kind === 'tv' ? (
                           <Tv className="w-3 h-3 text-cyan-400" aria-hidden="true" />
                         ) : (
@@ -345,11 +345,11 @@ export function SearchBar({ autoFocus = false, onDone, className }: SearchBarPro
           ) : null}
 
           {trimmed && results.length > 0 && (
-            <div className="p-2 bg-zinc-900/40 text-center border-t border-zinc-800/60">
+            <div className="p-2 bg-zinc-900/40 text-center">
               <button
                 type="button"
                 onClick={() => submitSearch(query)}
-                className="text-xs font-semibold text-red-400 hover:text-red-300 hover:underline"
+                className="text-xs font-semibold text-accent hover:text-white hover:underline"
               >
                 View all results for &quot;{trimmed}&quot; →
               </button>

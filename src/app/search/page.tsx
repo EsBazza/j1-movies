@@ -118,9 +118,9 @@ function SearchContent() {
     <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-16">
       {/* Search Input Bar */}
       <div className="max-w-2xl mx-auto mb-10 text-center">
-        <h1 className="text-3xl font-extrabold text-white mb-3">Search Media</h1>
+        <h1 className="text-3xl font-extrabold text-white mb-3">Search</h1>
         <p className="text-sm text-zinc-400 mb-6">
-          Find any movie or TV series across millions of titles.
+          Movies, series and people.
         </p>
 
         <div className="relative flex items-center">
@@ -146,10 +146,10 @@ function SearchContent() {
             onClick={() => setFilterType('all')}
             aria-pressed={filterType === 'all'}
             className={cn(
-              'px-4 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer',
+              'px-4 py-1.5 rounded-full text-xs font-semibold transition-all',
               filterType === 'all'
-                ? 'bg-red-600 text-white shadow-lg shadow-red-600/30'
-                : 'bg-zinc-900 text-zinc-400 hover:text-white border border-zinc-800'
+                ? 'bg-accent text-on-accent shadow-lg'
+                : 'bg-surface-1 text-zinc-400 hover:text-white'
             )}
           >
             All ({results.length})
@@ -158,10 +158,10 @@ function SearchContent() {
             onClick={() => setFilterType('movie')}
             aria-pressed={filterType === 'movie'}
             className={cn(
-              'flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer',
+              'flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-semibold transition-all',
               filterType === 'movie'
-                ? 'bg-red-600 text-white shadow-lg shadow-red-600/30'
-                : 'bg-zinc-900 text-zinc-400 hover:text-white border border-zinc-800'
+                ? 'bg-accent text-on-accent shadow-lg'
+                : 'bg-surface-1 text-zinc-400 hover:text-white'
             )}
           >
             <Film className="w-3.5 h-3.5" />
@@ -171,10 +171,10 @@ function SearchContent() {
             onClick={() => setFilterType('tv')}
             aria-pressed={filterType === 'tv'}
             className={cn(
-              'flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer',
+              'flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-semibold transition-all',
               filterType === 'tv'
-                ? 'bg-red-600 text-white shadow-lg shadow-red-600/30'
-                : 'bg-zinc-900 text-zinc-400 hover:text-white border border-zinc-800'
+                ? 'bg-accent text-on-accent shadow-lg'
+                : 'bg-surface-1 text-zinc-400 hover:text-white'
             )}
           >
             <Tv className="w-3.5 h-3.5" />
@@ -203,11 +203,11 @@ function SearchContent() {
               <button
                 onClick={handleLoadMore}
                 disabled={isLoadingMore}
-                className="flex items-center gap-2 px-8 py-3.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-white font-semibold text-sm transition-all hover:scale-105 cursor-pointer shadow-lg"
+                className="flex items-center gap-2 px-8 py-3.5 rounded-xl bg-surface-1 hover:bg-zinc-800 text-white font-semibold text-sm transition-all hover:scale-105 shadow-lg"
               >
                 {isLoadingMore ? (
                   <>
-                    <Loader2 className="w-4 h-4 animate-spin text-red-500" />
+                    <Loader2 className="w-4 h-4 animate-spin text-accent" />
                     <span>Searching More Titles...</span>
                   </>
                 ) : (
@@ -224,7 +224,7 @@ function SearchContent() {
         </div>
       ) : query ? (
         <div className="py-20 text-center flex flex-col items-center justify-center" role="status">
-          <div className="w-16 h-16 rounded-full bg-zinc-900 flex items-center justify-center text-zinc-500 mb-4">
+          <div className="w-16 h-16 rounded-full bg-surface-1 flex items-center justify-center text-subtle mb-4">
             <Search className="w-8 h-8" aria-hidden="true" />
           </div>
           <h2 className="text-lg font-bold text-white mb-1">No matches found</h2>
@@ -234,12 +234,12 @@ function SearchContent() {
         </div>
       ) : (
         <div className="py-20 text-center flex flex-col items-center justify-center">
-          <div className="w-16 h-16 rounded-full bg-red-600/10 border border-red-500/20 flex items-center justify-center text-red-500 mb-4">
+          <div className="w-16 h-16 rounded-full bg-red-600/10 flex items-center justify-center text-accent mb-4">
             <Sparkles className="w-8 h-8" />
           </div>
-          <h2 className="text-lg font-bold text-white mb-1">Discover Something New</h2>
+          <h2 className="text-lg font-bold text-white mb-1">Start typing to search</h2>
           <p className="text-sm text-zinc-400 max-w-sm">
-            Start typing above to search instantly across TMDB&apos;s global movie and TV catalog.
+            Results update as you type.
           </p>
         </div>
       )}

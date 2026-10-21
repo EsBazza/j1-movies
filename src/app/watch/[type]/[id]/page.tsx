@@ -36,7 +36,7 @@ function parsePositiveInt(value: string | null, fallback = 1): number {
 }
 
 const pillClass =
-  'flex items-center gap-2 px-3.5 py-2 rounded-full bg-black/60 hover:bg-black/80 text-white backdrop-blur-xl border border-white/10 text-xs font-semibold shadow-2xl transition-colors';
+  'flex items-center gap-2 px-3.5 py-2 rounded-full bg-black/60 hover:bg-black/80 text-white backdrop-blur-xl text-xs font-semibold shadow-2xl transition-colors';
 
 function WatchContent() {
   const router = useRouter();
@@ -334,7 +334,7 @@ function WatchContent() {
         className="fixed inset-0 bg-bg z-[var(--z-player)] flex flex-col items-center justify-center gap-4"
         role="status"
       >
-        <div className="w-12 h-12 rounded-full border-4 border-white/10 border-t-accent animate-spin" aria-hidden="true" />
+        <div className="w-12 h-12 rounded-full border-t-accent animate-spin" aria-hidden="true" />
         <p className="text-sm font-semibold text-white">Loading player…</p>
       </div>
     );
@@ -361,13 +361,13 @@ function WatchContent() {
         allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
         allowFullScreen
         referrerPolicy="origin"
-        className="w-full h-full border-0 absolute inset-0 z-0 bg-black"
+        className="w-full h-full absolute inset-0 z-0 bg-black"
       />
 
       {/* Loading overlay */}
       {isPlayerLoading && (
         <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-bg/90 backdrop-blur-md gap-4 px-4 text-center">
-          <div className="w-12 h-12 rounded-full border-4 border-white/10 border-t-accent animate-spin" aria-hidden="true" />
+          <div className="w-12 h-12 rounded-full border-t-accent animate-spin" aria-hidden="true" />
           <div role="status">
             <p className="text-sm font-bold text-white">
               {isSlow ? `${server.name} is taking longer than usual` : `Connecting to ${server.name}…`}
@@ -416,7 +416,7 @@ function WatchContent() {
             <ArrowLeft className="w-4 h-4 text-accent" aria-hidden="true" />
             <span className="hidden sm:inline">Details</span>
           </Link>
-          <div className="flex items-center gap-2 px-3 sm:px-4 py-2 rounded-full bg-black/50 backdrop-blur-xl border border-white/10 min-w-0">
+          <div className="flex items-center gap-2 px-3 sm:px-4 py-2 rounded-full bg-black/50 backdrop-blur-xl min-w-0">
             <span className="text-xs sm:text-sm font-semibold text-white truncate max-w-[120px] sm:max-w-[320px]">
               {title}
             </span>
@@ -495,7 +495,7 @@ function WatchContent() {
         <div
           role="alertdialog"
           aria-label="Next episode"
-          className="absolute bottom-6 right-4 sm:right-6 z-30 w-[calc(100%-2rem)] max-w-xs p-4 rounded-card bg-surface-1/95 backdrop-blur-xl border border-border-strong shadow-2xl animate-slide-up"
+          className="absolute bottom-6 right-4 sm:right-6 z-30 w-[calc(100%-2rem)] max-w-xs p-4 rounded-card bg-surface-1/95 backdrop-blur-xl shadow-2xl animate-slide-up"
         >
           <p className="text-xs text-zinc-400">Up next in {nextUpCountdown}s</p>
           <p className="text-sm font-bold text-white mt-0.5">
@@ -539,8 +539,8 @@ function WatchContent() {
                   onClick={() => handleServerChange(s.id)}
                   aria-pressed={active}
                   className={cn(
-                    'w-full flex items-center justify-between gap-3 p-3 rounded-control border text-left transition-colors',
-                    active ? 'bg-accent/15 border-accent/50' : 'bg-white/[0.03] border-border hover:bg-white/[0.07]'
+                    'w-full flex items-center justify-between gap-3 p-3 rounded-control text-left transition-colors',
+                    active ? 'bg-accent/15 border-accent/50' : 'bg-white/[0.03] hover:bg-white/[0.07]'
                   )}
                 >
                   <span>
@@ -559,7 +559,7 @@ function WatchContent() {
             setReloadKey((k) => k + 1);
             setIsServerSheetOpen(false);
           }}
-          className="mt-3 w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-control bg-white/5 hover:bg-white/10 border border-border text-sm font-semibold text-white transition-colors"
+          className="mt-3 w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-control bg-white/5 hover:bg-white/10 text-sm font-semibold text-white transition-colors"
         >
           <RefreshCw className="w-4 h-4" aria-hidden="true" />
           Reload player
@@ -612,10 +612,10 @@ function WatchContent() {
                     onClick={() => goToEpisode(selectedSeasonNum, ep.episode_number)}
                     aria-current={isCurrent ? 'true' : undefined}
                     className={cn(
-                      'w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition-colors group border',
+                      'w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition-colors group',
                       isCurrent
                         ? 'bg-accent/15 border-accent/50'
-                        : 'bg-white/[0.03] border-white/5 hover:bg-white/[0.08] hover:border-white/15'
+                        : 'bg-white/[0.03] hover:bg-white/[0.08]'
                     )}
                   >
                     <div className="relative w-24 aspect-video rounded-lg overflow-hidden bg-black/40 flex-shrink-0">
@@ -628,7 +628,7 @@ function WatchContent() {
                           className="object-cover"
                         />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center text-zinc-500 text-xs">
+                        <div className="w-full h-full flex items-center justify-center text-subtle text-xs">
                           EP {ep.episode_number}
                         </div>
                       )}

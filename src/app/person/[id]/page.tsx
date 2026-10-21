@@ -55,9 +55,9 @@ function PersonContent() {
     return (
       <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 pb-20">
         <div className="flex flex-col md:flex-row gap-8 items-start mb-12">
-          <div className="w-44 h-60 rounded-2xl bg-zinc-800 animate-pulse flex-shrink-0" />
+          <div className="w-44 h-60 rounded-2xl bg-surface-3 animate-pulse flex-shrink-0" />
           <div className="flex-1 flex flex-col gap-4">
-            <div className="w-48 h-8 bg-zinc-800 rounded animate-pulse" />
+            <div className="w-48 h-8 bg-surface-3 rounded animate-pulse" />
             <div className="w-full h-24 bg-zinc-800/60 rounded animate-pulse" />
           </div>
         </div>
@@ -79,7 +79,7 @@ function PersonContent() {
         </p>
         <button
           onClick={() => router.back()}
-          className="px-6 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-semibold cursor-pointer"
+          className="px-6 py-2.5 rounded-xl bg-accent hover:bg-accent-hover text-on-accent text-sm font-semibold"
         >
           Go Back
         </button>
@@ -133,7 +133,7 @@ function PersonContent() {
       <div className="mb-4">
         <button
           onClick={() => router.back()}
-          className="inline-flex items-center gap-2 text-xs font-semibold text-zinc-400 hover:text-white transition-colors cursor-pointer"
+          className="inline-flex items-center gap-2 text-xs font-semibold text-zinc-400 hover:text-white transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
           <span>Back</span>
@@ -141,9 +141,9 @@ function PersonContent() {
       </div>
 
       {/* Person Bio Header */}
-      <div className="flex flex-col md:flex-row items-start gap-8 pb-10 border-b border-zinc-800">
+      <div className="flex flex-col md:flex-row items-start gap-8 pb-10">
         {/* Profile Image */}
-        <div className="relative w-44 sm:w-52 aspect-[2/3] rounded-2xl overflow-hidden bg-zinc-900 border border-white/10 shadow-2xl flex-shrink-0">
+        <div className="relative w-44 sm:w-52 aspect-[2/3] rounded-2xl overflow-hidden bg-surface-1 shadow-2xl flex-shrink-0">
           {person.profile_path ? (
             <Image
               src={getImageUrl(person.profile_path, 'w500')}
@@ -154,7 +154,7 @@ function PersonContent() {
               className="object-cover"
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center bg-zinc-900 text-zinc-600">
+            <div className="w-full h-full flex items-center justify-center bg-surface-1 text-zinc-600">
               <User className="w-16 h-16" />
             </div>
           )}
@@ -198,7 +198,7 @@ function PersonContent() {
               {person.biography.length > 300 && (
                 <button
                   onClick={() => setIsBioExpanded(!isBioExpanded)}
-                  className="flex items-center gap-1 text-xs font-semibold text-red-400 hover:text-red-300 self-start cursor-pointer transition-colors"
+                  className="flex items-center gap-1 text-xs font-semibold text-accent hover:text-white self-start transition-colors"
                 >
                   <span>{isBioExpanded ? 'Read Less' : 'Read Full Biography'}</span>
                   {isBioExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
@@ -206,7 +206,7 @@ function PersonContent() {
               )}
             </div>
           ) : (
-            <p className="text-sm text-zinc-500 italic">No biography available for this artist.</p>
+            <p className="text-sm text-subtle italic">No biography available for this artist.</p>
           )}
         </div>
       </div>
@@ -215,21 +215,21 @@ function PersonContent() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pt-8 pb-6">
         <div>
           <h2 className="text-2xl font-black text-white tracking-tight flex items-center gap-2">
-            <Clapperboard className="w-5 h-5 text-red-500" />
+            <Clapperboard className="w-5 h-5 text-accent" />
             <span>Filmography & Appearances</span>
-            <span className="text-sm text-zinc-500 font-medium">({itemsToDisplay.length} titles)</span>
+            <span className="text-sm text-subtle font-medium">({itemsToDisplay.length} titles)</span>
           </h2>
         </div>
 
         {/* Filter Tabs & Sort Dropdown */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-          <div className="flex items-center gap-1 bg-zinc-900/90 p-1 rounded-xl border border-zinc-800">
+          <div className="flex items-center gap-1 bg-zinc-900/90 p-1 rounded-xl">
             <button
               onClick={() => setFilterType('all')}
               className={cn(
-                'px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer',
+                'px-3 py-1.5 rounded-lg text-xs font-semibold transition-all',
                 filterType === 'all'
-                  ? 'bg-red-600 text-white shadow-md'
+                  ? 'bg-accent text-on-accent shadow-md'
                   : 'text-zinc-400 hover:text-white'
               )}
             >
@@ -238,9 +238,9 @@ function PersonContent() {
             <button
               onClick={() => setFilterType('movie')}
               className={cn(
-                'flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer',
+                'flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all',
                 filterType === 'movie'
-                  ? 'bg-red-600 text-white shadow-md'
+                  ? 'bg-accent text-on-accent shadow-md'
                   : 'text-zinc-400 hover:text-white'
               )}
             >
@@ -250,9 +250,9 @@ function PersonContent() {
             <button
               onClick={() => setFilterType('tv')}
               className={cn(
-                'flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer',
+                'flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all',
                 filterType === 'tv'
-                  ? 'bg-red-600 text-white shadow-md'
+                  ? 'bg-accent text-on-accent shadow-md'
                   : 'text-zinc-400 hover:text-white'
               )}
             >
@@ -263,9 +263,9 @@ function PersonContent() {
               <button
                 onClick={() => setFilterType('crew')}
                 className={cn(
-                  'px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer',
+                  'px-3 py-1.5 rounded-lg text-xs font-semibold transition-all',
                   filterType === 'crew'
-                    ? 'bg-red-600 text-white shadow-md'
+                    ? 'bg-accent text-on-accent shadow-md'
                     : 'text-zinc-400 hover:text-white'
                 )}
               >
@@ -275,7 +275,7 @@ function PersonContent() {
           </div>
 
           <div className="relative flex items-center">
-            <div className="absolute left-3 pointer-events-none text-red-500">
+            <div className="absolute left-3 pointer-events-none text-accent">
               <ArrowUpDown className="w-3.5 h-3.5" />
             </div>
             <select
@@ -303,7 +303,7 @@ function PersonContent() {
           ))}
         </div>
       ) : (
-        <div className="py-20 text-center text-zinc-500 text-sm">
+        <div className="py-20 text-center text-subtle text-sm">
           No titles found for this filter.
         </div>
       )}

@@ -189,7 +189,7 @@ function GenreContent() {
       <div className="mb-4">
         <button
           onClick={() => router.back()}
-          className="inline-flex items-center gap-2 text-xs font-semibold text-zinc-400 hover:text-white transition-colors cursor-pointer"
+          className="inline-flex items-center gap-2 text-xs font-semibold text-zinc-400 hover:text-white transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
           <span>Back</span>
@@ -197,9 +197,9 @@ function GenreContent() {
       </div>
 
       {/* Header Banner */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-zinc-800">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6">
         <div>
-          <div className="flex items-center gap-2 text-red-500 text-xs font-bold uppercase tracking-wider mb-1">
+          <div className="flex items-center gap-2 text-accent text-xs font-bold uppercase tracking-wider mb-1">
             <Sparkles className="w-3.5 h-3.5" />
             <span>Genre Explorer</span>
           </div>
@@ -214,13 +214,13 @@ function GenreContent() {
         {/* Filters and Sorting Controls */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
           {/* Media Type Tabs */}
-          <div className="flex items-center gap-1 bg-zinc-900/90 p-1 rounded-xl border border-zinc-800">
+          <div className="flex items-center gap-1 bg-zinc-900/90 p-1 rounded-xl">
             <button
               onClick={() => handleTypeChange('all')}
               className={cn(
-                'px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer',
+                'px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all',
                 mediaType === 'all'
-                  ? 'bg-red-600 text-white shadow-md'
+                  ? 'bg-accent text-on-accent shadow-md'
                   : 'text-zinc-400 hover:text-white'
               )}
             >
@@ -229,9 +229,9 @@ function GenreContent() {
             <button
               onClick={() => handleTypeChange('movie')}
               className={cn(
-                'flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer',
+                'flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all',
                 mediaType === 'movie'
-                  ? 'bg-red-600 text-white shadow-md'
+                  ? 'bg-accent text-on-accent shadow-md'
                   : 'text-zinc-400 hover:text-white'
               )}
             >
@@ -241,9 +241,9 @@ function GenreContent() {
             <button
               onClick={() => handleTypeChange('tv')}
               className={cn(
-                'flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer',
+                'flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all',
                 mediaType === 'tv'
-                  ? 'bg-red-600 text-white shadow-md'
+                  ? 'bg-accent text-on-accent shadow-md'
                   : 'text-zinc-400 hover:text-white'
               )}
             >
@@ -255,7 +255,7 @@ function GenreContent() {
           {/* Sort By Dropdown */}
           <div className="relative flex items-center">
             <div className="absolute left-3 pointer-events-none text-zinc-400 flex items-center gap-1 text-xs">
-              <ArrowUpDown className="w-3.5 h-3.5 text-red-500" />
+              <ArrowUpDown className="w-3.5 h-3.5 text-accent" />
             </div>
             <select
               value={sortBy}
@@ -297,11 +297,11 @@ function GenreContent() {
               <button
                 onClick={handleLoadMore}
                 disabled={isLoadingMore}
-                className="flex items-center gap-2 px-8 py-3.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-white font-semibold text-sm transition-all hover:scale-105 cursor-pointer shadow-lg"
+                className="flex items-center gap-2 px-8 py-3.5 rounded-xl bg-surface-1 hover:bg-zinc-800 text-white font-semibold text-sm transition-all hover:scale-105 shadow-lg"
               >
                 {isLoadingMore ? (
                   <>
-                    <Loader2 className="w-4 h-4 animate-spin text-red-500" />
+                    <Loader2 className="w-4 h-4 animate-spin text-accent" />
                     <span>Loading {genreName} Titles...</span>
                   </>
                 ) : (

@@ -140,18 +140,18 @@ function WatchlistContent() {
   return (
     <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-28 md:pb-16">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-zinc-800">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-white">My Cinema Library</h1>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-white">My List</h1>
           <p className="text-xs sm:text-sm text-zinc-400">
-            Stored locally with zero logins. Export backup anytime.
+            Saved in this browser. Back it up any time.
           </p>
         </div>
 
         {/* Tab & Backup Controls */}
         <div className="flex flex-wrap items-center gap-3">
           {/* Tabs */}
-          <div role="tablist" aria-label="Library sections" className="flex items-center gap-1 bg-zinc-900 p-1.5 rounded-2xl border border-zinc-800">
+          <div role="tablist" aria-label="Library sections" className="flex items-center gap-1 bg-surface-1 p-1.5 rounded-2xl">
             {TABS.map((tab) => {
               const { label, icon: Icon, count } = tabMeta[tab];
               const selected = activeTab === tab;
@@ -164,7 +164,7 @@ function WatchlistContent() {
                   onClick={() => setActiveTab(tab)}
                   className={cn(
                     'flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-xl text-xs font-semibold transition-colors',
-                    selected ? 'bg-accent text-white shadow-lg shadow-red-600/30' : 'text-zinc-400 hover:text-white'
+                    selected ? 'bg-accent text-white shadow-lg' : 'text-zinc-400 hover:text-white'
                   )}
                 >
                   <Icon className="w-3.5 h-3.5" aria-hidden="true" />
@@ -181,15 +181,15 @@ function WatchlistContent() {
             <button
               onClick={handleExport}
               title="Download JSON Backup"
-              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 hover:text-white text-xs font-semibold transition-colors cursor-pointer shadow-md"
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-surface-1 hover:bg-zinc-800 text-zinc-300 hover:text-white text-xs font-semibold transition-colors shadow-md"
             >
-              <Download className="w-3.5 h-3.5 text-red-500" />
+              <Download className="w-3.5 h-3.5 text-accent" />
               <span>Backup</span>
             </button>
 
             <label
               title="Restore from JSON Backup file"
-              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 hover:text-white text-xs font-semibold transition-colors cursor-pointer shadow-md"
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-surface-1 hover:bg-zinc-800 text-zinc-300 hover:text-white text-xs font-semibold transition-colors shadow-md"
             >
               <Upload className="w-3.5 h-3.5 text-cyan-400" />
               <span>Restore</span>
@@ -216,8 +216,8 @@ function WatchlistContent() {
                 onClick={() => setFilterType(f)}
                 aria-pressed={filterType === f}
                 className={cn(
-                  'px-3 py-1 rounded-full text-xs font-medium transition-colors border',
-                  filterType === f ? 'bg-zinc-800 text-white border-zinc-700' : 'text-zinc-400 hover:text-zinc-200 border-transparent'
+                  'px-3 py-1 rounded-full text-xs font-medium transition-colors',
+                  filterType === f ? 'bg-surface-3 text-white' : 'text-zinc-400 hover:text-zinc-200'
                 )}
               >
                 {f === 'all' ? 'All' : f === 'movie' ? 'Movies' : 'TV Series'}
@@ -229,7 +229,7 @@ function WatchlistContent() {
             <button
               type="button"
               onClick={handleClearHistory}
-              className="flex items-center gap-1.5 text-xs text-zinc-400 hover:text-red-400 transition-colors"
+              className="flex items-center gap-1.5 text-xs text-zinc-400 hover:text-white transition-colors"
             >
               <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
               <span>Clear History</span>
@@ -261,7 +261,7 @@ function WatchlistContent() {
             </div>
           ) : (
             <div className="py-24 text-center flex flex-col items-center justify-center">
-              <div className="w-16 h-16 rounded-full bg-zinc-900 flex items-center justify-center text-zinc-500 mb-4">
+              <div className="w-16 h-16 rounded-full bg-surface-1 flex items-center justify-center text-subtle mb-4">
                 <Bookmark className="w-8 h-8" />
               </div>
               <h2 className="text-xl font-bold text-white mb-1">Your list is empty</h2>
@@ -270,7 +270,7 @@ function WatchlistContent() {
               </p>
               <Link
                 href="/movies"
-                className="flex items-center gap-2 px-6 py-3 rounded-xl bg-red-600 hover:bg-red-700 text-white font-semibold text-sm transition-all shadow-lg shadow-red-600/30"
+                className="flex items-center gap-2 px-6 py-3 rounded-xl bg-accent hover:bg-accent-hover text-on-accent font-semibold text-sm transition-all shadow-lg"
               >
                 <Sparkles className="w-4 h-4" />
                 <span>Explore Movies</span>
@@ -298,10 +298,10 @@ function WatchlistContent() {
                 return (
                   <div
                     key={`${item.type}-${item.id}`}
-                    className="group relative rounded-xl overflow-hidden bg-zinc-900 border border-zinc-800 hover:border-zinc-700 transition-all shadow-md flex flex-col"
+                    className="group relative rounded-xl overflow-hidden bg-surface-1 transition-all shadow-md flex flex-col"
                   >
                     {/* Backdrop */}
-                    <div className="relative aspect-video w-full overflow-hidden bg-zinc-950">
+                    <div className="relative aspect-video w-full overflow-hidden bg-surface-1">
                       <Image
                         src={getBackdropUrl(item.backdrop_path || item.poster_path, 'w780')}
                         alt=""
@@ -317,7 +317,7 @@ function WatchlistContent() {
                         aria-hidden="true"
                         className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity"
                       >
-                        <div className="w-12 h-12 rounded-full bg-accent text-white flex items-center justify-center shadow-lg shadow-red-600/50">
+                        <div className="w-12 h-12 rounded-full bg-accent text-white flex items-center justify-center shadow-lg">
                           <Play className="w-5 h-5 fill-white ml-0.5" />
                         </div>
                       </Link>
@@ -326,7 +326,7 @@ function WatchlistContent() {
                         type="button"
                         onClick={() => handleRemoveHistory(item)}
                         aria-label={`Remove ${item.title} from history`}
-                        className="absolute top-2 right-2 p-1.5 rounded-full bg-black/60 text-zinc-300 hover:text-red-400 hover:bg-black/90 transition-colors z-10"
+                        className="absolute top-2 right-2 p-1.5 rounded-full bg-black/60 text-zinc-300 hover:text-white hover:bg-black/90 transition-colors z-10"
                       >
                         <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
                       </button>
@@ -347,7 +347,7 @@ function WatchlistContent() {
                           </h3>
                         </div>
                         {item.type === 'tv' && item.season && item.episode ? (
-                          <p className="text-xs text-red-400 font-medium mt-1">
+                          <p className="text-xs text-accent font-medium mt-1">
                             Season {item.season}, Episode {item.episode}{' '}
                             {item.episodeTitle ? `• ${item.episodeTitle}` : ''}
                           </p>
@@ -356,14 +356,14 @@ function WatchlistContent() {
                         )}
                       </div>
 
-                      <div className="flex items-center justify-between pt-3 mt-3 border-t border-zinc-800/60 text-xs text-zinc-400">
+                      <div className="flex items-center justify-between pt-3 mt-3 text-xs text-zinc-400">
                         <span>
                           {formatRelativeTime(item.lastWatchedAt)}
                           {item.finished ? ' · Watched' : remaining ? ` · ${remaining} left` : ''}
                         </span>
                         <Link
                           href={playUrl}
-                          className="font-semibold text-red-400 hover:text-red-300 flex items-center gap-1"
+                          className="font-semibold text-accent hover:text-white flex items-center gap-1"
                         >
                           <span>{item.finished ? 'Watch again' : 'Resume'}</span>
                           <Play className="w-3 h-3 fill-red-400" />
@@ -376,7 +376,7 @@ function WatchlistContent() {
             </div>
           ) : (
             <div className="py-24 text-center flex flex-col items-center justify-center">
-              <div className="w-16 h-16 rounded-full bg-zinc-900 flex items-center justify-center text-zinc-500 mb-4">
+              <div className="w-16 h-16 rounded-full bg-surface-1 flex items-center justify-center text-subtle mb-4">
                 <History className="w-8 h-8" />
               </div>
               <h2 className="text-xl font-bold text-white mb-1">No watch history yet</h2>
@@ -385,7 +385,7 @@ function WatchlistContent() {
               </p>
               <Link
                 href="/movies"
-                className="flex items-center gap-2 px-6 py-3 rounded-xl bg-red-600 hover:bg-red-700 text-white font-semibold text-sm transition-all shadow-lg shadow-red-600/30"
+                className="flex items-center gap-2 px-6 py-3 rounded-xl bg-accent hover:bg-accent-hover text-on-accent font-semibold text-sm transition-all shadow-lg"
               >
                 <Sparkles className="w-4 h-4" />
                 <span>Start Watching</span>
@@ -398,15 +398,15 @@ function WatchlistContent() {
       {/* Custom Collections Tab Content */}
       {activeTab === 'collections' && (
         <div className="mt-6 flex flex-col gap-8">
-          <div className="flex items-center justify-between pb-4 border-b border-zinc-800">
+          <div className="flex items-center justify-between pb-4">
             <div>
-              <h2 className="text-xl font-bold text-white">Custom Watchlist Collections</h2>
-              <p className="text-xs text-zinc-400">Organize your movies and shows into tailored categories.</p>
+              <h2 className="text-xl font-bold text-white">Collections</h2>
+              <p className="text-xs text-zinc-400">Group titles any way you like.</p>
             </div>
 
             <button
               onClick={() => setIsCreateModalOpen(true)}
-              className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white font-semibold text-xs shadow-lg shadow-red-600/30 transition-all hover:scale-105 cursor-pointer"
+              className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-accent hover:bg-accent-hover text-on-accent font-semibold text-xs shadow-lg transition-all hover:scale-105"
             >
               <Plus className="w-4 h-4" />
               <span>New Collection</span>
@@ -416,7 +416,7 @@ function WatchlistContent() {
           {collections.length > 0 ? (
             <div className="flex flex-col gap-8">
               {collections.map((col) => (
-                <div key={col.id} className="p-6 rounded-2xl bg-zinc-900/60 border border-zinc-800 flex flex-col gap-4">
+                <div key={col.id} className="p-6 rounded-2xl bg-surface-1 flex flex-col gap-4">
                   <div className="flex items-center justify-between">
                     <div>
                       <h3 className="text-lg font-bold text-white">{col.name}</h3>
@@ -433,7 +433,7 @@ function WatchlistContent() {
                           action: { label: 'Undo', onClick: () => restoreCollection(col) },
                         });
                       }}
-                      className="p-2 rounded-xl bg-zinc-800 hover:bg-accent text-zinc-300 hover:text-white transition-colors"
+                      className="p-2 rounded-xl bg-surface-3 hover:bg-accent text-zinc-300 hover:text-white transition-colors"
                       aria-label={`Delete collection ${col.name}`}
                     >
                       <Trash2 className="w-4 h-4" aria-hidden="true" />
@@ -457,7 +457,7 @@ function WatchlistContent() {
                               toast(`Added "${picked.title}" to ${col.name}`);
                             }
                           }}
-                          className="bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-1.5 text-zinc-100 text-xs max-w-[260px]"
+                          className="bg-surface-1 rounded-lg px-3 py-1.5 text-zinc-100 text-xs max-w-[260px]"
                         >
                           <option value="" disabled>
                             Choose a title…
@@ -492,7 +492,7 @@ function WatchlistContent() {
                             type="button"
                             onClick={() => removeItemFromCollection(col.id, item.id, item.type)}
                             aria-label={`Remove ${item.title} from ${col.name}`}
-                            className="absolute top-12 right-2.5 z-20 p-2 rounded-full bg-black/70 hover:bg-accent text-white shadow-lg border border-white/10 transition-opacity [@media(hover:hover)]:opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
+                            className="absolute top-12 right-2.5 z-20 p-2 rounded-full bg-black/70 hover:bg-accent text-white shadow-lg transition-opacity [@media(hover:hover)]:opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
                           >
                             <X className="w-3.5 h-3.5" aria-hidden="true" />
                           </button>
@@ -509,7 +509,7 @@ function WatchlistContent() {
             </div>
           ) : (
             <div className="py-20 text-center flex flex-col items-center justify-center">
-              <div className="w-16 h-16 rounded-full bg-zinc-900 flex items-center justify-center text-zinc-500 mb-4">
+              <div className="w-16 h-16 rounded-full bg-surface-1 flex items-center justify-center text-subtle mb-4">
                 <FolderPlus className="w-8 h-8" />
               </div>
               <h3 className="text-xl font-bold text-white mb-1">No custom collections yet</h3>
@@ -518,10 +518,10 @@ function WatchlistContent() {
               </p>
               <button
                 onClick={() => setIsCreateModalOpen(true)}
-                className="flex items-center gap-2 px-6 py-3 rounded-xl bg-red-600 hover:bg-red-700 text-white font-semibold text-sm transition-all shadow-lg shadow-red-600/30 cursor-pointer"
+                className="flex items-center gap-2 px-6 py-3 rounded-xl bg-accent hover:bg-accent-hover text-on-accent font-semibold text-sm transition-all shadow-lg"
               >
                 <Plus className="w-4 h-4" />
-                <span>Create Your First Collection</span>
+                <span>Create a collection</span>
               </button>
             </div>
           )}
@@ -532,7 +532,7 @@ function WatchlistContent() {
       <Modal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
-        title="Create New Custom Collection"
+        title="New collection"
       >
         <form onSubmit={handleCreateCollection} className="flex flex-col gap-4 p-2">
           <div>
@@ -568,13 +568,13 @@ function WatchlistContent() {
             <button
               type="button"
               onClick={() => setIsCreateModalOpen(false)}
-              className="px-4 py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-semibold cursor-pointer"
+              className="px-4 py-2.5 rounded-xl bg-surface-3 hover:bg-zinc-700 text-zinc-300 text-xs font-semibold"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-6 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold shadow-lg shadow-red-600/30 cursor-pointer"
+              className="px-6 py-2.5 rounded-xl bg-accent hover:bg-accent-hover text-on-accent text-xs font-bold shadow-lg"
             >
               Create Collection
             </button>

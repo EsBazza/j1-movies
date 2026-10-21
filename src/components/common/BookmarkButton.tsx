@@ -49,8 +49,8 @@ export function BookmarkButton({ item, variant = 'icon', className }: BookmarkBu
         className={cn(
           'flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg font-medium text-sm transition-colors duration-200',
           isSaved
-            ? 'bg-zinc-800 text-zinc-100 border border-zinc-700 hover:bg-zinc-700'
-            : 'bg-zinc-900/80 text-white border border-zinc-700/60 hover:bg-zinc-800 hover:border-zinc-500',
+            ? 'bg-surface-3 text-zinc-100 hover:bg-zinc-700'
+            : 'bg-surface-1 text-white hover:bg-zinc-800',
           className
         )}
       >
@@ -78,8 +78,8 @@ export function BookmarkButton({ item, variant = 'icon', className }: BookmarkBu
       className={cn(
         'p-2 rounded-full backdrop-blur-md transition-colors duration-200',
         isSaved
-          ? 'bg-accent/90 text-white shadow-lg shadow-red-600/30 hover:bg-accent-hover'
-          : 'bg-black/60 text-white/90 hover:bg-black/80 hover:text-white border border-white/10',
+          ? 'bg-accent/90 text-white shadow-lg hover:bg-accent-hover'
+          : 'bg-black/60 text-white/90 hover:bg-black/80 hover:text-white',
         className
       )}
     >

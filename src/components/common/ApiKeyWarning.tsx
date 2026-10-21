@@ -28,7 +28,7 @@ export function ApiKeyWarning() {
   if (reason === 'unreachable') {
     return (
       <div className="w-full max-w-xl mx-auto px-4 py-8 mt-24 text-center" role="alert">
-        <div className="w-14 h-14 mx-auto rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mb-4">
+        <div className="w-14 h-14 mx-auto rounded-2xl bg-white/5 flex items-center justify-center mb-4">
           <WifiOff className="w-7 h-7 text-zinc-300" aria-hidden="true" />
         </div>
         <h2 className="text-xl font-bold text-white">Couldn&apos;t load titles</h2>
@@ -47,23 +47,23 @@ export function ApiKeyWarning() {
 
   return (
     <div className="w-full max-w-4xl mx-auto px-4 py-8 mt-20" role="alert">
-      <div className="rounded-2xl bg-zinc-900/90 border border-red-500/30 p-6 md:p-8 text-center sm:text-left shadow-2xl backdrop-blur-xl">
+      <div className="rounded-2xl bg-zinc-900/90 p-6 md:p-8 text-center sm:text-left shadow-2xl backdrop-blur-xl">
         <div className="flex flex-col sm:flex-row items-center gap-5">
-          <div className="w-14 h-14 rounded-2xl bg-red-500/10 border border-red-500/30 flex items-center justify-center flex-shrink-0">
-            <Key className="w-7 h-7 text-red-500" aria-hidden="true" />
+          <div className="w-14 h-14 rounded-2xl bg-red-500/10 flex items-center justify-center flex-shrink-0">
+            <Key className="w-7 h-7 text-accent" aria-hidden="true" />
           </div>
           <div className="flex-1">
             <h2 className="text-xl font-bold text-white">TMDB API key required</h2>
             <p className="text-sm text-zinc-300 mt-1 leading-relaxed">
-              Add <code className="bg-zinc-800 text-red-400 px-2 py-0.5 rounded text-xs">TMDB_API_KEY</code> or{' '}
-              <code className="bg-zinc-800 text-red-400 px-2 py-0.5 rounded text-xs">TMDB_READ_ACCESS_TOKEN</code> to{' '}
-              <code className="bg-zinc-800 text-red-400 px-2 py-0.5 rounded text-xs">.env.local</code> (or your Vercel project
+              Add <code className="bg-surface-3 text-accent px-2 py-0.5 rounded text-xs">TMDB_API_KEY</code> or{' '}
+              <code className="bg-surface-3 text-accent px-2 py-0.5 rounded text-xs">TMDB_READ_ACCESS_TOKEN</code> to{' '}
+              <code className="bg-surface-3 text-accent px-2 py-0.5 rounded text-xs">.env.local</code> (or your Vercel project
               settings) and restart the server.
             </p>
           </div>
         </div>
 
-        <div className="mt-6 pt-6 border-t border-zinc-800/80 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="mt-6 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="text-xs text-zinc-400">
             Step 1: Sign up at TMDB &rarr; Step 2: Generate an API key in Settings &rarr; Step 3: Add it as a server env var
           </div>
@@ -71,7 +71,7 @@ export function ApiKeyWarning() {
             href="https://www.themoviedb.org/settings/api"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white font-semibold text-xs transition-colors shadow-lg shadow-red-600/30"
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-accent hover:bg-accent-hover text-on-accent font-semibold text-xs transition-colors shadow-lg"
           >
             <span>Get a free TMDB key</span>
             <ExternalLink className="w-3.5 h-3.5" aria-hidden="true" />
