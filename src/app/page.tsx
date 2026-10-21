@@ -159,7 +159,7 @@ export default function HomePage() {
       )}
 
       {/* Rows overlap the hero's faded bottom so the page reads as one surface */}
-      <div className="relative z-10 -mt-8 sm:-mt-12 flex flex-col gap-16 sm:gap-20 lg:gap-24">
+      <div className="relative z-10 mt-10 sm:mt-14 lg:mt-16 flex flex-col gap-16 sm:gap-20 lg:gap-24">
         <div className="max-w-[1800px] w-full mx-auto px-5 sm:px-10 lg:px-16 empty:hidden">
           <ContinueWatchingRow />
         </div>
