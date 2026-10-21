@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { Search, X, Film, Tv, Star, Loader2, User, History, TrendingUp } from 'lucide-react';
 import { searchMulti, getTrending, getPosterUrl, getImageUrl, normalizeMediaItem } from '@/lib/tmdb';
 import { formatYear, cn } from '@/lib/utils';
+import { readRecentSearches as readRecent, saveRecentSearch as saveRecent } from '@/lib/recentSearches';
 
 interface Suggestion {
   key: string;
@@ -15,28 +16,6 @@ interface Suggestion {
   image: string | null;
   year?: string;
   rating?: number;
-}
-
-const RECENT_KEY = 'j1-recent-searches';
-const MAX_RECENT = 5;
-
-function readRecent(): string[] {
-  try {
-    const raw = window.localStorage.getItem(RECENT_KEY);
-    const parsed = raw ? JSON.parse(raw) : [];
-    return Array.isArray(parsed) ? parsed.filter((q) => typeof q === 'string').slice(0, MAX_RECENT) : [];
-  } catch {
-    return [];
-  }
-}
-
-function saveRecent(query: string) {
-  try {
-    const next = [query, ...readRecent().filter((q) => q.toLowerCase() !== query.toLowerCase())].slice(0, MAX_RECENT);
-    window.localStorage.setItem(RECENT_KEY, JSON.stringify(next));
-  } catch {
-    // storage unavailable (private mode) — recent searches are a convenience only
-  }
 }
 
 interface SearchBarProps {
