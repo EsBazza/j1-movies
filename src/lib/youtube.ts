@@ -24,22 +24,19 @@ export function ytSetVolume(iframe: HTMLIFrameElement | null, volume: number) {
   }
 }
 
-function subscribeMotion(callback: () => void) {
-  const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
-  mq.addEventListener('change', callback);
-  return () => mq.removeEventListener('change', callback);
+function subscribeNoop() {
+  return () => {};
 }
 
 function getAutoplaySnapshot(): boolean {
-  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return false;
   const connection = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection;
   return !connection?.saveData;
 }
 
 /**
- * Whether decorative autoplay (background trailers, rotating heroes) is appropriate:
- * false for reduced-motion users, data-saver connections, and during SSR.
+ * Whether background trailers and hero rotation should autoplay: false only on
+ * data-saver connections (and during SSR). Users can always pause via the hero controls.
  */
 export function useAutoplayAllowed(): boolean {
-  return useSyncExternalStore(subscribeMotion, getAutoplaySnapshot, () => false);
+  return useSyncExternalStore(subscribeNoop, getAutoplaySnapshot, () => false);
 }

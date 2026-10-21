@@ -14,8 +14,6 @@ export interface StreamingSource {
   origin: string;
   /** Whether the embed posts playback progress events we can track */
   emitsProgress: boolean;
-  /** Whether the embed still plays inside a sandboxed iframe (Ad-Shield) */
-  supportsSandbox: boolean;
   getMovieUrl: (tmdbId: number | string, opts?: PlayerUrlOptions) => string;
   getTvUrl: (tmdbId: number | string, season: number, episode: number, opts?: PlayerUrlOptions) => string;
 }
@@ -43,7 +41,6 @@ export const STREAMING_SERVERS: StreamingSource[] = [
     badge: 'Ad-free · Resume',
     origin: 'https://vidlink.pro',
     emitsProgress: true,
-    supportsSandbox: true,
     getMovieUrl: (id, opts) =>
       `https://vidlink.pro/movie/${id}` +
       query({
@@ -76,7 +73,6 @@ export const STREAMING_SERVERS: StreamingSource[] = [
     badge: 'Fast · Resume',
     origin: 'https://vixsrc.to',
     emitsProgress: true,
-    supportsSandbox: false,
     getMovieUrl: (id, opts) =>
       `https://vixsrc.to/movie/${id}` +
       query({ primaryColor: BRAND, secondaryColor: BRAND_DARK, autoplay: opts?.autoplay, startAt: startAt(opts) }),
@@ -90,7 +86,6 @@ export const STREAMING_SERVERS: StreamingSource[] = [
     badge: 'Backup',
     origin: 'https://moviesapi.to',
     emitsProgress: true,
-    supportsSandbox: false,
     getMovieUrl: (id, opts) => `https://moviesapi.to/movie/${id}` + query({ theme: BRAND, startAt: startAt(opts) }),
     getTvUrl: (id, s, e, opts) =>
       `https://moviesapi.to/tv/${id}/${s}/${e}` + query({ theme: BRAND, startAt: startAt(opts) }),
@@ -101,7 +96,6 @@ export const STREAMING_SERVERS: StreamingSource[] = [
     badge: 'Backup',
     origin: 'https://vidfast.vc',
     emitsProgress: false,
-    supportsSandbox: false,
     getMovieUrl: (id, opts) =>
       `https://vidfast.vc/movie/${id}` + query({ theme: BRAND, autoPlay: opts?.autoplay, startAt: startAt(opts) }),
     getTvUrl: (id, s, e, opts) =>

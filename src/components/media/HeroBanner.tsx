@@ -10,7 +10,6 @@ import { formatYear, cn } from '@/lib/utils';
 import { BookmarkButton } from '@/components/common/BookmarkButton';
 import { ExtractedPalette, DEFAULT_PALETTE } from '@/lib/colorExtractor';
 import { getBackgroundTrailerUrl, useAutoplayAllowed, ytCommand, ytSetVolume } from '@/lib/youtube';
-import { useMediaQuery } from '@/lib/useMediaQuery';
 import { useUserStoreSelector } from '@/lib/store';
 
 interface HeroBannerProps {
@@ -66,9 +65,7 @@ export function HeroBanner({
   const [showVolumeSlider, setShowVolumeSlider] = useState(false);
 
   const autoplayAllowed = useAutoplayAllowed();
-  const isDesktop = useMediaQuery('(min-width: 768px)');
-  // Background trailers are desktop-only and respect reduced-motion / data-saver
-  const trailersEnabled = autoplayAllowed && isDesktop;
+  const trailersEnabled = autoplayAllowed;
 
   // Logo/trailer belong to a specific item id, so a stale value is never shown for a new slide
   const currentMedia = media && currentItem && media.id === currentItem.id ? media : null;

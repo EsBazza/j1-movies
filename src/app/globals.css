@@ -145,3 +145,8 @@
 .hero-progress[data-paused='true'] {
   animation-play-state: paused;
 }
+@media (prefers-reduced-motion: reduce) {
+  .hero-progress {
+    animation-duration: var(--hero-duration, 14s) !important;
+  }
+}

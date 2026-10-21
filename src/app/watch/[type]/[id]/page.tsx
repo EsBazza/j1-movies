@@ -13,7 +13,6 @@ import {
   Play,
   Check,
   Server,
-  ShieldCheck,
   SkipForward,
   SkipBack,
   AlertCircle,
@@ -79,9 +78,7 @@ function WatchContent() {
   const overlayOpenRef = useRef(false);
 
   const preferredServerId = useUserStoreSelector((s) => s.preferredServerId);
-  const adShieldEnabled = useUserStoreSelector((s) => s.adShieldEnabled);
   const server = getServer(preferredServerId);
-  const sandboxed = adShieldEnabled && server.supportsSandbox;
 
   // 1. Load title details (only when the title changes — not on episode switches)
   useEffect(() => {
@@ -279,7 +276,7 @@ function WatchContent() {
     startAt: resume?.at,
     autoplay: true,
   });
-  const iframeKey = `${playerUrl}|${sandboxed}|${reloadKey}`;
+  const iframeKey = `${playerUrl}|${reloadKey}`;
   const isPlayerLoading = loadedKey !== iframeKey;
   const isSlow = isPlayerLoading && slowKey === iframeKey;
 
@@ -364,7 +361,6 @@ function WatchContent() {
         allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
         allowFullScreen
         referrerPolicy="origin"
-        sandbox={sandboxed ? 'allow-scripts allow-same-origin allow-forms allow-presentation' : undefined}
         className="w-full h-full border-0 absolute inset-0 z-0 bg-black"
       />
 
@@ -549,10 +545,7 @@ function WatchContent() {
                 >
                   <span>
                     <span className="block text-sm font-semibold text-white">{s.name}</span>
-                    <span className="block text-xs text-zinc-400">
-                      {s.badge}
-                      {s.supportsSandbox ? ' · Ad-Shield compatible' : ''}
-                    </span>
+                    <span className="block text-xs text-zinc-400">{s.badge}</span>
                   </span>
                   {active && <Check className="w-4 h-4 text-accent" aria-hidden="true" />}
                 </button>
@@ -571,24 +564,6 @@ function WatchContent() {
           <RefreshCw className="w-4 h-4" aria-hidden="true" />
           Reload player
         </button>
-        <label className="mt-5 flex items-start gap-3 p-3 rounded-control bg-white/[0.03] border border-border cursor-pointer">
-          <input
-            type="checkbox"
-            checked={adShieldEnabled}
-            onChange={(e) => userStoreActions.setAdShieldEnabled(e.target.checked)}
-            className="mt-0.5 w-4 h-4 accent-[var(--color-accent)]"
-          />
-          <span>
-            <span className="flex items-center gap-1.5 text-sm font-semibold text-white">
-              <ShieldCheck className="w-4 h-4 text-emerald-400" aria-hidden="true" />
-              Ad-Shield
-            </span>
-            <span className="block text-xs text-zinc-400 mt-0.5">
-              Blocks pop-ups and redirects on compatible servers.
-              {adShieldEnabled && !server.supportsSandbox && ` Not supported by ${server.name}.`}
-            </span>
-          </span>
-        </label>
       </Modal>
 
       {/* Episode drawer */}
