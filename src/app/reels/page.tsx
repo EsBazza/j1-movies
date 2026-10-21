@@ -220,21 +220,21 @@ export default function ReelsPage() {
       <div className="hidden [@media(hover:hover)_and_(pointer:fine)]:flex absolute z-30 right-6 top-1/2 -translate-y-1/2 flex-col gap-3">
         <button
           type="button"
-          onClick={() => scrollToIndex(activeIndex - 1)}
-          disabled={activeIndex === 0}
+          onClick={() => activeIndex > 0 && scrollToIndex(activeIndex - 1)}
+          aria-disabled={activeIndex === 0}
           aria-label="Previous trailer"
           title="Previous (↑ / K)"
-          className="w-12 h-12 rounded-full bg-white/12 hover:bg-white/25 backdrop-blur-md text-white flex items-center justify-center transition-[background-color,opacity,transform] active:scale-90 disabled:opacity-30 disabled:pointer-events-none"
+          className="w-12 h-12 rounded-full bg-white/12 hover:bg-white/25 backdrop-blur-md text-white flex items-center justify-center transition-[background-color,opacity,transform] active:scale-90 aria-disabled:opacity-30 aria-disabled:pointer-events-none"
         >
           <ChevronUp className="w-6 h-6" aria-hidden="true" />
         </button>
         <button
           type="button"
-          onClick={() => scrollToIndex(activeIndex + 1)}
-          disabled={activeIndex >= playable.length - 1}
+          onClick={() => activeIndex < playable.length - 1 && scrollToIndex(activeIndex + 1)}
+          aria-disabled={activeIndex >= playable.length - 1}
           aria-label="Next trailer"
           title="Next (↓ / J)"
-          className="w-12 h-12 rounded-full bg-white/12 hover:bg-white/25 backdrop-blur-md text-white flex items-center justify-center transition-[background-color,opacity,transform] active:scale-90 disabled:opacity-30 disabled:pointer-events-none"
+          className="w-12 h-12 rounded-full bg-white/12 hover:bg-white/25 backdrop-blur-md text-white flex items-center justify-center transition-[background-color,opacity,transform] active:scale-90 aria-disabled:opacity-30 aria-disabled:pointer-events-none"
         >
           <ChevronDown className="w-6 h-6" aria-hidden="true" />
         </button>

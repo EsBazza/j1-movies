@@ -13,7 +13,7 @@ interface ScrollRowProps {
 }
 
 const arrowClass =
-  'absolute top-1/2 -translate-y-1/2 z-30 w-11 h-11 rounded-full bg-black/75 hover:bg-white hover:text-black text-white flex items-center justify-center shadow-2xl transition-all duration-300 opacity-0 group-hover/row:opacity-100 group-focus-within/row:opacity-100 disabled:!opacity-0 disabled:pointer-events-none [@media(hover:none)]:hidden';
+  'absolute top-1/2 -translate-y-1/2 z-30 w-11 h-11 rounded-full bg-black/75 hover:bg-white hover:text-black text-white flex items-center justify-center shadow-2xl transition-all duration-300 opacity-0 group-hover/row:opacity-100 group-focus-within/row:opacity-100 aria-disabled:!opacity-0 aria-disabled:pointer-events-none [@media(hover:none)]:hidden';
 
 /**
  * Horizontal scroll track with arrow buttons that hide at the edges and when
@@ -54,8 +54,9 @@ export function ScrollRow({ children, label, className, trackClassName }: Scroll
     <div className={cn('relative group/row', className)}>
       <button
         type="button"
-        onClick={() => scrollBy(-1)}
-        disabled={!canScrollLeft}
+        onClick={() => canScrollLeft && scrollBy(-1)}
+        aria-disabled={!canScrollLeft}
+        tabIndex={canScrollLeft ? undefined : -1}
         aria-label={`Scroll ${label} left`}
         className={cn(arrowClass, 'left-0 md:-left-4')}
       >
@@ -76,8 +77,9 @@ export function ScrollRow({ children, label, className, trackClassName }: Scroll
 
       <button
         type="button"
-        onClick={() => scrollBy(1)}
-        disabled={!canScrollRight}
+        onClick={() => canScrollRight && scrollBy(1)}
+        aria-disabled={!canScrollRight}
+        tabIndex={canScrollRight ? undefined : -1}
         aria-label={`Scroll ${label} right`}
         className={cn(arrowClass, 'right-0 md:-right-4')}
       >
