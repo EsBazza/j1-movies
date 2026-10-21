@@ -22,7 +22,7 @@ export function Footer() {
     window.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' });
   };
 
-  if (pathname?.startsWith('/watch/')) {
+  if (pathname?.startsWith('/watch/') || pathname === '/reels') {
     return null;
   }
 
