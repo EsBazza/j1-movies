@@ -8,6 +8,7 @@ import { discoverMedia, getTrailerKey, getTrending, normalizeMediaItem } from '@
 import { NormalizedMedia } from '@/types/tmdb';
 import { ReelItem } from '@/components/reels/ReelItem';
 import { Chip } from '@/components/ui/Chip';
+import { VolumeControl } from '@/components/ui/VolumeControl';
 import { setTrailerMuted, useTrailerMuted } from '@/lib/youtube';
 
 interface Feed {
@@ -189,13 +190,14 @@ export default function ReelsPage() {
             <ArrowLeft className="w-5 h-5" aria-hidden="true" />
             <Image src="/logo.png" alt="" width={90} height={24} className="h-6 w-auto hidden sm:block" />
           </Link>
-          <div className="flex gap-2 overflow-x-auto no-scrollbar" role="group" aria-label="Feed">
+          <div className="flex flex-1 min-w-0 gap-2 overflow-x-auto no-scrollbar" role="group" aria-label="Feed">
             {FEEDS.map((f) => (
               <Chip key={f.id} selected={f.id === feedId} onClick={() => setFeedId(f.id)} className="bg-black/40 backdrop-blur-sm">
                 {f.label}
               </Chip>
             ))}
           </div>
+          <VolumeControl size="md" className="flex-shrink-0 bg-black/40" />
         </div>
       </div>
 

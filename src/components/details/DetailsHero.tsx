@@ -3,12 +3,13 @@
 import React, { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Play, RotateCcw, Share2, Star, Volume2, VolumeX, Film } from 'lucide-react';
+import { Play, RotateCcw, Share2, Star, Film } from 'lucide-react';
 import { TMDBMovieDetails, TMDBTVDetails, WatchHistoryItem } from '@/types/tmdb';
 import { getBackdropUrl, getPosterUrl, getLogoUrl } from '@/lib/tmdb';
 import { useAutoplayAllowed, useBackgroundTrailer } from '@/lib/youtube';
 import { BookmarkButton } from '@/components/common/BookmarkButton';
 import { LinkButton, Button, IconButton } from '@/components/ui/Button';
+import { VolumeControl } from '@/components/ui/VolumeControl';
 import { toast } from '@/components/ui/Toast';
 import { formatRuntime, formatYear, cn } from '@/lib/utils';
 
@@ -47,8 +48,6 @@ export function DetailsHero({
     attachIframe,
     iframeProps,
     isPlaying,
-    isMuted,
-    toggleMute,
   } = useBackgroundTrailer({ videoKey: trailerKey, enabled: autoplayAllowed, loop: true });
 
   // Arriving from Continue Watching (#resume): focus and briefly highlight Resume
@@ -233,11 +232,7 @@ export function DetailsHero({
             <IconButton aria-label="Share" size="lg" onClick={share}>
               <Share2 className="w-5 h-5" aria-hidden="true" />
             </IconButton>
-            {iframeProps && (
-              <IconButton aria-label={isMuted ? 'Unmute trailer' : 'Mute trailer'} aria-pressed={!isMuted} size="lg" onClick={toggleMute}>
-                {isMuted ? <VolumeX className="w-5 h-5" aria-hidden="true" /> : <Volume2 className="w-5 h-5" aria-hidden="true" />}
-              </IconButton>
-            )}
+            {iframeProps && <VolumeControl />}
           </div>
         </div>
       </div>

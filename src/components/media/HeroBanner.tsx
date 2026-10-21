@@ -2,12 +2,13 @@
 
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import Image from 'next/image';
-import { Play, Pause, Star, Volume2, VolumeX } from 'lucide-react';
+import { Play, Pause, Star } from 'lucide-react';
 import { NormalizedMedia } from '@/types/tmdb';
 import { getBackdropUrl, getPosterUrl, getLogoUrl, getMovieDetails, getTVDetails, pickLogo } from '@/lib/tmdb';
 import { formatYear, cn } from '@/lib/utils';
 import { BookmarkButton } from '@/components/common/BookmarkButton';
 import { LinkButton, IconButton } from '@/components/ui/Button';
+import { VolumeControl } from '@/components/ui/VolumeControl';
 import { ExtractedPalette } from '@/lib/colorExtractor';
 import { useAutoplayAllowed, useBackgroundTrailer } from '@/lib/youtube';
 import { useUserStoreSelector } from '@/lib/store';
@@ -75,8 +76,6 @@ export function HeroBanner({ item, items = [], onActiveItemChange, pageTitle = '
     attachIframe,
     iframeProps: trailerIframeProps,
     isPlaying: trailerPlaying,
-    isMuted: trailerMuted,
-    toggleMute: toggleTrailerMute,
     isPaused: userPaused,
     togglePause,
   } = useBackgroundTrailer({
@@ -272,16 +271,7 @@ export function HeroBanner({ item, items = [], onActiveItemChange, pageTitle = '
               }}
               className="w-12 h-12 p-0 inline-flex items-center justify-center"
             />
-            {trailerIframeProps && (
-              <IconButton
-                aria-label={trailerMuted ? 'Unmute trailer' : 'Mute trailer'}
-                aria-pressed={!trailerMuted}
-                size="lg"
-                onClick={toggleTrailerMute}
-              >
-                {trailerMuted ? <VolumeX className="w-5 h-5" aria-hidden="true" /> : <Volume2 className="w-5 h-5" aria-hidden="true" />}
-              </IconButton>
-            )}
+            {trailerIframeProps && <VolumeControl />}
           </div>
         </div>
 

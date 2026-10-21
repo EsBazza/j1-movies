@@ -72,19 +72,56 @@ export function setTrailerMuted(value: boolean) {
 }
 
 export function useTrailerMuted(): boolean {
-  return useSyncExternalStore(
-    (l) => {
-      muteListeners.add(l);
-      return () => muteListeners.delete(l);
-    },
-    readMuted,
-    () => true
-  );
+  return useSyncExternalStore(subscribeAudio, readMuted, () => true);
+}
+
+// ── Shared volume level (0-100), remembered alongside mute ─────────────────
+const VOLUME_KEY = 'j1-trailer-volume';
+const DEFAULT_VOLUME = 80;
+let volume = DEFAULT_VOLUME;
+let volumeLoaded = false;
+
+function readVolume(): number {
+  if (!volumeLoaded) {
+    volumeLoaded = true;
+    try {
+      const stored = Number(window.localStorage.getItem(VOLUME_KEY));
+      if (Number.isFinite(stored) && stored > 0 && stored <= 100) volume = stored;
+    } catch {
+      // storage unavailable — keep default
+    }
+  }
+  return volume;
+}
+
+/** Sets the trailer volume; 0 mutes, anything above unmutes. */
+export function setTrailerVolume(value: number) {
+  const v = Math.max(0, Math.min(100, Math.round(value)));
+  if (v === 0) {
+    setTrailerMuted(true);
+    return;
+  }
+  volume = v;
+  volumeLoaded = true;
+  try {
+    window.localStorage.setItem(VOLUME_KEY, String(v));
+  } catch {
+    // ignore
+  }
+  setTrailerMuted(false);
+}
+
+export function useTrailerVolume(): number {
+  return useSyncExternalStore(subscribeAudio, readVolume, () => DEFAULT_VOLUME);
+}
+
+function subscribeAudio(l: () => void) {
+  muteListeners.add(l);
+  return () => muteListeners.delete(l);
 }
 
 const YT_PLAYING = 1;
 const YT_ENDED = 0;
-const TRAILER_VOLUME = 80;
 
 interface BackgroundTrailerOptions {
   videoKey: string | null;
@@ -110,6 +147,7 @@ export function useBackgroundTrailer({ videoKey, enabled = true, loop = true, on
   const [inView, setInView] = useState(true);
   const [tabHidden, setTabHidden] = useState(false);
   const isMuted = useTrailerMuted();
+  const level = useTrailerVolume();
   const onEndedRef = useRef(onEnded);
   useEffect(() => {
     onEndedRef.current = onEnded;
@@ -162,14 +200,14 @@ export function useBackgroundTrailer({ videoKey, enabled = true, loop = true, on
   }, [shouldPlay, iframe]);
 
   useEffect(() => {
-    ytSetVolume(iframe, isMuted ? 0 : TRAILER_VOLUME);
-  }, [isMuted, iframe]);
+    ytSetVolume(iframe, isMuted ? 0 : level);
+  }, [isMuted, level, iframe]);
 
   const onLoad = useCallback(() => {
     // Subscribe to player events, then re-apply the current mute/pause state
     iframe?.contentWindow?.postMessage(JSON.stringify({ event: 'listening', id: videoKey, channel: 'widget' }), YT_ORIGIN);
     ytCommand(iframe, 'addEventListener', ['onStateChange']);
-    if (!readMuted()) ytSetVolume(iframe, TRAILER_VOLUME);
+    if (!readMuted()) ytSetVolume(iframe, readVolume());
   }, [videoKey, iframe]);
 
   return {
