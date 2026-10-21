@@ -11,11 +11,6 @@ import {
 
 const TMDB_IMAGE_BASE = 'https://image.tmdb.org/t/p';
 
-// Fallback credentials in case environment variables are missing on Vercel
-const DEFAULT_TMDB_API_KEY = 'f185fd26e0b5d4a99193d29f47c04ce9';
-const DEFAULT_TMDB_READ_ACCESS_TOKEN =
-  'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJmMTg1ZmQyNmUwYjVkNGE5OTE5M2QyOWY0N2MwNGNlOSIsIm5iZiI6MTc2NDA0MDc1Mi4zMzcsInN1YiI6IjY5MjUyMDMwMWRkMzc4OTY2YmQ5YzMxZiIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.q7UWt1vbgSe54DC_HfnGvq2NrvSRZSNPgz2j42uGxVE';
-
 /**
  * Build TMDB image URL with resolution sizing and safe fallback
  */
@@ -70,98 +65,47 @@ export function normalizeMediaItem(item: TMDBMediaItem, fallbackType: MediaType 
 }
 
 /**
- * Helper to fetch from internal /api/tmdb proxy (client) or direct TMDB API (server/client fallback)
+ * Error carrying the HTTP status so callers can tell "not found" apart from outages.
+ */
+export class TMDBError extends Error {
+  constructor(message: string, public status: number) {
+    super(message);
+    this.name = 'TMDBError';
+  }
+}
+
+export function isNotFoundError(error: unknown): boolean {
+  return error instanceof TMDBError && error.status === 404;
+}
+
+/**
+ * Fetches TMDB data. In the browser this always goes through the /api/tmdb proxy so
+ * credentials never reach the client; on the server it calls TMDB directly.
  */
 async function fetchFromTMDB<T>(path: string, params: Record<string, string | number> = {}): Promise<T> {
-  const isClient = typeof window !== 'undefined';
-  
-  if (isClient) {
+  let res: Response;
+
+  if (typeof window !== 'undefined') {
     const searchParams = new URLSearchParams();
     Object.entries(params).forEach(([key, val]) => {
       if (val !== undefined && val !== null) {
         searchParams.set(key, String(val));
       }
     });
-
     const queryStr = searchParams.toString();
-    const url = `/api/tmdb/${path}${queryStr ? `?${queryStr}` : ''}`;
-
-    try {
-      const res = await fetch(url, {
-        headers: { 'Content-Type': 'application/json' },
-      });
-
-      if (res.ok) {
-        return await res.json();
-      }
-    } catch {
-      // Internal proxy failed, fall back to direct TMDB API below
-    }
-
-    // Direct TMDB client fallback if local proxy fails on Vercel
-    const directUrl = new URL(`https://api.themoviedb.org/3/${path}`);
-    Object.entries(params).forEach(([key, val]) => {
-      if (val !== undefined && val !== null) {
-        directUrl.searchParams.set(key, String(val));
-      }
-    });
-    directUrl.searchParams.set('api_key', DEFAULT_TMDB_API_KEY);
-
-    const directRes = await fetch(directUrl.toString(), {
-      headers: {
-        Accept: 'application/json',
-        Authorization: `Bearer ${DEFAULT_TMDB_READ_ACCESS_TOKEN}`,
-      },
-    });
-
-    if (!directRes.ok) {
-      const errorData = await directRes.json().catch(() => ({}));
-      throw new Error(errorData.message || errorData.status_message || `TMDB API Request Failed: ${directRes.status}`);
-    }
-
-    return directRes.json();
+    res = await fetch(`/api/tmdb/${path}${queryStr ? `?${queryStr}` : ''}`);
+  } else {
+    const { buildTMDBRequest } = await import('./tmdbAuth');
+    const { url, headers } = buildTMDBRequest(path, params);
+    res = await fetch(url, { headers, next: { revalidate: 3600 } });
   }
-
-  // Server-side (SSR / Static Generation / Build time)
-  const apiKey =
-    process.env.TMDB_API_KEY ||
-    process.env.NEXT_PUBLIC_TMDB_API_KEY ||
-    process.env.TMDB_KEY ||
-    process.env.API_KEY ||
-    DEFAULT_TMDB_API_KEY;
-
-  const readAccessToken =
-    process.env.TMDB_READ_ACCESS_TOKEN ||
-    process.env.NEXT_PUBLIC_TMDB_READ_ACCESS_TOKEN ||
-    process.env.TMDB_TOKEN ||
-    process.env.TMDB_ACCESS_TOKEN ||
-    DEFAULT_TMDB_READ_ACCESS_TOKEN;
-
-  const targetUrl = new URL(`https://api.themoviedb.org/3/${path}`);
-  Object.entries(params).forEach(([key, val]) => {
-    if (val !== undefined && val !== null) {
-      targetUrl.searchParams.set(key, String(val));
-    }
-  });
-
-  const headers: HeadersInit = {
-    'Accept': 'application/json',
-  };
-
-  if (readAccessToken) {
-    headers['Authorization'] = `Bearer ${readAccessToken}`;
-  } else if (apiKey) {
-    targetUrl.searchParams.set('api_key', apiKey);
-  }
-
-  const res = await fetch(targetUrl.toString(), {
-    headers,
-    next: { revalidate: 3600 },
-  });
 
   if (!res.ok) {
     const errorData = await res.json().catch(() => ({}));
-    throw new Error(errorData.message || errorData.status_message || `TMDB API Request Failed: ${res.status}`);
+    throw new TMDBError(
+      errorData.error || errorData.status_message || `TMDB API Request Failed: ${res.status}`,
+      res.status
+    );
   }
 
   return res.json();

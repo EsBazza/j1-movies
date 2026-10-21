@@ -207,6 +207,8 @@ export interface WatchHistoryItem {
   durationSeconds?: number;
   progressPercent?: number;
   timestampFormatted?: string;
+  /** True once playback passed the "finished" threshold (~90%) */
+  finished?: boolean;
   lastWatchedAt: number;
 }
 

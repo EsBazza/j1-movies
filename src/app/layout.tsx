@@ -1,9 +1,10 @@
-import type { Metadata } from 'next';
-import { Plus_Jakarta_Sans, Bebas_Neue } from 'next/font/google';
+import type { Metadata, Viewport } from 'next';
+import { Plus_Jakarta_Sans } from 'next/font/google';
 import './globals.css';
 import { Navbar } from '@/components/layout/Navbar';
 import { MobileNav } from '@/components/layout/MobileNav';
 import { Footer } from '@/components/layout/Footer';
+import { Toaster } from '@/components/ui/Toast';
 
 const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ['latin'],
@@ -12,25 +13,21 @@ const plusJakartaSans = Plus_Jakarta_Sans({
   display: 'swap',
 });
 
-const bebasNeue = Bebas_Neue({
-  subsets: ['latin'],
-  weight: ['400'],
-  variable: '--font-display',
-  display: 'swap',
-});
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+  themeColor: '#0f1014',
+  colorScheme: 'dark',
+};
 
 export const metadata: Metadata = {
-  title: 'J1 Movies - Cinema Streaming & Discovery',
+  title: {
+    default: 'J1 Movies - Cinema Streaming & Discovery',
+    template: '%s | J1 Movies',
+  },
   description:
     'Stream your favorite movies, TV series, anime, and Asian dramas with crystal-clear high definition, instant playback, and personal watchlist.',
-  icons: {
-    icon: [
-      { url: '/icon.png', type: 'image/png' },
-      { url: '/favicon.ico' },
-    ],
-    shortcut: '/icon.png',
-    apple: '/icon.png',
-  },
 };
 
 export default function RootLayout({
@@ -39,12 +36,21 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`dark ${plusJakartaSans.variable} ${bebasNeue.variable}`}>
-      <body className="bg-[#0f1014] font-sans text-zinc-100 min-h-screen flex flex-col antialiased selection:bg-red-600 selection:text-white">
+    <html lang="en" className={`dark ${plusJakartaSans.variable}`}>
+      <body className="bg-bg font-sans text-zinc-100 min-h-screen flex flex-col antialiased selection:bg-accent selection:text-white">
+        <a
+          href="#main"
+          className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[100] focus:px-4 focus:py-2 focus:rounded-full focus:bg-white focus:text-black focus:text-sm focus:font-semibold"
+        >
+          Skip to content
+        </a>
         <Navbar />
-        <main className="flex-1 w-full">{children}</main>
+        <main id="main" className="flex-1 w-full">
+          {children}
+        </main>
         <Footer />
         <MobileNav />
+        <Toaster />
       </body>
     </html>
   );

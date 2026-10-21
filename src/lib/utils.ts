@@ -1,35 +1,13 @@
-export type ClassValue =
-  | string
-  | number
-  | boolean
-  | undefined
-  | null
-  | { [key: string]: any }
-  | ClassValue[];
+import { clsx, type ClassValue } from 'clsx';
+import { twMerge } from 'tailwind-merge';
+
+export type { ClassValue };
 
 /**
- * Lightweight, zero-dependency classname merger
+ * Merges class names; later Tailwind utilities override conflicting earlier ones.
  */
 export function cn(...inputs: ClassValue[]): string {
-  const classes: string[] = [];
-
-  function process(input: ClassValue) {
-    if (!input) return;
-    if (typeof input === 'string' || typeof input === 'number') {
-      classes.push(String(input));
-    } else if (Array.isArray(input)) {
-      input.forEach(process);
-    } else if (typeof input === 'object') {
-      for (const key in input) {
-        if (input[key]) {
-          classes.push(key);
-        }
-      }
-    }
-  }
-
-  inputs.forEach(process);
-  return classes.join(' ').trim();
+  return twMerge(clsx(inputs));
 }
 
 export function formatRuntime(minutes?: number): string {

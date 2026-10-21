@@ -1,74 +1,77 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { buildTMDBRequest } from '@/lib/tmdbAuth';
 
-const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
-
-// Fallback defaults in case environment variables are missing on Vercel
-const DEFAULT_TMDB_API_KEY = 'f185fd26e0b5d4a99193d29f47c04ce9';
-const DEFAULT_TMDB_READ_ACCESS_TOKEN =
-  'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJmMTg1ZmQyNmUwYjVkNGE5OTE5M2QyOWY0N2MwNGNlOSIsIm5iZiI6MTc2NDA0MDc1Mi4zMzcsInN1YiI6IjY5MjUyMDMwMWRkMzc4OTY2YmQ5YzMxZiIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.q7UWt1vbgSe54DC_HfnGvq2NrvSRZSNPgz2j42uGxVE';
+// Only endpoints the app actually uses — prevents the proxy being used as an open TMDB gateway.
+const ALLOWED_PREFIXES = ['movie/', 'tv/', 'person/', 'search/', 'discover/', 'trending/', 'genre/'];
+const SAFE_SEGMENT = /^[a-zA-Z0-9_-]+$/;
+const ALLOWED_QUERY_KEYS = new Set([
+  'page',
+  'query',
+  'include_adult',
+  'append_to_response',
+  'include_image_language',
+  'language',
+  'sort_by',
+  'with_genres',
+  'without_genres',
+  'with_keywords',
+  'without_keywords',
+  'with_original_language',
+  'with_origin_country',
+  'primary_release_year',
+  'first_air_date_year',
+  'primary_release_date.gte',
+  'primary_release_date.lte',
+  'first_air_date.gte',
+  'first_air_date.lte',
+  'vote_average.gte',
+  'vote_count.gte',
+]);
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ path: string[] }> }
 ) {
   const { path } = await params;
-  const endpoint = path.join('/');
-  const searchParams = request.nextUrl.searchParams;
 
-  const apiKey =
-    process.env.TMDB_API_KEY ||
-    process.env.NEXT_PUBLIC_TMDB_API_KEY ||
-    process.env.TMDB_KEY ||
-    process.env.API_KEY ||
-    DEFAULT_TMDB_API_KEY;
-
-  const readAccessToken =
-    process.env.TMDB_READ_ACCESS_TOKEN ||
-    process.env.NEXT_PUBLIC_TMDB_READ_ACCESS_TOKEN ||
-    process.env.TMDB_TOKEN ||
-    process.env.TMDB_ACCESS_TOKEN ||
-    DEFAULT_TMDB_READ_ACCESS_TOKEN;
-
-  // Construct target URL
-  const targetUrl = new URL(`${TMDB_BASE_URL}/${endpoint}`);
-  searchParams.forEach((value, key) => {
-    targetUrl.searchParams.set(key, value);
-  });
-
-  const headers: HeadersInit = {
-    'Accept': 'application/json',
-  };
-
-  if (readAccessToken) {
-    headers['Authorization'] = `Bearer ${readAccessToken}`;
-  } else if (apiKey) {
-    targetUrl.searchParams.set('api_key', apiKey);
+  if (!path?.length || !path.every((segment) => SAFE_SEGMENT.test(segment))) {
+    return NextResponse.json({ error: 'Invalid path' }, { status: 400 });
   }
 
+  const endpoint = path.join('/');
+  if (!ALLOWED_PREFIXES.some((prefix) => `${endpoint}/`.startsWith(prefix))) {
+    return NextResponse.json({ error: 'Endpoint not allowed' }, { status: 403 });
+  }
+
+  const query = new URLSearchParams();
+  request.nextUrl.searchParams.forEach((value, key) => {
+    if (ALLOWED_QUERY_KEYS.has(key)) query.set(key, value);
+  });
+
+  let tmdbRequest: { url: string; headers: HeadersInit };
   try {
-    const isDetail =
-      endpoint.includes('details') ||
-      endpoint.includes('credits') ||
-      endpoint.startsWith('movie/') ||
-      endpoint.startsWith('tv/') ||
-      endpoint.startsWith('person/');
+    tmdbRequest = buildTMDBRequest(endpoint, query);
+  } catch (error) {
+    return NextResponse.json(
+      { error: 'TMDB_NOT_CONFIGURED', message: (error as Error).message },
+      { status: 503 }
+    );
+  }
 
-    const cacheTime = isDetail ? 86400 : 3600;
+  const isDetail =
+    endpoint.startsWith('movie/') || endpoint.startsWith('tv/') || endpoint.startsWith('person/');
+  const cacheTime = isDetail ? 86400 : 3600;
 
-    const response = await fetch(targetUrl.toString(), {
-      headers,
-      next: {
-        revalidate: cacheTime,
-      },
+  try {
+    const response = await fetch(tmdbRequest.url, {
+      headers: tmdbRequest.headers,
+      next: { revalidate: cacheTime },
     });
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       return NextResponse.json(
-        {
-          error: `TMDB API error (${response.status})`,
-          details: errorData,
-        },
+        { error: `TMDB API error (${response.status})`, details: errorData },
         { status: response.status }
       );
     }
@@ -79,13 +82,10 @@ export async function GET(
         'Cache-Control': `public, s-maxage=${cacheTime}, stale-while-revalidate=86400`,
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     return NextResponse.json(
-      {
-        error: 'Failed to communicate with TMDB API',
-        message: error.message || 'Unknown network error',
-      },
-      { status: 500 }
+      { error: 'Failed to communicate with TMDB API', message: (error as Error).message || 'Unknown network error' },
+      { status: 502 }
     );
   }
 }

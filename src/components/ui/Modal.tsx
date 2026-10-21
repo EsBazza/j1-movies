@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useId, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -8,59 +9,152 @@ interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
   title?: string;
+  /** Accessible description shown under the title */
+  description?: string;
   children: React.ReactNode;
   className?: string;
+  /** `center` dialog, right-side `drawer`, or full-screen `sheet` */
+  variant?: 'center' | 'drawer' | 'sheet';
+  /** Hide the built-in header (the content must then provide its own close control) */
+  hideHeader?: boolean;
 }
 
-export function Modal({ isOpen, onClose, title, children, className }: ModalProps) {
+// Ref-counted scroll lock so stacked overlays don't unlock the page early.
+let scrollLocks = 0;
+function lockScroll() {
+  if (scrollLocks++ === 0) document.documentElement.style.overflow = 'hidden';
+}
+function unlockScroll() {
+  if (--scrollLocks <= 0) {
+    scrollLocks = 0;
+    document.documentElement.style.overflow = '';
+  }
+}
+
+const FOCUSABLE =
+  'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), iframe, [tabindex]:not([tabindex="-1"])';
+
+export function Modal({
+  isOpen,
+  onClose,
+  title,
+  description,
+  children,
+  className,
+  variant = 'center',
+  hideHeader = false,
+}: ModalProps) {
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const onCloseRef = useRef(onClose);
+  const titleId = useId();
+  const descId = useId();
+
   useEffect(() => {
+    onCloseRef.current = onClose;
+  });
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const previouslyFocused = document.activeElement as HTMLElement | null;
+    lockScroll();
+
+    const dialog = dialogRef.current;
+    const first = dialog?.querySelector<HTMLElement>(FOCUSABLE);
+    (first || dialog)?.focus();
+
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape') {
+        e.stopPropagation();
+        onCloseRef.current();
+        return;
+      }
+      if (e.key !== 'Tab' || !dialog) return;
+      const items = Array.from(dialog.querySelectorAll<HTMLElement>(FOCUSABLE));
+      if (items.length === 0) {
+        e.preventDefault();
+        return;
+      }
+      const firstEl = items[0];
+      const lastEl = items[items.length - 1];
+      if (e.shiftKey && document.activeElement === firstEl) {
+        e.preventDefault();
+        lastEl.focus();
+      } else if (!e.shiftKey && document.activeElement === lastEl) {
+        e.preventDefault();
+        firstEl.focus();
+      }
     };
 
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-      window.addEventListener('keydown', handleKeyDown);
-    } else {
-      document.body.style.overflow = '';
-    }
-
+    document.addEventListener('keydown', handleKeyDown, true);
     return () => {
-      document.body.style.overflow = '';
-      window.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('keydown', handleKeyDown, true);
+      unlockScroll();
+      previouslyFocused?.focus?.();
     };
-  }, [isOpen, onClose]);
+  }, [isOpen]);
 
-  if (!isOpen) return null;
+  if (!isOpen || typeof document === 'undefined') return null;
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 md:p-10">
-      {/* Backdrop */}
+  return createPortal(
+    <div
+      className={cn(
+        'fixed inset-0 z-[var(--z-overlay)] flex',
+        variant === 'center' && 'items-center justify-center p-4 sm:p-6 md:p-10',
+        variant === 'drawer' && 'justify-end',
+        variant === 'sheet' && 'items-stretch'
+      )}
+    >
       <div
-        className="fixed inset-0 bg-black/80 backdrop-blur-sm transition-opacity"
-        onClick={onClose}
+        className="fixed inset-0 bg-black/80 backdrop-blur-sm animate-fade-in"
+        onClick={() => onCloseRef.current()}
+        aria-hidden="true"
       />
 
-      {/* Modal Dialog */}
       <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={title ? titleId : undefined}
+        aria-describedby={description ? descId : undefined}
+        tabIndex={-1}
         className={cn(
-          'relative z-10 w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-2xl bg-zinc-950 border border-zinc-800 shadow-2xl p-6 text-zinc-100',
+          'relative z-10 flex flex-col bg-surface-1 text-zinc-100 shadow-2xl outline-none',
+          variant === 'center' &&
+            'w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-2xl border border-border p-6 animate-scale-in',
+          variant === 'drawer' &&
+            'h-full w-full max-w-md overflow-hidden border-l border-border p-5 sm:p-6 animate-slide-in-right',
+          variant === 'sheet' && 'w-full h-full overflow-y-auto p-4 sm:p-6 animate-fade-in',
           className
         )}
       >
-        <div className="flex items-center justify-between pb-4 border-b border-zinc-800/80 mb-4">
-          <h3 className="text-xl font-bold tracking-tight text-white">{title || ''}</h3>
-          <button
-            onClick={onClose}
-            className="p-2 rounded-full text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors"
-            aria-label="Close dialog"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
+        {!hideHeader && (
+          <div className="flex items-start justify-between gap-4 pb-4 border-b border-border mb-4 flex-shrink-0">
+            <div className="min-w-0">
+              {title && (
+                <h2 id={titleId} className="text-lg sm:text-xl font-bold tracking-tight text-white truncate">
+                  {title}
+                </h2>
+              )}
+              {description && (
+                <p id={descId} className="text-xs text-zinc-400 mt-0.5 truncate">
+                  {description}
+                </p>
+              )}
+            </div>
+            <button
+              type="button"
+              onClick={() => onCloseRef.current()}
+              className="p-2 -m-1 rounded-full text-zinc-400 hover:text-white hover:bg-white/10 transition-colors"
+              aria-label="Close dialog"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+        )}
 
-        <div className="relative">{children}</div>
+        <div className={cn('relative', variant === 'drawer' && 'flex-1 min-h-0 flex flex-col')}>{children}</div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
