@@ -3,12 +3,14 @@
 import React, { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Play, RotateCcw, Share2, Star, Film } from 'lucide-react';
+import { Play, RotateCcw, Share2, Star } from 'lucide-react';
 import { TMDBMovieDetails, TMDBTVDetails, WatchHistoryItem } from '@/types/tmdb';
 import { getBackdropUrl, getPosterUrl, getLogoUrl } from '@/lib/tmdb';
 import { TRAILER_FADE, useAutoplayAllowed, useBackgroundTrailer } from '@/lib/youtube';
 import { BookmarkButton } from '@/components/common/BookmarkButton';
-import { LinkButton, Button, IconButton } from '@/components/ui/Button';
+import { LinkButton, IconButton } from '@/components/ui/Button';
+import { ExtractedPalette } from '@/lib/colorExtractor';
+import { useTrailerPalette } from '@/lib/palette';
 import { VolumeControl } from '@/components/ui/VolumeControl';
 import { toast } from '@/components/ui/Toast';
 import { formatRuntime, formatYear, cn } from '@/lib/utils';
@@ -23,7 +25,8 @@ interface DetailsHeroProps {
   historyItem?: WatchHistoryItem;
   /** First season number (TV) for "Play from the start" */
   firstSeason: number;
-  onOpenTrailer?: () => void;
+  /** Title palette; restored when the trailer isn't playing */
+  palette: ExtractedPalette;
 }
 
 export function DetailsHero({
@@ -35,7 +38,7 @@ export function DetailsHero({
   certification,
   historyItem,
   firstSeason,
-  onOpenTrailer,
+  palette,
 }: DetailsHeroProps) {
   const [logoFailed, setLogoFailed] = useState(false);
   const [backdropFailed, setBackdropFailed] = useState(false);
@@ -49,6 +52,9 @@ export function DetailsHero({
     iframeProps,
     isPlaying,
   } = useBackgroundTrailer({ videoKey: trailerKey, enabled: autoplayAllowed, loop: true });
+
+  // Ambient colours follow the trailer while it plays
+  useTrailerPalette(trailerKey, isPlaying, palette);
 
   // Arriving from Continue Watching (#resume): focus and briefly highlight Resume
   useEffect(() => {
@@ -96,7 +102,7 @@ export function DetailsHero({
 
   return (
     <section ref={observeContainer} className="relative w-full min-h-[86svh] sm:min-h-[88vh] max-h-[1000px] flex flex-col justify-end overflow-hidden">
-      <div aria-hidden="true" className="absolute inset-0 overflow-hidden">
+      <div aria-hidden="true" className="absolute inset-0 overflow-hidden fade-bottom">
         <Image
           src={
             backdropFailed
@@ -122,8 +128,11 @@ export function DetailsHero({
             )}
           />
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-bg via-bg/40 to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-r from-bg/90 via-bg/30 to-transparent" />
+        {/* Media fades to transparent (mask), so the ambient background continues below
+            without a visible edge; a soft blur band smooths the transition */}
+        <div className="absolute inset-x-0 bottom-0 h-2/5 blur-band" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/20 to-transparent" />
       </div>
 
       <div className="relative max-w-[1800px] w-full mx-auto px-4 sm:px-8 lg:px-12 pt-28 pb-10 sm:pb-14">
@@ -224,12 +233,6 @@ export function DetailsHero({
               }}
               className="w-12 h-12 p-0 inline-flex items-center justify-center"
             />
-            {onOpenTrailer && trailerKey && (
-              <Button variant="secondary" size="lg" onClick={onOpenTrailer}>
-                <Film className="w-4 h-4" aria-hidden="true" />
-                Trailer
-              </Button>
-            )}
             <IconButton aria-label="Share" size="lg" onClick={share}>
               <Share2 className="w-5 h-5" aria-hidden="true" />
             </IconButton>

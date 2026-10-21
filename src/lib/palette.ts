@@ -1,7 +1,7 @@
 'use client';
 
-import { useSyncExternalStore } from 'react';
-import { DEFAULT_PALETTE, ExtractedPalette } from '@/lib/colorExtractor';
+import { useEffect, useState, useSyncExternalStore } from 'react';
+import { DEFAULT_PALETTE, ExtractedPalette, extractPaletteFromImage } from '@/lib/colorExtractor';
 
 /**
  * Global, title-driven colour palette. The active hero slide or details page sets it;
@@ -85,4 +85,58 @@ export function useActivePalette(): ExtractedPalette {
     () => current,
     () => DEFAULT_PALETTE
   );
+}
+
+// ── Trailer-driven colours ──────────────────────────────────────────────────
+// The YouTube player itself can't be read (cross-origin), but YouTube serves CORS-enabled
+// still frames: hqdefault plus 1/2/3 (≈25/50/75% through the video).
+const TRAILER_FRAMES = ['hqdefault', '1', '2', '3'];
+const FRAME_INTERVAL_MS = 7000;
+const framePaletteCache = new Map<string, ExtractedPalette[]>();
+
+/**
+ * While a background trailer is visibly playing, cycles the global palette through the
+ * trailer's frames (colours cross-fade via the registered CSS properties). When it
+ * stops, the title's base palette comes back.
+ */
+export function useTrailerPalette(trailerKey: string | null, isPlaying: boolean, basePalette?: ExtractedPalette) {
+  const [frames, setFrames] = useState<{ key: string; palettes: ExtractedPalette[] } | null>(null);
+
+  useEffect(() => {
+    if (!trailerKey) return;
+    const cached = framePaletteCache.get(trailerKey);
+    if (cached) {
+      setFrames({ key: trailerKey, palettes: cached });
+      return;
+    }
+    let ignore = false;
+    Promise.all(
+      TRAILER_FRAMES.map((f) => extractPaletteFromImage(`https://i.ytimg.com/vi/${trailerKey}/${f}.jpg`))
+    ).then((palettes) => {
+      // extractPaletteFromImage falls back to the default palette on failure; drop those
+      const usable = palettes.filter((p) => p !== DEFAULT_PALETTE);
+      framePaletteCache.set(trailerKey, usable);
+      if (!ignore) setFrames({ key: trailerKey, palettes: usable });
+    });
+    return () => {
+      ignore = true;
+    };
+  }, [trailerKey]);
+
+  const palettes = frames && frames.key === trailerKey ? frames.palettes : null;
+
+  useEffect(() => {
+    if (!isPlaying || !palettes?.length) {
+      if (basePalette) setActivePalette(basePalette);
+      return;
+    }
+    let i = 0;
+    setActivePalette(palettes[0]);
+    if (palettes.length < 2) return;
+    const timer = setInterval(() => {
+      i = (i + 1) % palettes.length;
+      setActivePalette(palettes[i]);
+    }, FRAME_INTERVAL_MS);
+    return () => clearInterval(timer);
+  }, [isPlaying, palettes, basePalette]);
 }

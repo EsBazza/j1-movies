@@ -251,8 +251,16 @@
   animation-play-state: paused;
 }
 
-/* Fades media edges into the page so sections flow without hard lines */
+/* Hero media fades to transparent (not to a colour), so the ambient background shows
+   through and there is no visible edge where the hero ends */
 .fade-bottom {
-  mask-image: linear-gradient(to bottom, #000 55%, transparent 100%);
-  -webkit-mask-image: linear-gradient(to bottom, #000 55%, transparent 100%);
+  mask-image: linear-gradient(to bottom, #000 0%, #000 55%, rgb(0 0 0 / 0.6) 75%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 55%, rgb(0 0 0 / 0.6) 75%, transparent 100%);
+}
+/* Soft blur band along the hero's lower edge */
+.blur-band {
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  mask-image: linear-gradient(to top, #000 0%, #000 25%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to top, #000 0%, #000 25%, transparent 100%);
 }

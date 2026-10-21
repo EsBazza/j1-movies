@@ -175,7 +175,7 @@ export default function MediaDetailsPage() {
         certification={derived.certification}
         historyItem={historyItem}
         firstSeason={derived.seasons[0]?.season_number ?? 1}
-        onOpenTrailer={derived.trailer ? () => setModalVideo(derived.trailer!) : undefined}
+        palette={palette}
       />
 
       {/* One scrolling page: spacious, revealed sections (no tabs) */}
@@ -221,8 +221,6 @@ export default function MediaDetailsPage() {
           </DetailsSection>
         )}
 
-        {derived.recommendations.length > 0 && <MediaCarousel title="More like this" items={derived.recommendations} />}
-
         <DetailsSection id="about" title="About">
           <div className="grid lg:grid-cols-[1fr_320px] gap-10 lg:gap-16">
             <div>
@@ -254,6 +252,9 @@ export default function MediaDetailsPage() {
             </dl>
           </div>
         </DetailsSection>
+
+        {derived.recommendations.length > 0 && <MediaCarousel title="More like this" items={derived.recommendations} />}
+
       </div>
 
       <Modal isOpen={Boolean(modalVideo)} onClose={() => setModalVideo(null)} title={modalVideo?.name} className="max-w-5xl">

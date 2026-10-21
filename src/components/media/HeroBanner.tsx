@@ -12,11 +12,12 @@ import { VolumeControl } from '@/components/ui/VolumeControl';
 import { ExtractedPalette } from '@/lib/colorExtractor';
 import { TRAILER_FADE, useAutoplayAllowed, useBackgroundTrailer } from '@/lib/youtube';
 import { useUserStoreSelector } from '@/lib/store';
+import { useTrailerPalette } from '@/lib/palette';
 
 interface HeroBannerProps {
   item?: NormalizedMedia;
   items?: NormalizedMedia[];
-  /** Palette is published globally by the page; accepted for call-site compatibility */
+  /** The page's palette for the active slide; restored when the trailer isn't playing */
   palette?: ExtractedPalette;
   onActiveItemChange?: (item: NormalizedMedia) => void;
   /** Page-level heading for screen readers (the hero title itself is an h2) */
@@ -41,7 +42,7 @@ function pickTrailerKey(videos: { site?: string; type?: string; key?: string }[]
   return trailer?.key || null;
 }
 
-export function HeroBanner({ item, items = [], onActiveItemChange, pageTitle = 'J1 Movies' }: HeroBannerProps) {
+export function HeroBanner({ item, items = [], palette, onActiveItemChange, pageTitle = 'J1 Movies' }: HeroBannerProps) {
   const slides = useMemo(() => {
     if (items.length > 0) return items.slice(0, 6);
     return item ? [item] : [];
@@ -84,6 +85,9 @@ export function HeroBanner({ item, items = [], onActiveItemChange, pageTitle = '
     loop: false,
     onEnded: () => canRotate && goTo(index + 1),
   });
+
+  // Ambient colours follow the trailer while it plays
+  useTrailerPalette(media?.trailerKey ?? null, trailerPlaying, palette);
 
   const isPaused = isHoverPaused || userPaused;
   const slideDuration = trailerPlaying ? ROTATION_WITH_TRAILER_MS : ROTATION_MS;
@@ -167,7 +171,7 @@ export function HeroBanner({ item, items = [], onActiveItemChange, pageTitle = '
       <h1 className="sr-only">{pageTitle}</h1>
 
       {/* Media */}
-      <div aria-hidden="true" className="absolute inset-0 overflow-hidden">
+      <div aria-hidden="true" className="absolute inset-0 overflow-hidden fade-bottom">
         <Image
           key={`${current.id}-${backdropError ? 'poster' : 'backdrop'}`}
           src={
@@ -198,9 +202,11 @@ export function HeroBanner({ item, items = [], onActiveItemChange, pageTitle = '
             )}
           />
         )}
-        {/* Seamless blend into the page: bottom and left scrims, no hard edge */}
-        <div className="absolute inset-0 bg-gradient-to-t from-bg via-bg/30 to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-r from-bg/85 via-bg/25 to-transparent" />
+        {/* Media fades to transparent (mask), so the ambient background continues below
+            without a visible edge; a soft blur band smooths the transition */}
+        <div className="absolute inset-x-0 bottom-0 h-2/5 blur-band" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/20 to-transparent" />
       </div>
 
       {/* Content */}
